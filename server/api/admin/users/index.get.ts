@@ -12,7 +12,7 @@ export default defineEventHandler(async (event) => {
   const limit = Math.min(Number(query.limit) || 50, 100)
   const offset = Number(query.offset) || 0
 
-  const supabase = useSupabaseAdmin()
+  const supabase = useSupabaseAdmin(event)
 
   // Базовый запрос
   let queryBuilder = supabase

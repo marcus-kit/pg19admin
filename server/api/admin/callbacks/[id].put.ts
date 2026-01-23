@@ -20,7 +20,7 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, message: 'Некорректный статус' })
   }
 
-  const supabase = useSupabaseAdmin()
+  const supabase = useSupabaseAdmin(event)
 
   // Подготавливаем данные для обновления
   const updateData: Record<string, any> = {

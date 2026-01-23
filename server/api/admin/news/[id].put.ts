@@ -15,7 +15,7 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  const supabase = useSupabaseAdmin()
+  const supabase = useSupabaseAdmin(event)
 
   // Маппинг camelCase → snake_case
   const dbData: Record<string, unknown> = {}

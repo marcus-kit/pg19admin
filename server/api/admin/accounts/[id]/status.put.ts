@@ -22,7 +22,7 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  const supabase = useSupabaseAdmin()
+  const supabase = useSupabaseAdmin(event)
 
   // Проверяем существование аккаунта
   const { data: existingAccount, error: fetchError } = await supabase

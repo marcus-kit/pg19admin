@@ -14,7 +14,7 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  const supabase = useSupabaseAdmin()
+  const supabase = useSupabaseAdmin(event)
 
   const { data, error } = await supabase
     .from('connection_requests')

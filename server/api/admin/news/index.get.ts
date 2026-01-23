@@ -6,7 +6,7 @@ export default defineEventHandler(async (event) => {
   await requirePermission(event, 'news:read')
 
   const query = getQuery(event)
-  const supabase = useSupabaseAdmin()
+  const supabase = useSupabaseAdmin(event)
 
   let queryBuilder = supabase
     .from('news')

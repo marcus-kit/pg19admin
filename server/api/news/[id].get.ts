@@ -1,7 +1,4 @@
-import { createClient } from '@supabase/supabase-js'
-
 export default defineEventHandler(async (event) => {
-  const config = useRuntimeConfig()
   const id = getRouterParam(event, 'id')
 
   if (!id) {
@@ -11,10 +8,7 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  const supabase = createClient(
-    config.public.supabaseUrl,
-    config.public.supabaseKey
-  )
+  const supabase = await serverSupabaseClient(event)
 
   // Получаем новость с вложениями
   const { data: newsItem, error: newsError } = await supabase

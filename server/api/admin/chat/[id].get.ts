@@ -17,7 +17,7 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  const supabase = useSupabaseAdmin()
+  const supabase = useSupabaseAdmin(event)
 
   // Получаем чат
   const { data: chat, error: chatError } = await supabase

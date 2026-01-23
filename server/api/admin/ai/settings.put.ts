@@ -25,7 +25,7 @@ export default defineEventHandler(async (event) => {
 
   const body = await readBody<UpdateSettingsRequest>(event)
 
-  const supabase = useSupabaseAdmin()
+  const supabase = useSupabaseAdmin(event)
 
   // Строим объект обновления (только переданные поля)
   const updateData: Record<string, unknown> = {}

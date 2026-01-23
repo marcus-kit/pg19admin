@@ -5,7 +5,7 @@ export default defineEventHandler(async (event) => {
   await requirePermission(event, 'catalog:read')
 
   const query = getQuery(event)
-  const supabase = useSupabaseAdmin()
+  const supabase = useSupabaseAdmin(event)
 
   let queryBuilder = supabase
     .from('service_categories')

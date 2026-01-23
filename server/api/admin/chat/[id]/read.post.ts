@@ -13,7 +13,7 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  const supabase = useSupabaseAdmin()
+  const supabase = useSupabaseAdmin(event)
 
   // Используем функцию из миграции
   const { error } = await supabase.rpc('mark_chat_messages_read', {

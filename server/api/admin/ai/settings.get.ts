@@ -10,7 +10,7 @@ export default defineEventHandler(async (event) => {
   // Проверка авторизации и прав
   await requirePermission(event, 'ai:read')
 
-  const supabase = useSupabaseAdmin()
+  const supabase = useSupabaseAdmin(event)
 
   // Получаем настройки (singleton)
   const { data: settings, error } = await supabase

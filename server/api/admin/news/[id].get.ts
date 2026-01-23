@@ -14,7 +14,7 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  const supabase = useSupabaseAdmin()
+  const supabase = useSupabaseAdmin(event)
 
   // Получаем новость с вложениями
   const { data: newsItem, error: newsError } = await supabase

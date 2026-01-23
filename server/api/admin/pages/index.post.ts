@@ -47,7 +47,7 @@ export default defineEventHandler(async (event) => {
     .replace(/-+/g, '-')
     .replace(/^-|-$/g, '')
 
-  const supabase = useSupabaseAdmin()
+  const supabase = useSupabaseAdmin(event)
 
   // Проверяем уникальность slug
   const { data: existing } = await supabase

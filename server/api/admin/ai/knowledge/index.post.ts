@@ -37,7 +37,7 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  const supabase = useSupabaseAdmin()
+  const supabase = useSupabaseAdmin(event)
 
   // Генерируем embedding для вопроса
   let embedding: number[] | null = null

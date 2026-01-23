@@ -32,7 +32,7 @@ export default defineEventHandler(async (event) => {
   const status = query.status as string | undefined
   const limit = parseInt(query.limit as string) || 100
 
-  const supabase = useSupabaseAdmin()
+  const supabase = useSupabaseAdmin(event)
 
   let queryBuilder = supabase
     .from('callback_requests')

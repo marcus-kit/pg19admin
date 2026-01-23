@@ -21,7 +21,7 @@ export default defineEventHandler(async (event) => {
   const query = getQuery(event)
   const hardDelete = query.hard === 'true'
 
-  const supabase = useSupabaseAdmin()
+  const supabase = useSupabaseAdmin(event)
 
   if (hardDelete) {
     // Полное удаление

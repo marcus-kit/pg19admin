@@ -28,7 +28,7 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  const supabase = useSupabaseAdmin()
+  const supabase = useSupabaseAdmin(event)
 
   // Проверяем, что тикет существует и не закрыт
   const { data: ticket, error: ticketError } = await supabase

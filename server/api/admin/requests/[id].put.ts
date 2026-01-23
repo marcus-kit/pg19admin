@@ -28,7 +28,7 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  const supabase = useSupabaseAdmin()
+  const supabase = useSupabaseAdmin(event)
 
   // Проверяем существование заявки
   const { data: existing, error: findError } = await supabase

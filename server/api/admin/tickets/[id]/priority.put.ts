@@ -27,7 +27,7 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  const supabase = useSupabaseAdmin()
+  const supabase = useSupabaseAdmin(event)
 
   // Получаем текущий тикет
   const { data: ticket, error: ticketError } = await supabase

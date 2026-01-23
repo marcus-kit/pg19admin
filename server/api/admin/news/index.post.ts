@@ -15,7 +15,7 @@ export default defineEventHandler(async (event) => {
   }
 
   const authorId = admin.id
-  const supabase = useSupabaseAdmin()
+  const supabase = useSupabaseAdmin(event)
 
   // Если status = published и publishedAt не указан, ставим текущее время
   const publishedAt = body.status === 'published' && !body.publishedAt

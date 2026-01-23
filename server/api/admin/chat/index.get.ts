@@ -9,7 +9,7 @@ export default defineEventHandler(async (event) => {
   const status = query.status as string | undefined
   const assignedToMe = query.assignedToMe === 'true'
 
-  const supabase = useSupabaseAdmin()
+  const supabase = useSupabaseAdmin(event)
 
   let queryBuilder = supabase
     .from('chats')

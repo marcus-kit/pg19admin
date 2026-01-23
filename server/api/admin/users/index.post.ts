@@ -5,7 +5,7 @@ export default defineEventHandler(async (event) => {
   await requirePermission(event, 'users:create')
 
   const body = await readBody(event)
-  const supabase = useSupabaseAdmin()
+  const supabase = useSupabaseAdmin(event)
 
   // Валидация обязательных полей
   if (!body.firstName?.trim()) {

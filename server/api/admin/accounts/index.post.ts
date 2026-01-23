@@ -5,7 +5,7 @@ export default defineEventHandler(async (event) => {
   await requirePermission(event, 'accounts:create')
 
   const body = await readBody(event)
-  const supabase = useSupabaseAdmin()
+  const supabase = useSupabaseAdmin(event)
 
   // Собираем данные для вставки
   const insertData: Record<string, any> = {}

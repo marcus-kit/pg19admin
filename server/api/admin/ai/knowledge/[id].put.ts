@@ -31,7 +31,7 @@ export default defineEventHandler(async (event) => {
 
   const body = await readBody<UpdateKnowledgeRequest>(event)
 
-  const supabase = useSupabaseAdmin()
+  const supabase = useSupabaseAdmin(event)
 
   // Проверяем что запись существует
   const { data: existing, error: existingError } = await supabase

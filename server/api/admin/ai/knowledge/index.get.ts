@@ -12,7 +12,7 @@ export default defineEventHandler(async (event) => {
 
   const query = getQuery(event)
 
-  const supabase = useSupabaseAdmin()
+  const supabase = useSupabaseAdmin(event)
 
   // Строим запрос
   let queryBuilder = supabase

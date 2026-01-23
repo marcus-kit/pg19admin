@@ -32,7 +32,7 @@ export default defineEventHandler(async (event) => {
     await requirePermission(event, 'tickets:close')
   }
 
-  const supabase = useSupabaseAdmin()
+  const supabase = useSupabaseAdmin(event)
 
   // Получаем текущий тикет
   const { data: ticket, error: ticketError } = await supabase

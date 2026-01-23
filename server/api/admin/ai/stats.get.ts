@@ -15,7 +15,7 @@ export default defineEventHandler(async (event) => {
   // Период: today, week, month, all
   const period = String(query.period || 'week')
 
-  const supabase = useSupabaseAdmin()
+  const supabase = useSupabaseAdmin(event)
 
   // Определяем временной фильтр
   let dateFilter: string | null = null
