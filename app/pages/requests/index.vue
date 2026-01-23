@@ -161,7 +161,7 @@ watch(activeTab, (newTab) => {
     </div>
 
     <!-- CONNECTION TAB -->
-    <RequestsConnectionRequestsTab
+    <ConnectionRequestsTab
       v-show="activeTab === 'connection'"
       :requests="connectionRequests"
       :loading="connectionLoading"
@@ -170,7 +170,7 @@ watch(activeTab, (newTab) => {
     />
 
     <!-- CALLBACK TAB -->
-    <RequestsCallbackRequestsTab
+    <CallbackRequestsTab
       v-show="activeTab === 'callback'"
       :requests="callbackRequests"
       :loading="callbackLoading"

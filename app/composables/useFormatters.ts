@@ -138,6 +138,18 @@ export function formatContractNumber(number: number | null | undefined): string 
   return number.toString().padStart(6, '0')
 }
 
+/**
+ * Format balance (kopeks to rubles with sign)
+ */
+export function formatBalance(kopeks: number | null | undefined): string {
+  if (kopeks === null || kopeks === undefined) return '—'
+  const rubles = kopeks / 100
+  return rubles.toLocaleString('ru-RU', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  }) + ' ₽'
+}
+
 // ==================== COMPOSABLE ====================
 
 /**
@@ -152,6 +164,7 @@ export function useFormatters() {
     formatKopeks,
     formatFileSize,
     truncateText,
-    formatContractNumber
+    formatContractNumber,
+    formatBalance
   }
 }
