@@ -6,9 +6,6 @@ interface AdminLoginRequest {
 }
 
 export default defineEventHandler(async (event) => {
-  // Rate limiting: 5 попыток за 15 минут
-  requireRateLimit(event, RATE_LIMIT_CONFIGS.login)
-
   const body = await readBody<AdminLoginRequest>(event)
 
   // Валидация входных данных
@@ -62,10 +59,6 @@ export default defineEventHandler(async (event) => {
       statusMessage: 'Неверные учётные данные'
     })
   }
-
-  // Сбрасываем rate limit после успешного входа
-  const clientIp = getClientIdentifier(event)
-  resetRateLimit(clientIp, 'login')
 
   // Обновляем last_login_at
   await supabaseAdmin
