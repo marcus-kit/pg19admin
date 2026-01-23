@@ -1,5 +1,4 @@
 import { useSupabaseAdmin } from '~~/server/utils/supabase'
-import { requireAdmin } from '~~/server/utils/adminAuth'
 
 interface CreatePageData {
   slug: string
@@ -13,7 +12,6 @@ interface CreatePageData {
 
 export default defineEventHandler(async (event) => {
   // Проверка авторизации и прав
-  const admin = await requireAdmin(event)
 
   const body = await readBody<CreatePageData>(event)
 

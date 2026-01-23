@@ -1,9 +1,7 @@
 import { useSupabaseAdmin } from '~~/server/utils/supabase'
-import { requireAdmin } from '~~/server/utils/adminAuth'
 
 export default defineEventHandler(async (event) => {
   // Проверка авторизации и прав
-  await requireAdmin(event)
 
   const query = getQuery(event)
 

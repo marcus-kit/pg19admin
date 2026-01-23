@@ -1,8 +1,6 @@
 import { serverSupabaseServiceRole } from '#supabase/server'
-import { requireAdmin } from '~~/server/utils/adminAuth'
 
 export default defineEventHandler(async (event) => {
-  const admin = await requireAdmin(event)
 
   const id = getRouterParam(event, 'id')
 

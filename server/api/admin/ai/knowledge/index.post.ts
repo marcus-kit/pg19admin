@@ -3,7 +3,6 @@
  * Создание записи в базе знаний с генерацией embedding
  */
 
-import { requireAdmin } from '~~/server/utils/adminAuth'
 import { useSupabaseAdmin } from '~~/server/utils/supabase'
 // generateEmbedding auto-imported from base layer
 
@@ -18,7 +17,6 @@ interface CreateKnowledgeRequest {
 
 export default defineEventHandler(async (event) => {
   // Проверка авторизации и прав
-  const admin = await requireAdmin(event)
 
   const body = await readBody<CreateKnowledgeRequest>(event)
 

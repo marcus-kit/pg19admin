@@ -1,9 +1,7 @@
-import { requireAdmin } from '~~/server/utils/adminAuth'
 import { useSupabaseAdmin } from '~~/server/utils/supabase'
 import type { UpdateNewsData } from '~~/types/admin'
 
 export default defineEventHandler(async (event) => {
-  await requireAdmin(event)
 
   const id = getRouterParam(event, 'id')
   const body = await readBody<UpdateNewsData>(event)

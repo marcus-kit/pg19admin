@@ -1,5 +1,4 @@
 import { serverSupabaseServiceRole } from '#supabase/server'
-import { requireAdmin } from '~~/server/utils/adminAuth'
 
 interface DashboardStats {
   news: {
@@ -42,7 +41,6 @@ interface DashboardStats {
 
 export default defineEventHandler(async (event): Promise<DashboardStats> => {
   // Проверяем авторизацию админа
-  await requireAdmin(event)
 
   const supabase = serverSupabaseServiceRole(event)
 

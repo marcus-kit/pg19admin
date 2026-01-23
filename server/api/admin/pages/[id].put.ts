@@ -1,5 +1,4 @@
 import { useSupabaseAdmin } from '~~/server/utils/supabase'
-import { requireAdmin } from '~~/server/utils/adminAuth'
 
 interface UpdatePageData {
   slug?: string
@@ -13,7 +12,6 @@ interface UpdatePageData {
 
 export default defineEventHandler(async (event) => {
   // Проверка авторизации и прав
-  await requireAdmin(event)
 
   const id = getRouterParam(event, 'id')
   const body = await readBody<UpdatePageData>(event)

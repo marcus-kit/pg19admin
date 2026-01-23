@@ -1,5 +1,4 @@
 import { serverSupabaseServiceRole } from '#supabase/server'
-import { requireAdmin } from '~~/server/utils/adminAuth'
 
 interface CreateZoneData {
   name: string
@@ -15,7 +14,6 @@ interface CreateZoneData {
 }
 
 export default defineEventHandler(async (event) => {
-  await requireAdmin(event)
 
   const body = await readBody<CreateZoneData>(event)
   const supabase = serverSupabaseServiceRole(event)

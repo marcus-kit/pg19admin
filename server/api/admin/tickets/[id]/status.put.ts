@@ -1,4 +1,3 @@
-import { requireAdmin } from '~~/server/utils/adminAuth'
 import { useSupabaseAdmin } from '~~/server/utils/supabase'
 
 interface StatusBody {
@@ -8,7 +7,6 @@ interface StatusBody {
 const VALID_STATUSES = ['new', 'open', 'pending', 'resolved', 'closed']
 
 export default defineEventHandler(async (event) => {
-  const admin = await requireAdmin(event)
 
   const ticketId = getRouterParam(event, 'id')
   const body = await readBody<StatusBody>(event)
@@ -29,7 +27,6 @@ export default defineEventHandler(async (event) => {
 
   // Проверка прав на закрытие
   if (body.status === 'closed') {
-    await requireAdmin(event)
   }
 
   const supabase = useSupabaseAdmin(event)

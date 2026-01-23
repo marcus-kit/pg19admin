@@ -1,5 +1,4 @@
 import { serverSupabaseServiceRole } from '#supabase/server'
-import { requireAdmin } from '~~/server/utils/adminAuth'
 
 interface UpdateZoneData {
   name?: string
@@ -15,7 +14,6 @@ interface UpdateZoneData {
 }
 
 export default defineEventHandler(async (event) => {
-  await requireAdmin(event)
 
   const id = getRouterParam(event, 'id')
   const body = await readBody<UpdateZoneData>(event)

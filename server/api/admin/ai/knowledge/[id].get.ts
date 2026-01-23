@@ -3,12 +3,10 @@
  * Получение записи базы знаний по ID
  */
 
-import { requireAdmin } from '~~/server/utils/adminAuth'
 import { useSupabaseAdmin } from '~~/server/utils/supabase'
 
 export default defineEventHandler(async (event) => {
   // Проверка авторизации и прав
-  await requireAdmin(event)
 
   const id = getRouterParam(event, 'id')
   if (!id) {

@@ -1,9 +1,7 @@
-import { requireAdmin } from '~~/server/utils/adminAuth'
 import { useSupabaseAdmin } from '~~/server/utils/supabase'
 import { mapTicket, type DbTicket } from '~~/server/utils/mappers'
 
 export default defineEventHandler(async (event) => {
-  const admin = await requireAdmin(event)
 
   const query = getQuery(event)
   const status = query.status as string | undefined

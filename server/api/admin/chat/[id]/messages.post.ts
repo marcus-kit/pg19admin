@@ -1,4 +1,3 @@
-import { requireAdmin } from '~~/server/utils/adminAuth'
 import { useSupabaseAdmin } from '~~/server/utils/supabase'
 
 interface SendMessageBody {
@@ -10,7 +9,6 @@ interface SendMessageBody {
 }
 
 export default defineEventHandler(async (event) => {
-  const admin = await requireAdmin(event)
 
   const chatId = getRouterParam(event, 'id')
   const body = await readBody<SendMessageBody>(event)

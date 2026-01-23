@@ -1,7 +1,6 @@
 import { serverSupabaseServiceRole } from '#supabase/server'
 
 export default defineEventHandler(async (event) => {
-  await requireAdmin(event)
 
   const newsId = getRouterParam(event, 'id')
   const attachmentId = getRouterParam(event, 'attachmentId')

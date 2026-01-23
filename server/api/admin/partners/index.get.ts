@@ -2,10 +2,8 @@
 // Список активных партнёров для фильтров и выпадающих списков
 
 import { serverSupabaseServiceRole } from '#supabase/server'
-import { requireAdmin } from '~~/server/utils/adminAuth'
 
 export default defineEventHandler(async (event) => {
-  await requireAdmin(event)
 
   const supabase = serverSupabaseServiceRole(event)
 
