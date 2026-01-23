@@ -1,9 +1,9 @@
-import { requirePermission } from '~~/server/utils/adminAuth'
+import { requireAdmin } from '~~/server/utils/adminAuth'
 import { useSupabaseAdmin } from '~~/server/utils/supabase'
 import { mapUser, type DbUser } from '~~/server/utils/mappers'
 
 export default defineEventHandler(async (event) => {
-  await requirePermission(event, 'users:read')
+  await requireAdmin(event)
 
   const query = getQuery(event)
 

@@ -1,4 +1,4 @@
-import { requirePermission } from '~~/server/utils/adminAuth'
+import { requireAdmin } from '~~/server/utils/adminAuth'
 import { useSupabaseAdmin } from '~~/server/utils/supabase'
 
 interface AssignBody {
@@ -6,7 +6,7 @@ interface AssignBody {
 }
 
 export default defineEventHandler(async (event) => {
-  const currentAdmin = await requirePermission(event, 'tickets:respond')
+  const currentAdmin = await requireAdmin(event)
 
   const ticketId = getRouterParam(event, 'id')
   const body = await readBody<AssignBody>(event)

@@ -1,5 +1,5 @@
 import { serverSupabaseServiceRole } from '#supabase/server'
-import { requirePermission } from '~~/server/utils/adminAuth'
+import { requireAdmin } from '~~/server/utils/adminAuth'
 
 interface ImportOptions {
   geojson: any
@@ -10,7 +10,7 @@ interface ImportOptions {
 }
 
 export default defineEventHandler(async (event) => {
-  await requirePermission(event, 'coverage:create')
+  await requireAdmin(event)
 
   const body = await readBody<ImportOptions>(event)
 

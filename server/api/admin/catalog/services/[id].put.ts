@@ -1,4 +1,4 @@
-import { requirePermission } from '~~/server/utils/adminAuth'
+import { requireAdmin } from '~~/server/utils/adminAuth'
 import { useSupabaseAdmin } from '~~/server/utils/supabase'
 
 interface UpdateServiceData {
@@ -15,7 +15,7 @@ interface UpdateServiceData {
 }
 
 export default defineEventHandler(async (event) => {
-  await requirePermission(event, 'catalog:update')
+  await requireAdmin(event)
 
   const id = getRouterParam(event, 'id')
   const body = await readBody<UpdateServiceData>(event)

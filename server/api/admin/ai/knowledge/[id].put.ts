@@ -3,7 +3,7 @@
  * Обновление записи базы знаний
  */
 
-import { requirePermission } from '~~/server/utils/adminAuth'
+import { requireAdmin } from '~~/server/utils/adminAuth'
 import { useSupabaseAdmin } from '~~/server/utils/supabase'
 // generateEmbedding auto-imported from base layer
 
@@ -19,7 +19,7 @@ interface UpdateKnowledgeRequest {
 
 export default defineEventHandler(async (event) => {
   // Проверка авторизации и прав
-  await requirePermission(event, 'ai:manage')
+  await requireAdmin(event)
 
   const id = getRouterParam(event, 'id')
   if (!id) {

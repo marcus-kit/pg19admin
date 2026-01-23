@@ -1,8 +1,8 @@
-import { requirePermission } from '~~/server/utils/adminAuth'
+import { requireAdmin } from '~~/server/utils/adminAuth'
 import { useSupabaseAdmin } from '~~/server/utils/supabase'
 
 export default defineEventHandler(async (event) => {
-  await requirePermission(event, 'accounts:create')
+  await requireAdmin(event)
 
   const body = await readBody(event)
   const supabase = useSupabaseAdmin(event)

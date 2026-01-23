@@ -3,12 +3,12 @@
  * Статистика AI-бота
  */
 
-import { requirePermission } from '~~/server/utils/adminAuth'
+import { requireAdmin } from '~~/server/utils/adminAuth'
 import { useSupabaseAdmin } from '~~/server/utils/supabase'
 
 export default defineEventHandler(async (event) => {
   // Проверка авторизации и прав
-  await requirePermission(event, 'ai:read')
+  await requireAdmin(event)
 
   const query = getQuery(event)
 

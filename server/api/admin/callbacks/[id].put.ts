@@ -2,10 +2,10 @@
 // Обновление статуса заявки на обратный звонок
 
 import { useSupabaseAdmin } from '~~/server/utils/supabase'
-import { requirePermission } from '~~/server/utils/adminAuth'
+import { requireAdmin } from '~~/server/utils/adminAuth'
 
 export default defineEventHandler(async (event) => {
-  const admin = await requirePermission(event, 'requests:write')
+  const admin = await requireAdmin(event)
 
   const callbackId = getRouterParam(event, 'id')
 

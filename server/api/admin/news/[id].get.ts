@@ -1,9 +1,9 @@
-import { requirePermission } from '~~/server/utils/adminAuth'
+import { requireAdmin } from '~~/server/utils/adminAuth'
 import { useSupabaseAdmin } from '~~/server/utils/supabase'
 
 export default defineEventHandler(async (event) => {
   // Проверка авторизации и прав
-  await requirePermission(event, 'news:read')
+  await requireAdmin(event)
 
   const id = getRouterParam(event, 'id')
 

@@ -1,8 +1,8 @@
 import { serverSupabaseServiceRole } from '#supabase/server'
-import { requirePermission } from '~~/server/utils/adminAuth'
+import { requireAdmin } from '~~/server/utils/adminAuth'
 
 export default defineEventHandler(async (event) => {
-  const admin = await requirePermission(event, 'coverage:delete')
+  const admin = await requireAdmin(event)
 
   const id = getRouterParam(event, 'id')
 

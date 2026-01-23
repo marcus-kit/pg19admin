@@ -2,10 +2,10 @@
 // Список активных партнёров для фильтров и выпадающих списков
 
 import { serverSupabaseServiceRole } from '#supabase/server'
-import { requirePermission } from '~~/server/utils/adminAuth'
+import { requireAdmin } from '~~/server/utils/adminAuth'
 
 export default defineEventHandler(async (event) => {
-  await requirePermission(event, 'coverage:read')
+  await requireAdmin(event)
 
   const supabase = serverSupabaseServiceRole(event)
 

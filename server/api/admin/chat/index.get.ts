@@ -1,9 +1,9 @@
-import { requirePermission } from '~~/server/utils/adminAuth'
+import { requireAdmin } from '~~/server/utils/adminAuth'
 import { useSupabaseAdmin } from '~~/server/utils/supabase'
 import { mapChat, type DbChat } from '~~/server/utils/mappers'
 
 export default defineEventHandler(async (event) => {
-  const admin = await requirePermission(event, 'chat:read')
+  const admin = await requireAdmin(event)
 
   const query = getQuery(event)
   const status = query.status as string | undefined

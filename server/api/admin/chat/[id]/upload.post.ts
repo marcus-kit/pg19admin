@@ -14,7 +14,7 @@ const ALLOWED_TYPES = [
 ]
 
 export default defineEventHandler(async (event) => {
-  await requirePermission(event, 'chat:respond')
+  await requireAdmin(event)
 
   const chatId = getRouterParam(event, 'id')
   if (!chatId) {

@@ -3,12 +3,12 @@
  * Удаление записи из базы знаний (soft delete — устанавливает is_active = false)
  */
 
-import { requirePermission } from '~~/server/utils/adminAuth'
+import { requireAdmin } from '~~/server/utils/adminAuth'
 import { useSupabaseAdmin } from '~~/server/utils/supabase'
 
 export default defineEventHandler(async (event) => {
   // Проверка авторизации и прав
-  await requirePermission(event, 'ai:manage')
+  await requireAdmin(event)
 
   const id = getRouterParam(event, 'id')
   if (!id) {

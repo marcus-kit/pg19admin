@@ -1,4 +1,4 @@
-import { requirePermission } from '~~/server/utils/adminAuth'
+import { requireAdmin } from '~~/server/utils/adminAuth'
 import { useSupabaseAdmin } from '~~/server/utils/supabase'
 
 interface CreateServiceData {
@@ -15,7 +15,7 @@ interface CreateServiceData {
 }
 
 export default defineEventHandler(async (event) => {
-  await requirePermission(event, 'catalog:create')
+  await requireAdmin(event)
 
   const body = await readBody<CreateServiceData>(event)
 
