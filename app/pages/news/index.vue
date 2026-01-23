@@ -1,0 +1,136 @@
+<script setup lang="ts">
+import type { NewsItem } from '~/types/admin'
+import {
+  NEWS_STATUS,
+  NEWS_CATEGORY,
+  NEWS_STATUS_OPTIONS,
+  getStatusLabel,
+  getStatusBadgeClass
+} from '~/composables/useStatusConfig'
+import { formatDateShort } from '~/composables/useFormatters'
+import { useAdminList } from '~/composables/useAdminList'
+
+const toast = useToast()
+
+definePageMeta({
+  middleware: 'admin'
+})
+
+useHead({ title: 'Управление новостями — Админ-панель' })
+
+// Use centralized list composable
+const {
+  items: news,
+  loading,
+  filters,
+  deleteItem
+} = useAdminList<NewsItem, { status: string }>({
+  endpoint: '/api/admin/news',
+  responseKey: 'news',
+  initialFilters: { status: 'all' }
+})
+
+const deleteNews = (id: string) => deleteItem(id, 'Удалить эту новость?')
+</script>
+
+<template>
+  <div>
+    <!-- Header -->
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
+      <h1 class="text-3xl font-bold text-[var(--text-primary)]">
+        Управление новостями
+      </h1>
+      <UiButton @click="$router.push('/news/create')">
+        <Icon name="heroicons:plus" class="w-5 h-5" />
+        Создать новость
+      </UiButton>
+    </div>
+
+    <!-- Filters -->
+    <div class="flex flex-wrap gap-3 mb-6">
+      <UiButton
+        v-for="opt in NEWS_STATUS_OPTIONS"
+        :key="opt.value"
+        variant="ghost"
+        :class="{ 'bg-primary/20': filters.status === opt.value }"
+        @click="filters.status = opt.value"
+      >
+        {{ opt.label }}
+      </UiButton>
+    </div>
+
+    <!-- News List -->
+    <div v-if="loading" class="text-center py-12">
+      <Icon name="heroicons:arrow-path" class="w-8 h-8 animate-spin text-primary mx-auto" />
+    </div>
+
+    <div v-else class="space-y-4">
+      <UiCard
+        v-for="item in news"
+        :key="item.id"
+        class="hover:shadow-lg transition-shadow"
+      >
+        <div class="flex items-start justify-between gap-4">
+          <div class="flex-1">
+            <div class="flex items-center gap-2 mb-2 flex-wrap">
+              <UiBadge :class="getStatusBadgeClass(NEWS_STATUS, item.status)">
+                {{ getStatusLabel(NEWS_STATUS, item.status) }}
+              </UiBadge>
+              <UiBadge :class="getStatusBadgeClass(NEWS_CATEGORY, item.category)">
+                {{ getStatusLabel(NEWS_CATEGORY, item.category) }}
+              </UiBadge>
+              <Icon
+                v-if="item.isPinned"
+                name="heroicons:bookmark-solid"
+                class="w-4 h-4 text-primary"
+                title="Закреплено"
+              />
+            </div>
+
+            <h3 class="text-lg font-semibold text-[var(--text-primary)] mb-2">
+              {{ item.title }}
+            </h3>
+
+            <p v-if="item.summary" class="text-sm text-[var(--text-muted)] mb-3">
+              {{ item.summary }}
+            </p>
+
+            <div class="text-xs text-[var(--text-muted)]">
+              Создано: {{ formatDate(item.createdAt) }}
+              <span v-if="item.publishedAt">
+                • Опубликовано: {{ formatDate(item.publishedAt) }}
+              </span>
+            </div>
+          </div>
+
+          <div class="flex gap-2">
+            <UiButton
+              variant="ghost"
+              size="sm"
+              @click="$router.push(`/news/${item.id}/edit`)"
+              title="Редактировать"
+            >
+              <Icon name="heroicons:pencil" class="w-4 h-4" />
+            </UiButton>
+            <UiButton
+              variant="ghost"
+              size="sm"
+              @click="deleteNews(item.id)"
+              title="Удалить"
+            >
+              <Icon name="heroicons:trash" class="w-4 h-4 text-red-400" />
+            </UiButton>
+          </div>
+        </div>
+      </UiCard>
+
+      <!-- Empty state -->
+      <div v-if="news.length === 0" class="text-center py-12">
+        <Icon name="heroicons:newspaper" class="w-16 h-16 text-[var(--text-muted)] mx-auto mb-4" />
+        <p class="text-[var(--text-muted)]">
+          {{ filters.status === 'all' ? 'Новостей пока нет' : `Нет новостей со статусом "${getStatusLabel(NEWS_STATUS, filters.status)}"` }}
+        </p>
+      </div>
+    </div>
+  </div>
+</template>
