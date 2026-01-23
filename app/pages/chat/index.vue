@@ -6,7 +6,6 @@ import {
   getStatusLabel,
   getStatusBadgeClass
 } from '~/composables/useStatusConfig'
-import { useAdminAuthStore } from '~/stores/adminAuth'
 
 definePageMeta({
   middleware: 'admin'
@@ -14,7 +13,6 @@ definePageMeta({
 
 useHead({ title: 'Чаты поддержки — Админ-панель' })
 
-const adminAuthStore = useAdminAuthStore()
 const toast = useToast()
 const router = useRouter()
 

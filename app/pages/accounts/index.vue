@@ -9,7 +9,6 @@ import {
   getStatusBadgeClass
 } from '~/composables/useStatusConfig'
 import { useAdminList } from '~/composables/useAdminList'
-import { useAdminAuthStore } from '~/stores/adminAuth'
 
 definePageMeta({
   middleware: 'admin'
@@ -17,7 +16,6 @@ definePageMeta({
 
 useHead({ title: 'Аккаунты — Админ-панель' })
 
-const adminAuthStore = useAdminAuthStore()
 const router = useRouter()
 
 // Use centralized list composable with two filters
@@ -46,7 +44,7 @@ const {
         </span>
       </h1>
       <UiButton
-        v-if="adminAuthStore.canCreateAccounts"
+        
         @click="router.push('/accounts/create')"
       >
         <Icon name="heroicons:plus" class="w-4 h-4" />

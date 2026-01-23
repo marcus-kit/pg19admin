@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { useAdminAuthStore } from '~/stores/adminAuth'
-
 definePageMeta({
   middleware: 'admin'
 })
@@ -9,12 +7,6 @@ useHead({ title: 'Создать пользователя — Админ-пан�
 
 const toast = useToast()
 const router = useRouter()
-const adminAuthStore = useAdminAuthStore()
-
-// Проверка прав
-if (!adminAuthStore.canCreateUsers) {
-  router.push('/users')
-}
 
 const saving = ref(false)
 const error = ref('')

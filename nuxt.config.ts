@@ -22,8 +22,6 @@ export default defineNuxtConfig({
     '@nuxtjs/tailwindcss',
     '@nuxt/icon',
     '@nuxtjs/color-mode',
-    '@pinia/nuxt',
-    'pinia-plugin-persistedstate/nuxt',
     '@nuxtjs/supabase'
   ],
 
@@ -55,11 +53,6 @@ export default defineNuxtConfig({
     classSuffix: '',
     preference: 'dark',
     fallback: 'dark'
-  },
-
-  // Авто-импорт stores
-  imports: {
-    dirs: ['stores']
   },
 
   // SEO и мета

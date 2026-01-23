@@ -1,7 +1,5 @@
 <script setup lang="ts">
-import { createClient } from '@supabase/supabase-js'
 import type { Chat, ChatMessage } from '~/types/admin'
-import { useAdminAuthStore } from '~/stores/adminAuth'
 
 definePageMeta({
   middleware: 'admin'
@@ -10,9 +8,9 @@ definePageMeta({
 const route = useRoute()
 const router = useRouter()
 const chatId = computed(() => route.params.id as string)
-const adminAuthStore = useAdminAuthStore()
 const toast = useToast()
 const config = useRuntimeConfig()
+const user = useSupabaseUser()
 
 useHead({ title: 'Чат — Админ-панель' })
 
@@ -116,12 +114,12 @@ const handleClose = async () => {
 }
 
 const handleAssignToMe = async () => {
-  if (!adminAuthStore.admin) return
+  if (!user.value) return
 
   try {
     await $fetch(`/api/admin/chat/${chatId.value}/assign`, {
       method: 'POST',
-      body: { adminId: adminAuthStore.admin.id }
+      body: { adminId: user.value.sub }
     })
     await fetchChat()
   } catch (error: any) {

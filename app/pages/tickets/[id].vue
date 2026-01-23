@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import type { Ticket, TicketComment, TicketHistoryItem } from '~/types/admin'
-import { useAdminAuthStore } from '~/stores/adminAuth'
 
 definePageMeta({
   middleware: 'admin'
@@ -9,8 +8,8 @@ definePageMeta({
 const route = useRoute()
 const router = useRouter()
 const ticketId = computed(() => route.params.id as string)
-const adminAuthStore = useAdminAuthStore()
 const toast = useToast()
+const user = useSupabaseUser()
 
 useHead({ title: 'Тикет — Админ-панель' })
 
@@ -103,13 +102,13 @@ const handleUpdatePriority = async (newPriority: string) => {
 }
 
 const handleAssignToMe = async () => {
-  if (!adminAuthStore.admin || saving.value) return
+  if (!user.value || saving.value) return
 
   saving.value = true
   try {
     await $fetch(`/api/admin/tickets/${ticketId.value}/assign`, {
       method: 'POST',
-      body: { adminId: adminAuthStore.admin.id }
+      body: { adminId: user.value.sub }
     })
 
     await fetchTicket()

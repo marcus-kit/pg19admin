@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { useAdminAuthStore } from '~/stores/adminAuth'
 
 definePageMeta({
   middleware: 'admin'
@@ -9,7 +8,6 @@ const toast = useToast()
 const route = useRoute()
 const router = useRouter()
 const userId = computed(() => route.params.id as string)
-const adminAuthStore = useAdminAuthStore()
 
 useHead({ title: 'Пользователь — Админ-панель' })
 
@@ -264,7 +262,7 @@ onMounted(() => {
 
         <div class="flex gap-2">
           <UiButton
-            v-if="adminAuthStore.canEditUsers"
+            
             variant="secondary"
             size="sm"
             @click="openEditModal"
@@ -377,7 +375,7 @@ onMounted(() => {
         <!-- Sidebar -->
         <div class="space-y-6">
           <!-- Status Management -->
-          <UiCard v-if="adminAuthStore.canManageUsers">
+          <UiCard >
             <template #header>
               <span class="font-medium text-[var(--text-primary)]">Управление статусом</span>
             </template>

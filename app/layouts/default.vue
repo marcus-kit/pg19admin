@@ -1,11 +1,9 @@
 <script setup lang="ts">
-import { useAdminAuthStore } from '~/stores/adminAuth'
-
-const adminAuthStore = useAdminAuthStore()
+const supabase = useSupabaseClient()
 const router = useRouter()
 
 const handleLogout = async () => {
-  await adminAuthStore.logout()
+  await supabase.auth.signOut()
   router.push('/admin/login')
 }
 </script>
@@ -31,115 +29,56 @@ const handleLogout = async () => {
 
         <!-- Navigation -->
         <nav class="space-y-2">
-          <NuxtLink
-            to="/dashboard"
-            class="nav-item"
-            active-class="nav-item-active"
-          >
+          <NuxtLink to="/dashboard" class="nav-item" active-class="nav-item-active">
             <Icon name="heroicons:home" class="w-5 h-5" />
             <span>Dashboard</span>
           </NuxtLink>
 
-          <!-- Пользователи (все роли) -->
-          <NuxtLink
-            v-if="adminAuthStore.canViewUsers"
-            to="/users"
-            class="nav-item"
-            active-class="nav-item-active"
-          >
+          <NuxtLink to="/users" class="nav-item" active-class="nav-item-active">
             <Icon name="heroicons:users" class="w-5 h-5" />
             <span>Пользователи</span>
           </NuxtLink>
 
-          <!-- Аккаунты (все роли) -->
-          <NuxtLink
-            v-if="adminAuthStore.canViewAccounts"
-            to="/accounts"
-            class="nav-item"
-            active-class="nav-item-active"
-          >
+          <NuxtLink to="/accounts" class="nav-item" active-class="nav-item-active">
             <Icon name="heroicons:identification" class="w-5 h-5" />
             <span>Аккаунты</span>
           </NuxtLink>
 
-          <!-- Новости (все роли) -->
-          <NuxtLink
-            v-if="adminAuthStore.canManageNews"
-            to="/news"
-            class="nav-item"
-            active-class="nav-item-active"
-          >
+          <NuxtLink to="/news" class="nav-item" active-class="nav-item-active">
             <Icon name="heroicons:newspaper" class="w-5 h-5" />
             <span>Новости</span>
           </NuxtLink>
 
-          <!-- Каталог (admin, moderator) -->
-          <NuxtLink
-            v-if="adminAuthStore.canManageCatalog"
-            to="/catalog"
-            class="nav-item"
-            active-class="nav-item-active"
-          >
+          <NuxtLink to="/catalog" class="nav-item" active-class="nav-item-active">
             <Icon name="heroicons:squares-2x2" class="w-5 h-5" />
             <span>Каталог</span>
           </NuxtLink>
 
-          <!-- Карта покрытия (admin, moderator) -->
-          <NuxtLink
-            v-if="adminAuthStore.canManageCoverage"
-            to="/coverage"
-            class="nav-item"
-            active-class="nav-item-active"
-          >
+          <NuxtLink to="/coverage" class="nav-item" active-class="nav-item-active">
             <Icon name="heroicons:map" class="w-5 h-5" />
             <span>Карта покрытия</span>
           </NuxtLink>
 
-          <!-- Заявки на подключение (все роли) -->
-          <NuxtLink
-            v-if="adminAuthStore.canManageRequests"
-            to="/requests"
-            class="nav-item"
-            active-class="nav-item-active"
-          >
+          <NuxtLink to="/requests" class="nav-item" active-class="nav-item-active">
             <Icon name="heroicons:clipboard-document-list" class="w-5 h-5" />
             <span>Заявки</span>
           </NuxtLink>
 
-          <!-- Чат (admin, support) -->
-          <NuxtLink
-            v-if="adminAuthStore.canAccessChat"
-            to="/chat"
-            class="nav-item"
-            active-class="nav-item-active"
-          >
+          <NuxtLink to="/chat" class="nav-item" active-class="nav-item-active">
             <Icon name="heroicons:chat-bubble-left-right" class="w-5 h-5" />
             <span>Чат</span>
           </NuxtLink>
 
-          <!-- Тикеты (admin, support) -->
-          <NuxtLink
-            v-if="adminAuthStore.canAccessTickets"
-            to="/tickets"
-            class="nav-item"
-            active-class="nav-item-active"
-          >
+          <NuxtLink to="/tickets" class="nav-item" active-class="nav-item-active">
             <Icon name="heroicons:ticket" class="w-5 h-5" />
             <span>Тикеты</span>
           </NuxtLink>
 
-          <!-- AI-бот (только admin) -->
-          <NuxtLink
-            v-if="adminAuthStore.canManageAI"
-            to="/settings/ai"
-            class="nav-item"
-            active-class="nav-item-active"
-          >
+          <NuxtLink to="/settings/ai" class="nav-item" active-class="nav-item-active">
             <Icon name="heroicons:sparkles" class="w-5 h-5" />
             <span>AI-бот</span>
           </NuxtLink>
         </nav>
-
       </div>
     </aside>
 
@@ -158,12 +97,12 @@ const handleLogout = async () => {
           <span class="text-xs">Dashboard</span>
         </NuxtLink>
 
-        <NuxtLink v-if="adminAuthStore.canManageNews" to="/news" class="mobile-nav-item">
+        <NuxtLink to="/news" class="mobile-nav-item">
           <Icon name="heroicons:newspaper" class="w-5 h-5" />
           <span class="text-xs">Новости</span>
         </NuxtLink>
 
-        <NuxtLink v-if="adminAuthStore.canAccessTickets" to="/tickets" class="mobile-nav-item">
+        <NuxtLink to="/tickets" class="mobile-nav-item">
           <Icon name="heroicons:ticket" class="w-5 h-5" />
           <span class="text-xs">Тикеты</span>
         </NuxtLink>

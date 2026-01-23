@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import type { ServiceCategory, Service } from '~/types/admin'
 import { ACTIVE_STATUS, getStatusBadgeClass, getStatusLabel } from '~/composables/useStatusConfig'
-import { useAdminAuthStore } from '~/stores/adminAuth'
 
 const toast = useToast()
 
@@ -11,7 +10,6 @@ definePageMeta({
 
 useHead({ title: 'Каталог услуг — Админ-панель' })
 
-const adminAuthStore = useAdminAuthStore()
 const router = useRouter()
 
 const activeTab = ref<'categories' | 'services'>('services')

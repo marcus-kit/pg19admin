@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { useAdminAuthStore } from '~/stores/adminAuth'
 
 definePageMeta({
   middleware: 'admin'
@@ -8,7 +7,6 @@ definePageMeta({
 useHead({ title: 'Карта покрытия — Админ-панель' })
 
 const toast = useToast()
-const adminAuthStore = useAdminAuthStore()
 
 interface CoverageZone {
   id: number

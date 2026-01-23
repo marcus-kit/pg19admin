@@ -8,7 +8,6 @@ import {
   getStatusBadgeClass
 } from '~/composables/useStatusConfig'
 import { useAdminList } from '~/composables/useAdminList'
-import { useAdminAuthStore } from '~/stores/adminAuth'
 
 definePageMeta({
   middleware: 'admin'
@@ -16,7 +15,6 @@ definePageMeta({
 
 useHead({ title: 'Пользователи — Админ-панель' })
 
-const adminAuthStore = useAdminAuthStore()
 const router = useRouter()
 
 // Use centralized list composable
@@ -54,7 +52,7 @@ const getOnlineStatusClass = (status: string) => {
         </span>
       </h1>
       <UiButton
-        v-if="adminAuthStore.canCreateUsers"
+        
         @click="router.push('/users/create')"
       >
         <Icon name="heroicons:plus" class="w-4 h-4" />

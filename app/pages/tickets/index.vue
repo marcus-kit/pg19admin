@@ -9,7 +9,6 @@ import {
   getStatusLabel,
   getStatusBadgeClass
 } from '~/composables/useStatusConfig'
-import { useAdminAuthStore } from '~/stores/adminAuth'
 
 definePageMeta({
   middleware: 'admin'
@@ -17,7 +16,6 @@ definePageMeta({
 
 useHead({ title: 'Тикеты — Админ-панель' })
 
-const adminAuthStore = useAdminAuthStore()
 const toast = useToast()
 const { formatDateTime } = useFormatters()
 

@@ -1,13 +1,11 @@
 <script setup lang="ts">
-import { useAdminAuthStore } from '~/stores/adminAuth'
-
 definePageMeta({
   middleware: 'admin'
 })
 
 useHead({ title: 'Админ-панель — ПЖ19' })
 
-const adminAuthStore = useAdminAuthStore()
+const user = useSupabaseUser()
 const toast = useToast()
 
 interface DashboardStats {
@@ -82,7 +80,7 @@ onMounted(() => {
     <!-- Header -->
     <div class="mb-8">
       <h1 class="text-3xl font-bold text-[var(--text-primary)] mb-2">
-        Добро пожаловать, {{ adminAuthStore.admin?.fullName }}!
+        Добро пожаловать!
       </h1>
       <p class="text-[var(--text-muted)]">
         Панель управления сайтом ПЖ19
@@ -267,7 +265,7 @@ onMounted(() => {
       </div>
 
       <!-- Requests Stats -->
-      <div v-if="adminAuthStore.canManageRequests">
+      <div >
         <h2 class="text-lg font-semibold text-[var(--text-secondary)] mb-4 flex items-center gap-2">
           <Icon name="heroicons:clipboard-document-list" class="w-5 h-5" />
           Заявки на подключение
@@ -324,7 +322,7 @@ onMounted(() => {
       </div>
 
       <!-- Chats Stats -->
-      <div v-if="adminAuthStore.canAccessChat">
+      <div >
         <h2 class="text-lg font-semibold text-[var(--text-secondary)] mb-4 flex items-center gap-2">
           <Icon name="heroicons:chat-bubble-left-right" class="w-5 h-5" />
           Чаты поддержки
@@ -381,7 +379,7 @@ onMounted(() => {
       </div>
 
       <!-- Tickets Stats -->
-      <div v-if="adminAuthStore.canAccessTickets">
+      <div >
         <h2 class="text-lg font-semibold text-[var(--text-secondary)] mb-4 flex items-center gap-2">
           <Icon name="heroicons:ticket" class="w-5 h-5" />
           Тикеты

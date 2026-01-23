@@ -1,15 +1,14 @@
 <script setup lang="ts">
-import { useAdminAuthStore } from '~/stores/adminAuth'
-
 definePageMeta({
   layout: 'guest',
-  middleware: 'admin' // Middleware обработает редирект если уже авторизован
+  middleware: 'admin'
 })
 
 useHead({ title: 'Вход в админ-панель — ПЖ19' })
 
-const adminAuthStore = useAdminAuthStore()
+const supabase = useSupabaseClient()
 const router = useRouter()
+const toast = useToast()
 
 const form = reactive({
   email: '',
@@ -55,26 +54,20 @@ const handleLogin = async () => {
   errors.general = ''
 
   try {
-    const success = await adminAuthStore.login(form.email, form.password)
+    const { error } = await supabase.auth.signInWithPassword({
+      email: form.email,
+      password: form.password
+    })
 
-    if (success) {
-      await router.push('/dashboard')
-    } else {
+    if (error) {
       errors.general = 'Неверный email или пароль'
+      return
     }
+
+    toast.success('Добро пожаловать!')
+    await router.push('/dashboard')
   } catch (error: any) {
-    const statusCode = error.statusCode || error.response?.status
-    const message = error.data?.statusMessage || error.statusMessage || error.message
-
-    if (statusCode === 429) {
-      errors.general = message || 'Слишком много попыток входа. Попробуйте позже.'
-    } else if (statusCode === 401) {
-      errors.general = 'Неверный email или пароль'
-    } else if (statusCode === 403) {
-      errors.general = 'Доступ запрещен'
-    } else {
-      errors.general = message || 'Ошибка входа. Попробуйте позже.'
-    }
+    errors.general = 'Ошибка входа. Попробуйте позже.'
   } finally {
     isLoading.value = false
   }

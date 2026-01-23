@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { useAdminAuthStore } from '~/stores/adminAuth'
 
 const toast = useToast()
 
@@ -9,7 +8,6 @@ definePageMeta({
 
 useHead({ title: 'Создать новость — Админ-панель' })
 
-const adminAuthStore = useAdminAuthStore()
 const router = useRouter()
 
 const form = reactive({
@@ -45,11 +43,6 @@ const saveNews = async () => {
 
   if (!form.content.trim() || form.content === '<p></p>') {
     error.value = 'Введите контент новости'
-    return
-  }
-
-  if (!adminAuthStore.isAuthenticated) {
-    error.value = 'Требуется авторизация'
     return
   }
 

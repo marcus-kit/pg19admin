@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { useAdminAuthStore } from '~/stores/adminAuth'
 
 const toast = useToast()
 
@@ -9,7 +8,6 @@ definePageMeta({
 
 useHead({ title: 'Редактировать новость — Админ-панель' })
 
-const adminAuthStore = useAdminAuthStore()
 const router = useRouter()
 const route = useRoute()
 
