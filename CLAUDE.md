@@ -10,9 +10,8 @@ This file provides guidance to Claude Code when working with this repository.
 |----------|----------|
 | **Фреймворк** | Nuxt 4.3 + Vue 3.5 |
 | **Стилизация** | Tailwind CSS + CSS Variables |
-| **State** | Pinia с persist |
 | **База данных** | Supabase (PostgreSQL) |
-| **Auth** | Supabase Auth |
+| **Auth** | Supabase Auth (JWT) |
 | **Package Manager** | pnpm |
 
 **Language**: Russian UI, Russian comments acceptable.
@@ -39,11 +38,9 @@ pg19v3admin/
 │   │   ├── coverage/        # CoverageMap, CoverageImportExport
 │   │   └── requests/        # ConnectionRequestsTab, CallbackRequestsTab
 │   ├── composables/
-│   │   ├── useFormatters.ts   # formatDate, formatKopeks, truncateText
+│   │   ├── useFormatters.ts   # formatDate, formatKopeks, formatBalance, truncateText
 │   │   ├── useAdminList.ts    # Generic list with pagination, filters
 │   │   └── useStatusConfig.ts # Status labels and badge classes
-│   ├── stores/
-│   │   └── adminAuth.ts       # Auth state + RBAC getters
 │   ├── pages/                 # 26 pages
 │   ├── layouts/
 │   │   └── default.vue        # Sidebar navigation layout
@@ -54,8 +51,7 @@ pg19v3admin/
 ├── server/
 │   ├── api/admin/             # 70+ API endpoints
 │   └── utils/
-│       ├── supabase.ts        # Database client
-│       ├── adminAuth.ts       # Server-side RBAC
+│       ├── supabase.ts        # Database client (useSupabaseAdmin)
 │       └── mappers.ts         # snake_case → camelCase
 ├── types/
 │   └── admin.ts               # TypeScript interfaces
@@ -110,49 +106,6 @@ components/
 // =============================================================================
 ```
 
-### Pinia Stores with Persistence
-
-```typescript
-import { defineStore } from 'pinia'
-
-const STORAGE_KEY = 'pg19_admin_auth'
-
-export const useAdminAuthStore = defineStore('adminAuth', {
-  state: () => ({ ... }),
-  getters: { ... },
-  actions: { ... },
-  persist: {
-    key: STORAGE_KEY,
-    pick: ['isAuthenticated', 'admin']
-  }
-})
-```
-
----
-
-## Roles & Permissions
-
-| Role | Access |
-|------|--------|
-| **admin** | Full access to all modules |
-| **moderator** | News, Catalog, Coverage, Pages, Requests |
-| **support** | Chat, Tickets, Requests, Users/Accounts (view only) |
-
-### Permission Getters (adminAuth store)
-
-```typescript
-canManageNews    // admin, moderator, support
-canDeleteNews    // admin, moderator
-canManageCatalog // admin, moderator
-canManageCoverage // admin, moderator
-canAccessChat    // admin, support
-canAccessTickets // admin, support
-canManageAI      // admin only
-canViewUsers     // all roles
-canEditUsers     // admin, moderator
-canManageUsers   // admin only
-```
-
 ---
 
 ## Environment Variables
@@ -203,9 +156,14 @@ AI bot configuration, knowledge base management.
 2. **pathPrefix: false** — components registered by filename, watch for conflicts
 3. **CSS Variables** — never hardcode colors, use var(--color-*)
 4. **Glass card hover** — only works with CSS class, not inline styles
-5. **requireAdmin()** — API endpoints must verify admin permissions
-6. **Sidebar navigation** — differs from client (sidebar vs bottom nav)
-7. **UI components** — all in ui/ folder with Ui* prefix
+5. **Sidebar navigation** — differs from client (sidebar vs bottom nav)
+6. **UI components** — all in ui/ folder with Ui* prefix
+7. **No local builds** — use `git push` only, builds run on Dokploy server (RAM constraint)
+8. **Component names** — use filename only (`ConnectionRequestsTab`), NOT folder prefix (`RequestsConnectionRequestsTab`)
+9. **useSupabaseUser()** — returns JWT claims, use `user.sub` for ID (not `user.id`)
+10. **Teleport hydration** — wrap `<Teleport>` in `<ClientOnly>` to avoid mismatch
+11. **Login redirect** — use `window.location.href` after signIn, not `router.push()` (session needs full reload)
+12. **Server imports** — explicitly import `serverSupabaseServiceRole` from `#supabase/server`
 
 ---
 
@@ -230,13 +188,12 @@ AI bot configuration, knowledge base management.
 
 ## Deploy
 
-Project deploys via Dokploy with Docker build.
+Project deploys via Dokploy with Docker build. **Do NOT run local builds** — push to git, Dokploy builds on server.
 
 ```bash
-# Local build test
-pnpm build
+git add -A && git commit -m "message" && git push
 ```
 
 ---
 
-*Refactored from pg19v2admin: removed PG19v2 layer dependency, migrated to pnpm, added chart.js graphs.*
+*Refactored from pg19v2admin: removed PG19v2 layer dependency, migrated to pnpm, removed Pinia/roles system.*
