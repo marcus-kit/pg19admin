@@ -1,6 +1,6 @@
 <script setup lang="ts">
 definePageMeta({
-  layout: 'guest',
+  layout: false,
   middleware: 'admin'
 })
 
@@ -8,7 +8,6 @@ useHead({ title: 'Вход в админ-панель — ПЖ19' })
 
 const supabase = useSupabaseClient()
 const router = useRouter()
-const toast = useToast()
 
 const form = reactive({
   email: '',
@@ -64,7 +63,6 @@ const handleLogin = async () => {
       return
     }
 
-    toast.success('Добро пожаловать!')
     await router.push('/dashboard')
   } catch (error: any) {
     errors.general = 'Ошибка входа. Попробуйте позже.'
@@ -75,7 +73,8 @@ const handleLogin = async () => {
 </script>
 
 <template>
-  <div class="w-full max-w-md">
+  <div class="min-h-screen mesh-gradient-hero flex items-center justify-center px-4">
+    <div class="w-full max-w-md">
     <!-- Card -->
     <div class="glass-card p-8 rounded-2xl">
       <!-- Header -->
@@ -162,6 +161,7 @@ const handleLogin = async () => {
     <div class="mt-6 text-center text-xs text-[var(--text-muted)] flex items-center justify-center gap-1">
       <Icon name="heroicons:lock-closed" class="w-3 h-3" />
       <span>Защищенное соединение</span>
+    </div>
     </div>
   </div>
 </template>

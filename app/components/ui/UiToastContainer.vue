@@ -39,44 +39,46 @@ const bgColors: Record<Toast['type'], string> = {
 </script>
 
 <template>
-  <Teleport to="body">
-    <div class="fixed top-4 right-4 z-[100] flex flex-col gap-3 max-w-sm w-full pointer-events-none">
-      <TransitionGroup
-        enter-active-class="transition-all duration-300 ease-out"
-        leave-active-class="transition-all duration-200 ease-in"
-        enter-from-class="opacity-0 translate-x-4 scale-95"
-        leave-to-class="opacity-0 translate-x-4 scale-95"
-      >
-        <div
-          v-for="toast in toasts"
-          :key="toast.id"
-          class="pointer-events-auto glass-card-static rounded-xl p-4 flex items-start gap-3 border"
-          :class="bgColors[toast.type]"
+  <ClientOnly>
+    <Teleport to="body">
+      <div class="fixed top-4 right-4 z-[100] flex flex-col gap-3 max-w-sm w-full pointer-events-none">
+        <TransitionGroup
+          enter-active-class="transition-all duration-300 ease-out"
+          leave-active-class="transition-all duration-200 ease-in"
+          enter-from-class="opacity-0 translate-x-4 scale-95"
+          leave-to-class="opacity-0 translate-x-4 scale-95"
         >
-          <!-- Icon -->
-          <Icon
-            :name="icons[toast.type]"
-            class="w-5 h-5 flex-shrink-0 mt-0.5"
-            :class="colors[toast.type]"
-          />
-
-          <!-- Message -->
-          <p class="flex-1 text-sm text-[var(--text-primary)]">
-            {{ toast.message }}
-          </p>
-
-          <!-- Close button -->
-          <button
-            @click="remove(toast.id)"
-            class="flex-shrink-0 p-1 rounded-lg hover:bg-[var(--glass-bg)] transition-colors"
+          <div
+            v-for="toast in toasts"
+            :key="toast.id"
+            class="pointer-events-auto glass-card-static rounded-xl p-4 flex items-start gap-3 border"
+            :class="bgColors[toast.type]"
           >
+            <!-- Icon -->
             <Icon
-              name="heroicons:x-mark"
-              class="w-4 h-4 text-[var(--text-muted)]"
+              :name="icons[toast.type]"
+              class="w-5 h-5 flex-shrink-0 mt-0.5"
+              :class="colors[toast.type]"
             />
-          </button>
-        </div>
-      </TransitionGroup>
-    </div>
-  </Teleport>
+
+            <!-- Message -->
+            <p class="flex-1 text-sm text-[var(--text-primary)]">
+              {{ toast.message }}
+            </p>
+
+            <!-- Close button -->
+            <button
+              @click="remove(toast.id)"
+              class="flex-shrink-0 p-1 rounded-lg hover:bg-[var(--glass-bg)] transition-colors"
+            >
+              <Icon
+                name="heroicons:x-mark"
+                class="w-4 h-4 text-[var(--text-muted)]"
+              />
+            </button>
+          </div>
+        </TransitionGroup>
+      </div>
+    </Teleport>
+  </ClientOnly>
 </template>
