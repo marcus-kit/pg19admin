@@ -1,3 +1,8 @@
+<script setup lang="ts">
+// Используем статический год чтобы избежать hydration mismatch
+const currentYear = 2026
+</script>
+
 <template>
   <div class="min-h-screen mesh-gradient-hero flex flex-col">
     <!-- Header -->
@@ -16,7 +21,7 @@
 
     <!-- Footer -->
     <footer class="py-6 text-center text-gray-500 text-sm">
-      <p>&copy; {{ new Date().getFullYear() }} ПЖ19. Все права защищены.</p>
+      <p>&copy; {{ currentYear }} ПЖ19. Все права защищены.</p>
     </footer>
   </div>
 </template>
