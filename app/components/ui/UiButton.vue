@@ -16,6 +16,7 @@
  */
 
 interface Props {
+  type?: 'button' | 'submit' | 'reset'
   variant?: 'primary' | 'secondary' | 'ghost' | 'danger' | 'success'
   size?: 'sm' | 'md' | 'lg'
   disabled?: boolean
@@ -24,6 +25,7 @@ interface Props {
 }
 
 withDefaults(defineProps<Props>(), {
+  type: 'button',
   variant: 'primary',
   size: 'md',
   disabled: false,
@@ -34,6 +36,7 @@ withDefaults(defineProps<Props>(), {
 
 <template>
   <button
+    :type="type"
     class="u-btn"
     :class="[
       `u-btn--${variant}`,
