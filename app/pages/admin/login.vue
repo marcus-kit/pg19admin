@@ -7,7 +7,6 @@ definePageMeta({
 useHead({ title: 'Вход в админ-панель — ПЖ19' })
 
 const supabase = useSupabaseClient()
-const router = useRouter()
 
 const form = reactive({
   email: '',
@@ -63,7 +62,8 @@ const handleLogin = async () => {
       return
     }
 
-    await router.push('/dashboard')
+    // Полная перезагрузка страницы чтобы сессия подхватилась
+    window.location.href = '/dashboard'
   } catch (error: any) {
     errors.general = 'Ошибка входа. Попробуйте позже.'
   } finally {
