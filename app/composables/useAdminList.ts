@@ -18,6 +18,12 @@ export interface UseAdminListOptions<T, F extends Record<string, unknown> = Reco
   fetchOnMount?: boolean
   /** Transform response items */
   transform?: (items: unknown[]) => T[]
+  /**
+   * Transform filters before building query params
+   * Use for virtual filters like 'active' → don't send to API
+   * Return null/undefined to skip a param
+   */
+  transformParams?: (filters: F) => Record<string, string | null | undefined>
 }
 
 export interface UseAdminListReturn<T, F extends Record<string, unknown>> {
@@ -66,6 +72,7 @@ export function useAdminList<
     searchDebounceMs = 300,
     fetchOnMount = true,
     transform,
+    transformParams,
   } = options
 
   const toast = useToast()
@@ -81,7 +88,13 @@ export function useAdminList<
   function buildQueryParams(): URLSearchParams {
     const params = new URLSearchParams()
 
-    for (const [key, value] of Object.entries(filters.value)) {
+    // Use transformParams if provided, otherwise use filters directly
+    const paramsToSend = transformParams
+      ? transformParams(filters.value)
+      : filters.value as Record<string, unknown>
+
+    for (const [key, value] of Object.entries(paramsToSend)) {
+      // Skip null, undefined, 'all', and empty strings
       if (value !== 'all' && value !== '' && value !== null && value !== undefined) {
         params.set(key, String(value))
       }

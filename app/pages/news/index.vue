@@ -15,7 +15,8 @@ definePageMeta({
 
 useHead({ title: 'Управление новостями — Админ-панель' })
 
-// Use centralized list composable
+const { formatDate } = useFormatters()
+
 const {
   items: news,
   loading,
@@ -45,22 +46,13 @@ const deleteNews = (id: string) => deleteItem(id, 'Удалить эту нов�
 
     <!-- Filters -->
     <div class="flex flex-wrap gap-3 mb-6">
-      <UiButton
-        v-for="opt in NEWS_STATUS_OPTIONS"
-        :key="opt.value"
-        :class="{ 'bg-primary/20': filters.status === opt.value }"
-        variant="ghost"
-        @click="filters.status = opt.value"
-      >
-        {{ opt.label }}
-      </UiButton>
+      <UiFilterTabs v-model="filters.status" :options="NEWS_STATUS_OPTIONS" />
     </div>
+
+    <!-- Loading -->
+    <UiLoading v-if="loading" />
 
     <!-- News List -->
-    <div v-if="loading" class="text-center py-12">
-      <Icon name="heroicons:arrow-path" class="w-8 h-8 animate-spin text-primary mx-auto" />
-    </div>
-
     <div v-else class="space-y-4">
       <UiCard
         v-for="item in news"
@@ -121,13 +113,12 @@ const deleteNews = (id: string) => deleteItem(id, 'Удалить эту нов�
         </div>
       </UiCard>
 
-      <!-- Empty state -->
-      <div v-if="news.length === 0" class="text-center py-12">
-        <Icon name="heroicons:newspaper" class="w-16 h-16 text-[var(--text-muted)] mx-auto mb-4" />
-        <p class="text-[var(--text-muted)]">
-          {{ filters.status === 'all' ? 'Новостей пока нет' : `Нет новостей со статусом "${getStatusLabel(NEWS_STATUS, filters.status)}"` }}
-        </p>
-      </div>
+      <!-- Empty State -->
+      <UiEmptyState
+        v-if="news.length === 0"
+        :title="filters.status === 'all' ? 'Новостей пока нет' : `Нет новостей со статусом «${getStatusLabel(NEWS_STATUS, filters.status)}»`"
+        icon="heroicons:newspaper"
+      />
     </div>
   </div>
 </template>

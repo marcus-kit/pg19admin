@@ -6,6 +6,7 @@ import {
   getStatusLabel,
   getStatusBadgeClass,
 } from '~/composables/useStatusConfig'
+import { useAdminList } from '~/composables/useAdminList'
 
 definePageMeta({
   middleware: 'admin',
@@ -13,45 +14,31 @@ definePageMeta({
 
 useHead({ title: 'Чаты поддержки — Админ-панель' })
 
-const toast = useToast()
-const router = useRouter()
-
-const loading = ref(true)
-const chats = ref<Chat[]>([])
-const statusFilter = ref<string>('waiting')
-const showMine = ref(false)
-
-// Custom fetch logic due to special filter behavior
-const fetchChats = async () => {
-  loading.value = true
-  try {
-    const params = new URLSearchParams()
-    if (statusFilter.value !== 'all') {
-      params.set('status', statusFilter.value)
-    }
-    if (showMine.value) {
-      params.set('assignedToMe', 'true')
-    }
-
-    const data = await $fetch<{ chats: Chat[] }>(`/api/admin/chat?${params}`)
-    chats.value = data.chats
-  }
-  catch (error) {
-    console.error('Failed to fetch chats:', error)
-    toast.error('Не удалось загрузить чаты')
-  }
-  finally {
-    loading.value = false
-  }
+interface ChatFilters {
+  status: string
+  assignedToMe: boolean
 }
 
-onMounted(() => {
-  fetchChats()
+const {
+  items: chats,
+  loading,
+  filters,
+} = useAdminList<Chat, ChatFilters>({
+  endpoint: '/api/admin/chat',
+  responseKey: 'chats',
+  initialFilters: {
+    status: 'waiting',
+    assignedToMe: false,
+  },
+  transformParams: f => ({
+    status: f.status === 'all' ? null : f.status,
+    assignedToMe: f.assignedToMe ? 'true' : null,
+  }),
 })
 
-watch([statusFilter, showMine], () => {
-  fetchChats()
-})
+const goToChat = (id: string) => {
+  navigateTo(`/chat/${id}`)
+}
 </script>
 
 <template>
@@ -65,23 +52,12 @@ watch([statusFilter, showMine], () => {
 
     <!-- Filters -->
     <div class="flex flex-wrap gap-4 mb-6">
-      <div class="flex gap-2">
-        <UiButton
-          v-for="opt in CHAT_STATUS_OPTIONS"
-          :key="opt.value"
-          :class="{ 'bg-primary/20': statusFilter === opt.value }"
-          variant="ghost"
-          size="sm"
-          @click="statusFilter = opt.value"
-        >
-          {{ opt.label }}
-        </UiButton>
-      </div>
+      <UiFilterTabs v-model="filters.status" :options="CHAT_STATUS_OPTIONS" />
 
       <div class="flex items-center gap-2 ml-auto">
         <input
           id="showMine"
-          v-model="showMine"
+          v-model="filters.assignedToMe"
           type="checkbox"
           class="w-4 h-4 rounded border-[var(--glass-border)] bg-[var(--glass-bg)] text-primary focus:ring-primary"
         />
@@ -92,9 +68,7 @@ watch([statusFilter, showMine], () => {
     </div>
 
     <!-- Loading -->
-    <div v-if="loading" class="flex justify-center py-12">
-      <Icon name="heroicons:arrow-path" class="w-8 h-8 animate-spin text-primary" />
-    </div>
+    <UiLoading v-if="loading" />
 
     <!-- Chat List -->
     <div v-else class="space-y-3">
@@ -102,7 +76,7 @@ watch([statusFilter, showMine], () => {
         v-for="chat in chats"
         :key="chat.id"
         class="glass-card p-4 rounded-lg cursor-pointer hover:border-primary/50 transition-all group"
-        @click="router.push(`/chat/${chat.id}`)"
+        @click="goToChat(chat.id)"
       >
         <div class="flex items-start justify-between gap-4">
           <div class="flex-1 min-w-0">
@@ -156,12 +130,11 @@ watch([statusFilter, showMine], () => {
       </div>
 
       <!-- Empty State -->
-      <div v-if="chats.length === 0" class="text-center py-12">
-        <Icon name="heroicons:chat-bubble-left-right" class="w-16 h-16 text-[var(--text-muted)] mx-auto mb-4" />
-        <p class="text-[var(--text-muted)]">
-          {{ statusFilter === 'all' ? 'Чатов пока нет' : 'Нет чатов с таким статусом' }}
-        </p>
-      </div>
+      <UiEmptyState
+        v-if="chats.length === 0"
+        :title="filters.status === 'all' ? 'Чатов пока нет' : 'Нет чатов с таким статусом'"
+        icon="heroicons:chat-bubble-left-right"
+      />
     </div>
   </div>
 </template>

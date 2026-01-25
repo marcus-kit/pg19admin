@@ -8,6 +8,7 @@ import {
   getStatusLabel,
   getStatusBadgeClass,
 } from '~/composables/useStatusConfig'
+import { useAdminList } from '~/composables/useAdminList'
 
 definePageMeta({
   middleware: 'admin',
@@ -15,59 +16,39 @@ definePageMeta({
 
 useHead({ title: 'Тикеты — Админ-панель' })
 
-const toast = useToast()
 const { formatDateTime } = useFormatters()
+
+interface TicketFilters {
+  status: string
+  priority: string
+  assignedToMe: boolean
+}
+
+const {
+  items: tickets,
+  loading,
+  total,
+  filters,
+} = useAdminList<Ticket, TicketFilters>({
+  endpoint: '/api/admin/tickets',
+  responseKey: 'tickets',
+  initialFilters: {
+    status: 'active',
+    priority: 'all',
+    assignedToMe: false,
+  },
+  // Transform virtual 'active' filter to API format
+  transformParams: f => ({
+    // 'active' is default — API shows new, open, pending when no status param
+    status: f.status === 'active' ? null : f.status,
+    priority: f.priority,
+    assignedToMe: f.assignedToMe ? 'true' : null,
+  }),
+})
 
 const goToTicket = (id: string) => {
   navigateTo(`/tickets/${id}`)
 }
-
-const loading = ref(true)
-const tickets = ref<Ticket[]>([])
-const total = ref(0)
-const statusFilter = ref<string>('active')
-const priorityFilter = ref<string>('all')
-const showMine = ref(false)
-
-// Custom fetch logic due to special 'active' status handling
-const fetchTickets = async () => {
-  loading.value = true
-  try {
-    const params = new URLSearchParams()
-
-    // 'active' is the default - don't send status param (API shows new, open, pending)
-    if (statusFilter.value !== 'active') {
-      params.set('status', statusFilter.value)
-    }
-
-    if (priorityFilter.value !== 'all') {
-      params.set('priority', priorityFilter.value)
-    }
-
-    if (showMine.value) {
-      params.set('assignedToMe', 'true')
-    }
-
-    const data = await $fetch<{ tickets: Ticket[], total: number }>(`/api/admin/tickets?${params}`)
-    tickets.value = data.tickets
-    total.value = data.total
-  }
-  catch (error) {
-    console.error('Failed to fetch tickets:', error)
-    toast.error('Не удалось загрузить тикеты')
-  }
-  finally {
-    loading.value = false
-  }
-}
-
-onMounted(() => {
-  fetchTickets()
-})
-
-watch([statusFilter, priorityFilter, showMine], () => {
-  fetchTickets()
-})
 </script>
 
 <template>
@@ -85,23 +66,12 @@ watch([statusFilter, priorityFilter, showMine], () => {
     <!-- Filters -->
     <div class="flex flex-wrap gap-4 mb-6">
       <!-- Status Filter -->
-      <div class="flex gap-1 flex-wrap">
-        <UiButton
-          v-for="opt in TICKET_STATUS_OPTIONS"
-          :key="opt.value"
-          :class="{ 'bg-primary/20': statusFilter === opt.value }"
-          variant="ghost"
-          size="sm"
-          @click="statusFilter = opt.value"
-        >
-          {{ opt.label }}
-        </UiButton>
-      </div>
+      <UiFilterTabs v-model="filters.status" :options="TICKET_STATUS_OPTIONS" />
 
       <div class="flex items-center gap-4 ml-auto">
         <!-- Priority Filter -->
         <UiSelect
-          v-model="priorityFilter"
+          v-model="filters.priority"
           :options="TICKET_PRIORITY_OPTIONS"
           :placeholder="undefined"
           size="sm"
@@ -110,7 +80,7 @@ watch([statusFilter, priorityFilter, showMine], () => {
         <!-- My Tickets -->
         <label class="flex items-center gap-2 cursor-pointer">
           <input
-            v-model="showMine"
+            v-model="filters.assignedToMe"
             type="checkbox"
             class="w-4 h-4 rounded border-[var(--glass-border)] bg-[var(--glass-bg)] text-primary focus:ring-primary"
           />
@@ -120,9 +90,7 @@ watch([statusFilter, priorityFilter, showMine], () => {
     </div>
 
     <!-- Loading -->
-    <div v-if="loading" class="flex justify-center py-12">
-      <Icon name="heroicons:arrow-path" class="w-8 h-8 animate-spin text-primary" />
-    </div>
+    <UiLoading v-if="loading" />
 
     <!-- Tickets Table -->
     <div v-else class="overflow-x-auto">
@@ -177,10 +145,11 @@ watch([statusFilter, priorityFilter, showMine], () => {
       </table>
 
       <!-- Empty State -->
-      <div v-if="tickets.length === 0" class="text-center py-12">
-        <Icon name="heroicons:ticket" class="w-16 h-16 text-[var(--text-muted)] mx-auto mb-4" />
-        <p class="text-[var(--text-muted)]">Тикетов не найдено</p>
-      </div>
+      <UiEmptyState
+        v-if="tickets.length === 0"
+        icon="heroicons:ticket"
+        title="Тикетов не найдено"
+      />
     </div>
   </div>
 </template>
