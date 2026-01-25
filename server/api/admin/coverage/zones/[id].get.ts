@@ -1,7 +1,6 @@
 import { serverSupabaseServiceRole } from '#supabase/server'
 
 export default defineEventHandler(async (event) => {
-
   const id = getRouterParam(event, 'id')
 
   if (!id) {
@@ -35,7 +34,7 @@ export default defineEventHandler(async (event) => {
       isActive: data.is_active,
       sortOrder: data.sort_order,
       createdAt: data.created_at,
-      updatedAt: data.updated_at
-    }
+      updatedAt: data.updated_at,
+    },
   }
 })

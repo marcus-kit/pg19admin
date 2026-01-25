@@ -1,4 +1,4 @@
-import { useSupabaseAdmin } from '~~/server/utils/supabase'
+import { getAdminFromEvent, useSupabaseAdmin } from '~~/server/utils/supabase'
 
 interface PriorityBody {
   priority: 'low' | 'normal' | 'high' | 'urgent'
@@ -7,21 +7,21 @@ interface PriorityBody {
 const VALID_PRIORITIES = ['low', 'normal', 'high', 'urgent']
 
 export default defineEventHandler(async (event) => {
-
+  const admin = await getAdminFromEvent(event)
   const ticketId = getRouterParam(event, 'id')
   const body = await readBody<PriorityBody>(event)
 
   if (!ticketId) {
     throw createError({
       statusCode: 400,
-      message: 'ID тикета обязателен'
+      message: 'ID тикета обязателен',
     })
   }
 
   if (!body.priority || !VALID_PRIORITIES.includes(body.priority)) {
     throw createError({
       statusCode: 400,
-      message: 'Некорректный приоритет'
+      message: 'Некорректный приоритет',
     })
   }
 
@@ -37,7 +37,7 @@ export default defineEventHandler(async (event) => {
   if (ticketError || !ticket) {
     throw createError({
       statusCode: 404,
-      message: 'Тикет не найден'
+      message: 'Тикет не найден',
     })
   }
 
@@ -55,7 +55,7 @@ export default defineEventHandler(async (event) => {
     console.error('Failed to update ticket priority:', updateError)
     throw createError({
       statusCode: 500,
-      message: 'Ошибка при обновлении приоритета'
+      message: 'Ошибка при обновлении приоритета',
     })
   }
 
@@ -68,12 +68,12 @@ export default defineEventHandler(async (event) => {
       admin_name: admin.fullName,
       action: 'priority_change',
       old_value: ticket.priority,
-      new_value: body.priority
+      new_value: body.priority,
     })
 
   return {
     success: true,
     oldPriority: ticket.priority,
-    newPriority: body.priority
+    newPriority: body.priority,
   }
 })

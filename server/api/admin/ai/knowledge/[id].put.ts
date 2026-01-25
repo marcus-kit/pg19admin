@@ -4,7 +4,7 @@
  */
 
 import { useSupabaseAdmin } from '~~/server/utils/supabase'
-// generateEmbedding auto-imported from base layer
+import { generateEmbedding } from '~~/server/utils/openai'
 
 interface UpdateKnowledgeRequest {
   category?: string
@@ -23,7 +23,7 @@ export default defineEventHandler(async (event) => {
   if (!id) {
     throw createError({
       statusCode: 400,
-      message: 'ID обязателен'
+      message: 'ID обязателен',
     })
   }
 
@@ -41,7 +41,7 @@ export default defineEventHandler(async (event) => {
   if (existingError || !existing) {
     throw createError({
       statusCode: 404,
-      message: 'Запись не найдена'
+      message: 'Запись не найдена',
     })
   }
 
@@ -56,7 +56,7 @@ export default defineEventHandler(async (event) => {
     if (!body.question.trim()) {
       throw createError({
         statusCode: 400,
-        message: 'Вопрос не может быть пустым'
+        message: 'Вопрос не может быть пустым',
       })
     }
     updateData.question = body.question.trim()
@@ -66,14 +66,14 @@ export default defineEventHandler(async (event) => {
     if (!body.answer.trim()) {
       throw createError({
         statusCode: 400,
-        message: 'Ответ не может быть пустым'
+        message: 'Ответ не может быть пустым',
       })
     }
     updateData.answer = body.answer.trim()
   }
 
   if (body.keywords !== undefined) {
-    updateData.keywords = body.keywords.filter((k) => k.trim())
+    updateData.keywords = body.keywords.filter(k => k.trim())
   }
 
   if (body.priority !== undefined) {
@@ -90,7 +90,8 @@ export default defineEventHandler(async (event) => {
     try {
       const questionText = (body.question?.trim() || existing.question)
       updateData.embedding = await generateEmbedding(questionText)
-    } catch (embeddingError) {
+    }
+    catch (embeddingError) {
       console.error('Failed to regenerate embedding:', embeddingError)
       // Не блокируем обновление — embedding можно сгенерировать позже
     }
@@ -99,7 +100,7 @@ export default defineEventHandler(async (event) => {
   if (Object.keys(updateData).length === 0) {
     throw createError({
       statusCode: 400,
-      message: 'Нечего обновлять'
+      message: 'Нечего обновлять',
     })
   }
 
@@ -115,7 +116,7 @@ export default defineEventHandler(async (event) => {
     console.error('Failed to update knowledge item:', error)
     throw createError({
       statusCode: 500,
-      message: 'Ошибка при обновлении записи'
+      message: 'Ошибка при обновлении записи',
     })
   }
 
@@ -130,7 +131,7 @@ export default defineEventHandler(async (event) => {
       isActive: item.is_active,
       hasEmbedding: item.embedding !== null,
       createdAt: item.created_at,
-      updatedAt: item.updated_at
-    }
+      updatedAt: item.updated_at,
+    },
   }
 })

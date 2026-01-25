@@ -5,7 +5,7 @@ import { ACTIVE_STATUS, getStatusBadgeClass, getStatusLabel } from '~/composable
 const toast = useToast()
 
 definePageMeta({
-  middleware: 'admin'
+  middleware: 'admin',
 })
 
 useHead({ title: 'Каталог услуг — Админ-панель' })
@@ -25,7 +25,8 @@ const fetchCategories = async () => {
   try {
     const data = await $fetch<{ categories: ServiceCategory[] }>('/api/admin/catalog/categories')
     categories.value = data.categories
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to fetch categories:', error)
     toast.error('Не удалось загрузить категории')
   }
@@ -40,10 +41,12 @@ const fetchServices = async () => {
     }
     const data = await $fetch<{ services: Service[] }>(`/api/admin/catalog/services?${query}`)
     services.value = data.services
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to fetch services:', error)
     toast.error('Не удалось загрузить услуги')
-  } finally {
+  }
+  finally {
     loading.value = false
   }
 }
@@ -55,7 +58,8 @@ const deleteCategory = async (id: string) => {
     await $fetch(`/api/admin/catalog/categories/${id}`, { method: 'DELETE' })
     toast.success('Категория успешно удалена')
     await fetchCategories()
-  } catch (error: any) {
+  }
+  catch (error: any) {
     console.error('Failed to delete category:', error)
     toast.error('Не удалось удалить категорию')
   }
@@ -68,7 +72,8 @@ const deleteService = async (id: string) => {
     await $fetch(`/api/admin/catalog/services/${id}`, { method: 'DELETE' })
     toast.success('Услуга успешно удалена')
     await fetchServices()
-  } catch (error: any) {
+  }
+  catch (error: any) {
     console.error('Failed to delete service:', error)
     toast.error('Не удалось удалить услугу')
   }
@@ -106,19 +111,19 @@ watch(selectedCategoryId, () => {
     <!-- Tabs -->
     <div class="flex gap-2 mb-6 border-b border-[var(--glass-border)]">
       <button
-        class="px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px"
         :class="activeTab === 'services'
           ? 'border-primary text-primary'
           : 'border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]'"
+        class="px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px"
         @click="activeTab = 'services'"
       >
         Услуги ({{ services.length }})
       </button>
       <button
-        class="px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px"
         :class="activeTab === 'categories'
           ? 'border-primary text-primary'
           : 'border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]'"
+        class="px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px"
         @click="activeTab = 'categories'"
       >
         Категории ({{ categories.length }})
@@ -130,9 +135,9 @@ watch(selectedCategoryId, () => {
       <!-- Category Filter -->
       <div class="flex flex-wrap gap-2 mb-6">
         <UiButton
+          :class="{ 'bg-primary/20': selectedCategoryId === null }"
           variant="ghost"
           size="sm"
-          :class="{ 'bg-primary/20': selectedCategoryId === null }"
           @click="selectedCategoryId = null"
         >
           Все
@@ -140,9 +145,9 @@ watch(selectedCategoryId, () => {
         <UiButton
           v-for="cat in categories"
           :key="cat.id"
+          :class="{ 'bg-primary/20': selectedCategoryId === cat.id }"
           variant="ghost"
           size="sm"
-          :class="{ 'bg-primary/20': selectedCategoryId === cat.id }"
           @click="selectedCategoryId = cat.id"
         >
           {{ cat.name }}

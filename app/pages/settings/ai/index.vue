@@ -1,6 +1,6 @@
 <script setup lang="ts">
 definePageMeta({
-  middleware: 'admin'
+  middleware: 'admin',
 })
 
 useHead({ title: 'Настройки AI-бота — Админ-панель' })
@@ -24,11 +24,11 @@ interface AISettings {
 
 interface AIStats {
   period: string
-  messages: { total: number; avgPerDay: number }
-  tokens: { prompt: number; completion: number; total: number }
-  latency: { average: number; unit: string }
-  cost: { estimated: number; currency: string }
-  escalations: { total: number; rate: number; reasons: Record<string, number> }
+  messages: { total: number, avgPerDay: number }
+  tokens: { prompt: number, completion: number, total: number }
+  latency: { average: number, unit: string }
+  cost: { estimated: number, currency: string }
+  escalations: { total: number, rate: number, reasons: Record<string, number> }
   chats: { withBot: number }
   knowledge: { activeItems: number }
   models: Record<string, number>
@@ -48,14 +48,14 @@ const editedOperatorName = ref('')
 const models = [
   { value: 'gpt-5-nano', label: 'GPT-5 Nano (быстрый, дешёвый)' },
   { value: 'gpt-5-mini', label: 'GPT-5 Mini (баланс цена/качество)' },
-  { value: 'gpt-5', label: 'GPT-5 (максимальное качество)' }
+  { value: 'gpt-5', label: 'GPT-5 (максимальное качество)' },
 ]
 
 const statsPeriodOptions = [
   { value: 'today', label: 'Сегодня' },
   { value: 'week', label: 'Неделя' },
   { value: 'month', label: 'Месяц' },
-  { value: 'all', label: 'Всё время' }
+  { value: 'all', label: 'Всё время' },
 ]
 
 async function fetchSettings() {
@@ -66,10 +66,12 @@ async function fetchSettings() {
     editedPrompt.value = data.settings.systemPrompt
     editedKeywords.value = data.settings.escalationKeywords.join('\n')
     editedOperatorName.value = data.settings.operatorName || ''
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to fetch AI settings:', error)
     toast.error('Не удалось загрузить настройки AI')
-  } finally {
+  }
+  finally {
     loading.value = false
   }
 }
@@ -78,7 +80,8 @@ async function fetchStats() {
   try {
     const data = await $fetch<{ stats: AIStats }>(`/api/admin/ai/stats?period=${statsPeriod.value}`)
     stats.value = data.stats
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to fetch AI stats:', error)
     toast.error('Не удалось загрузить статистику AI')
   }
@@ -89,16 +92,18 @@ async function updateSettings(updates: Partial<AISettings>) {
   try {
     const data = await $fetch<{ settings: AISettings }>('/api/admin/ai/settings', {
       method: 'PUT',
-      body: updates
+      body: updates,
     })
     settings.value = data.settings
     editedPrompt.value = data.settings.systemPrompt
     editedKeywords.value = data.settings.escalationKeywords.join('\n')
     toast.success('Настройки сохранены')
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to update settings:', error)
     toast.error('Не удалось сохранить настройки')
-  } finally {
+  }
+  finally {
     saving.value = false
   }
 }
@@ -119,15 +124,14 @@ async function saveOperatorName() {
 async function saveKeywords() {
   const keywords = editedKeywords.value
     .split('\n')
-    .map((k) => k.trim())
-    .filter((k) => k)
+    .map(k => k.trim())
+    .filter(k => k)
   await updateSettings({ escalationKeywords: keywords })
 }
 
 async function saveModel(model: string) {
   await updateSettings({ model })
 }
-
 
 async function saveMaxTokens(tokens: number) {
   await updateSettings({ maxTokens: tokens })
@@ -198,8 +202,8 @@ watch(statsPeriod, () => {
             </div>
             <UiToggle
               :model-value="settings.isEnabled"
-              @update:model-value="toggleEnabled"
               :disabled="saving"
+              @update:model-value="toggleEnabled"
             />
           </div>
           <div class="pt-4 border-t border-white/10">
@@ -213,9 +217,9 @@ watch(statsPeriod, () => {
                 class="flex-1"
               />
               <UiButton
-                @click="saveOperatorName"
                 :disabled="saving || editedOperatorName === settings.operatorName"
                 size="sm"
+                @click="saveOperatorName"
               >
                 Сохранить
               </UiButton>
@@ -237,8 +241,8 @@ watch(statsPeriod, () => {
           ></textarea>
           <div class="flex justify-end mt-3">
             <UiButton
-              @click="savePrompt"
               :disabled="saving || editedPrompt === settings.systemPrompt"
+              @click="savePrompt"
             >
               <Icon v-if="saving" name="heroicons:arrow-path" class="w-4 h-4 animate-spin" />
               Сохранить промпт
@@ -254,10 +258,10 @@ watch(statsPeriod, () => {
             <!-- Model -->
             <UiSelect
               :model-value="settings.model"
-              @update:model-value="saveModel($event as string)"
               :options="models"
-              label="Модель OpenAI"
               :disabled="saving"
+              label="Модель OpenAI"
+              @update:model-value="saveModel($event as string)"
             />
 
             <!-- Max Tokens -->
@@ -266,12 +270,12 @@ watch(statsPeriod, () => {
                 Макс. токенов (100–2000)
               </label>
               <UiInput
-                type="number"
                 :model-value="settings.maxTokens"
-                @change="saveMaxTokens(Number(($event.target as HTMLInputElement).value))"
                 :min="100"
                 :max="2000"
                 :step="100"
+                type="number"
+                @change="saveMaxTokens(Number(($event.target as HTMLInputElement).value))"
               />
             </div>
 
@@ -281,10 +285,10 @@ watch(statsPeriod, () => {
                 Макс. сообщений до эскалации
               </label>
               <UiInput
-                type="number"
                 :model-value="settings.maxBotMessages"
-                @change="saveMaxBotMessages(Number(($event.target as HTMLInputElement).value))"
                 :min="1"
+                type="number"
+                @change="saveMaxBotMessages(Number(($event.target as HTMLInputElement).value))"
               />
             </div>
           </div>
@@ -304,8 +308,8 @@ watch(statsPeriod, () => {
           ></textarea>
           <div class="flex justify-end mt-3">
             <UiButton
-              @click="saveKeywords"
               :disabled="saving || editedKeywords === settings.escalationKeywords.join('\n')"
+              @click="saveKeywords"
             >
               Сохранить
             </UiButton>
@@ -323,8 +327,8 @@ watch(statsPeriod, () => {
             </div>
             <UiToggle
               :model-value="settings.ragEnabled"
-              @update:model-value="toggleRag"
               :disabled="saving"
+              @update:model-value="toggleRag"
             />
           </div>
 
@@ -334,12 +338,12 @@ watch(statsPeriod, () => {
                 Порог релевантности (0.5–0.95)
               </label>
               <UiInput
-                type="number"
                 :model-value="settings.ragMatchThreshold"
-                @change="saveRagThreshold(Number(($event.target as HTMLInputElement).value))"
                 :min="0.5"
                 :max="0.95"
                 :step="0.05"
+                type="number"
+                @change="saveRagThreshold(Number(($event.target as HTMLInputElement).value))"
               />
             </div>
 
@@ -348,12 +352,12 @@ watch(statsPeriod, () => {
                 Кол-во результатов (1–10)
               </label>
               <UiInput
-                type="number"
                 :model-value="settings.ragMatchCount"
-                @change="saveRagCount(Number(($event.target as HTMLInputElement).value))"
                 :min="1"
                 :max="10"
                 :step="1"
+                type="number"
+                @change="saveRagCount(Number(($event.target as HTMLInputElement).value))"
               />
             </div>
           </div>
@@ -369,8 +373,8 @@ watch(statsPeriod, () => {
               <UiSelect
                 v-model="statsPeriod"
                 :options="statsPeriodOptions"
-                size="sm"
                 :placeholder="''"
+                size="sm"
               />
             </div>
           </div>
@@ -453,4 +457,3 @@ watch(statsPeriod, () => {
     </div>
   </div>
 </template>
-

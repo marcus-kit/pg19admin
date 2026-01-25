@@ -1,12 +1,11 @@
 import { useSupabaseAdmin } from '~~/server/utils/supabase'
 
 export default defineEventHandler(async (event) => {
-
   const id = getRouterParam(event, 'id')
   if (!id) {
     throw createError({
       statusCode: 400,
-      message: 'ID аккаунта не указан'
+      message: 'ID аккаунта не указан',
     })
   }
 
@@ -23,13 +22,13 @@ export default defineEventHandler(async (event) => {
   if (fetchError || !existingAccount) {
     throw createError({
       statusCode: 404,
-      message: 'Аккаунт не найден'
+      message: 'Аккаунт не найден',
     })
   }
 
   // Собираем поля для обновления
   const updateData: Record<string, any> = {
-    date_updated: new Date().toISOString()
+    date_updated: new Date().toISOString(),
   }
 
   // Данные договора
@@ -38,7 +37,7 @@ export default defineEventHandler(async (event) => {
     if (!['draft', 'active', 'terminated', 'stopped'].includes(body.contractStatus)) {
       throw createError({
         statusCode: 400,
-        message: 'Некорректный статус договора'
+        message: 'Некорректный статус договора',
       })
     }
     updateData.contract_status = body.contractStatus
@@ -70,7 +69,7 @@ export default defineEventHandler(async (event) => {
     console.error('Failed to update account:', updateError)
     throw createError({
       statusCode: 500,
-      message: 'Ошибка при обновлении аккаунта'
+      message: 'Ошибка при обновлении аккаунта',
     })
   }
 
@@ -83,7 +82,7 @@ export default defineEventHandler(async (event) => {
       status: updatedAccount.status,
       balance: updatedAccount.balance,
       addressFull: updatedAccount.address_full,
-      updatedAt: updatedAccount.date_updated
-    }
+      updatedAt: updatedAccount.date_updated,
+    },
   }
 })

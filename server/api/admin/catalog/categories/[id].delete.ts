@@ -1,13 +1,12 @@
 import { useSupabaseAdmin } from '~~/server/utils/supabase'
 
 export default defineEventHandler(async (event) => {
-
   const id = getRouterParam(event, 'id')
 
   if (!id) {
     throw createError({
       statusCode: 400,
-      message: 'ID категории обязателен'
+      message: 'ID категории обязателен',
     })
   }
 
@@ -22,7 +21,7 @@ export default defineEventHandler(async (event) => {
   if (count && count > 0) {
     throw createError({
       statusCode: 400,
-      message: `Нельзя удалить категорию: в ней ${count} услуг(и)`
+      message: `Нельзя удалить категорию: в ней ${count} услуг(и)`,
     })
   }
 
@@ -35,7 +34,7 @@ export default defineEventHandler(async (event) => {
     console.error('Failed to delete category:', error)
     throw createError({
       statusCode: 500,
-      message: 'Ошибка при удалении категории'
+      message: 'Ошибка при удалении категории',
     })
   }
 

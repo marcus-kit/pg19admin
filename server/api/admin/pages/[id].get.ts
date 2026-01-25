@@ -8,7 +8,7 @@ export default defineEventHandler(async (event) => {
   if (!id) {
     throw createError({
       statusCode: 400,
-      message: 'ID страницы обязателен'
+      message: 'ID страницы обязателен',
     })
   }
 
@@ -23,7 +23,7 @@ export default defineEventHandler(async (event) => {
   if (error || !page) {
     throw createError({
       statusCode: 404,
-      message: 'Страница не найдена'
+      message: 'Страница не найдена',
     })
   }
 
@@ -40,7 +40,7 @@ export default defineEventHandler(async (event) => {
       authorId: page.author_id,
       publishedAt: page.published_at,
       createdAt: page.created_at,
-      updatedAt: page.updated_at
-    }
+      updatedAt: page.updated_at,
+    },
   }
 })

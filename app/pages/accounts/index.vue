@@ -6,12 +6,12 @@ import {
   CONTRACT_STATUS,
   CONTRACT_STATUS_OPTIONS,
   getStatusLabel,
-  getStatusBadgeClass
+  getStatusBadgeClass,
 } from '~/composables/useStatusConfig'
 import { useAdminList } from '~/composables/useAdminList'
 
 definePageMeta({
-  middleware: 'admin'
+  middleware: 'admin',
 })
 
 useHead({ title: 'Аккаунты — Админ-панель' })
@@ -25,11 +25,11 @@ const {
   total,
   filters,
   searchQuery,
-  onSearchInput
-} = useAdminList<Account, { status: string; contractStatus: string }>({
+  onSearchInput,
+} = useAdminList<Account, { status: string, contractStatus: string }>({
   endpoint: '/api/admin/accounts',
   responseKey: 'accounts',
-  initialFilters: { status: 'all', contractStatus: 'all' }
+  initialFilters: { status: 'all', contractStatus: 'all' },
 })
 </script>
 
@@ -44,7 +44,7 @@ const {
         </span>
       </h1>
       <UiButton
-        
+
         @click="router.push('/accounts/create')"
       >
         <Icon name="heroicons:plus" class="w-4 h-4" />
@@ -59,9 +59,9 @@ const {
         <UiButton
           v-for="opt in ACCOUNT_STATUS_OPTIONS"
           :key="opt.value"
+          :class="{ 'bg-primary/20': filters.status === opt.value }"
           variant="ghost"
           size="sm"
-          :class="{ 'bg-primary/20': filters.status === opt.value }"
           @click="filters.status = opt.value"
         >
           {{ opt.label }}
@@ -73,8 +73,8 @@ const {
         <UiSelect
           v-model="filters.contractStatus"
           :options="CONTRACT_STATUS_OPTIONS"
-          size="sm"
           :placeholder="undefined"
+          size="sm"
         />
 
         <!-- Search -->

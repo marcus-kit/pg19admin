@@ -1,6 +1,6 @@
 <script setup lang="ts">
 definePageMeta({
-  middleware: 'admin'
+  middleware: 'admin',
 })
 
 useHead({ title: 'База знаний AI — Админ-панель' })
@@ -36,7 +36,7 @@ const formData = ref({
   answer: '',
   keywords: '',
   priority: 0,
-  isActive: true
+  isActive: true,
 })
 
 const categories = [
@@ -45,7 +45,7 @@ const categories = [
   { value: 'tv', label: 'Телевидение' },
   { value: 'billing', label: 'Оплата' },
   { value: 'technical', label: 'Техподдержка' },
-  { value: 'general', label: 'Общие вопросы' }
+  { value: 'general', label: 'Общие вопросы' },
 ]
 
 async function fetchItems() {
@@ -64,10 +64,12 @@ async function fetchItems() {
 
     const data = await $fetch<{ items: KnowledgeItem[] }>(`/api/admin/ai/knowledge?${params}`)
     items.value = data.items
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to fetch knowledge base:', error)
     toast.error('Не удалось загрузить базу знаний')
-  } finally {
+  }
+  finally {
     loading.value = false
   }
 }
@@ -80,7 +82,7 @@ function openCreateModal() {
     answer: '',
     keywords: '',
     priority: 0,
-    isActive: true
+    isActive: true,
   }
   showModal.value = true
 }
@@ -93,7 +95,7 @@ function openEditModal(item: KnowledgeItem) {
     answer: item.answer,
     keywords: item.keywords.join(', '),
     priority: item.priority,
-    isActive: item.isActive
+    isActive: item.isActive,
   }
   showModal.value = true
 }
@@ -112,31 +114,34 @@ async function saveItem() {
       answer: formData.value.answer.trim(),
       keywords: formData.value.keywords
         .split(',')
-        .map((k) => k.trim())
-        .filter((k) => k),
+        .map(k => k.trim())
+        .filter(k => k),
       priority: formData.value.priority,
-      isActive: formData.value.isActive
+      isActive: formData.value.isActive,
     }
 
     if (editingItem.value) {
       await $fetch(`/api/admin/ai/knowledge/${editingItem.value.id}`, {
         method: 'PUT',
-        body
+        body,
       })
-    } else {
+    }
+    else {
       await $fetch('/api/admin/ai/knowledge', {
         method: 'POST',
-        body
+        body,
       })
     }
 
     showModal.value = false
     await fetchItems()
     toast.success(editingItem.value ? 'Запись обновлена' : 'Запись создана')
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to save item:', error)
     toast.error('Не удалось сохранить запись')
-  } finally {
+  }
+  finally {
     saving.value = false
   }
 }
@@ -146,11 +151,12 @@ async function deleteItem(item: KnowledgeItem) {
 
   try {
     await $fetch(`/api/admin/ai/knowledge/${item.id}`, {
-      method: 'DELETE'
+      method: 'DELETE',
     })
     await fetchItems()
     toast.success('Запись удалена')
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to delete item:', error)
     toast.error('Не удалось удалить запись')
   }
@@ -160,18 +166,19 @@ async function toggleActive(item: KnowledgeItem) {
   try {
     await $fetch(`/api/admin/ai/knowledge/${item.id}`, {
       method: 'PUT',
-      body: { isActive: !item.isActive }
+      body: { isActive: !item.isActive },
     })
     await fetchItems()
     toast.success('Статус записи изменён')
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to toggle item:', error)
     toast.error('Не удалось изменить статус записи')
   }
 }
 
 const getCategoryLabel = (category: string | null) => {
-  const found = categories.find((c) => c.value === category)
+  const found = categories.find(c => c.value === category)
   return found?.label || category || 'Без категории'
 }
 
@@ -181,7 +188,7 @@ const getCategoryColor = (category: string | null) => {
     tv: 'bg-purple-500/20 text-purple-400',
     billing: 'bg-green-500/20 text-green-400',
     technical: 'bg-orange-500/20 text-orange-400',
-    general: 'bg-gray-500/20 text-gray-400'
+    general: 'bg-gray-500/20 text-gray-400',
   }
   return colors[category || ''] || 'bg-gray-500/20 text-gray-400'
 }
@@ -273,8 +280,8 @@ watch([categoryFilter, statusFilter], () => {
       <UiCard
         v-for="item in items"
         :key="item.id"
-        class="hover:shadow-lg transition-shadow"
         :class="{ 'opacity-50': !item.isActive }"
+        class="hover:shadow-lg transition-shadow"
       >
         <div class="flex items-start justify-between gap-4">
           <div class="flex-1 min-w-0">
@@ -317,10 +324,10 @@ watch([categoryFilter, statusFilter], () => {
 
           <div class="flex gap-2 flex-shrink-0">
             <UiButton
+              :title="item.isActive ? 'Деактивировать' : 'Активировать'"
               variant="ghost"
               size="sm"
               @click="toggleActive(item)"
-              :title="item.isActive ? 'Деактивировать' : 'Активировать'"
             >
               <Icon
                 :name="item.isActive ? 'heroicons:eye' : 'heroicons:eye-slash'"
@@ -330,16 +337,16 @@ watch([categoryFilter, statusFilter], () => {
             <UiButton
               variant="ghost"
               size="sm"
-              @click="openEditModal(item)"
               title="Редактировать"
+              @click="openEditModal(item)"
             >
               <Icon name="heroicons:pencil" class="w-4 h-4" />
             </UiButton>
             <UiButton
               variant="ghost"
               size="sm"
-              @click="deleteItem(item)"
               title="Удалить"
+              @click="deleteItem(item)"
             >
               <Icon name="heroicons:trash" class="w-4 h-4 text-red-400" />
             </UiButton>
@@ -372,8 +379,8 @@ watch([categoryFilter, statusFilter], () => {
               {{ editingItem ? 'Редактировать запись' : 'Новая запись' }}
             </h2>
             <button
-              @click="showModal = false"
               class="p-2 rounded-lg hover:bg-white/10 transition-colors"
+              @click="showModal = false"
             >
               <Icon name="heroicons:x-mark" class="w-5 h-5 text-[var(--text-muted)]" />
             </button>
@@ -463,7 +470,7 @@ watch([categoryFilter, statusFilter], () => {
             <UiButton variant="ghost" @click="showModal = false">
               Отмена
             </UiButton>
-            <UiButton @click="saveItem" :disabled="saving">
+            <UiButton :disabled="saving" @click="saveItem">
               <Icon v-if="saving" name="heroicons:arrow-path" class="w-4 h-4 animate-spin" />
               {{ editingItem ? 'Сохранить' : 'Создать' }}
             </UiButton>

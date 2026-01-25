@@ -57,7 +57,7 @@ export interface UseAdminListReturn<T, F extends Record<string, unknown>> {
  */
 export function useAdminList<
   T,
-  F extends Record<string, unknown> = { status: string }
+  F extends Record<string, unknown> = { status: string },
 >(options: UseAdminListOptions<T, F>): UseAdminListReturn<T, F> {
   const {
     endpoint,
@@ -65,7 +65,7 @@ export function useAdminList<
     initialFilters = { status: 'all' } as F,
     searchDebounceMs = 300,
     fetchOnMount = true,
-    transform
+    transform,
   } = options
 
   const toast = useToast()
@@ -108,15 +108,18 @@ export function useAdminList<
 
       if ('total' in response && typeof response.total === 'number') {
         total.value = response.total
-      } else {
+      }
+      else {
         total.value = items.value.length
       }
-    } catch (error) {
+    }
+    catch (error) {
       console.error(`Failed to fetch ${responseKey}:`, error)
       toast.error('Не удалось загрузить данные')
       items.value = []
       total.value = 0
-    } finally {
+    }
+    finally {
       loading.value = false
     }
   }
@@ -142,7 +145,7 @@ export function useAdminList<
 
   async function deleteItem(
     id: string | number,
-    confirmMessage = 'Удалить этот элемент?'
+    confirmMessage = 'Удалить этот элемент?',
   ): Promise<boolean> {
     if (!confirm(confirmMessage)) return false
 
@@ -150,7 +153,8 @@ export function useAdminList<
       await $fetch(`${endpoint}/${id}`, { method: 'DELETE' })
       await fetchItems()
       return true
-    } catch (error) {
+    }
+    catch (error) {
       console.error(`Failed to delete ${responseKey} item:`, error)
       toast.error('Ошибка при удалении')
       return false
@@ -161,7 +165,7 @@ export function useAdminList<
   watch(
     () => ({ ...filters.value }),
     () => fetchItems(),
-    { deep: true }
+    { deep: true },
   )
 
   // Fetch on mount
@@ -188,7 +192,7 @@ export function useAdminList<
     setFilter,
     resetFilters,
     onSearchInput,
-    deleteItem
+    deleteItem,
   }
 }
 
@@ -200,11 +204,11 @@ export function useAdminList<
 export function useAdminListSimple<T>(
   endpoint: string,
   responseKey: string,
-  defaultStatus: string = 'all'
+  defaultStatus: string = 'all',
 ) {
   return useAdminList<T, { status: string }>({
     endpoint,
     responseKey,
-    initialFilters: { status: defaultStatus }
+    initialFilters: { status: defaultStatus },
   })
 }

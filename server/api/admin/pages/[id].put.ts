@@ -19,7 +19,7 @@ export default defineEventHandler(async (event) => {
   if (!id) {
     throw createError({
       statusCode: 400,
-      message: 'ID страницы обязателен'
+      message: 'ID страницы обязателен',
     })
   }
 
@@ -35,7 +35,7 @@ export default defineEventHandler(async (event) => {
   if (fetchError || !currentPage) {
     throw createError({
       statusCode: 404,
-      message: 'Страница не найдена'
+      message: 'Страница не найдена',
     })
   }
 
@@ -63,7 +63,7 @@ export default defineEventHandler(async (event) => {
       if (existing) {
         throw createError({
           statusCode: 400,
-          message: 'Страница с таким URL уже существует'
+          message: 'Страница с таким URL уже существует',
         })
       }
     }
@@ -89,7 +89,7 @@ export default defineEventHandler(async (event) => {
   if (Object.keys(dbData).length === 0) {
     throw createError({
       statusCode: 400,
-      message: 'Нет данных для обновления'
+      message: 'Нет данных для обновления',
     })
   }
 
@@ -104,7 +104,7 @@ export default defineEventHandler(async (event) => {
     console.error('Failed to update page:', error)
     throw createError({
       statusCode: 500,
-      message: 'Ошибка при обновлении страницы'
+      message: 'Ошибка при обновлении страницы',
     })
   }
 
@@ -114,7 +114,7 @@ export default defineEventHandler(async (event) => {
       id: data.id,
       slug: data.slug,
       title: data.title,
-      isPublished: data.is_published
-    }
+      isPublished: data.is_published,
+    },
   }
 })

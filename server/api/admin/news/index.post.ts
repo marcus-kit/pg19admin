@@ -1,14 +1,14 @@
-import { useSupabaseAdmin } from '~~/server/utils/supabase'
+import { getAdminFromEvent, useSupabaseAdmin } from '~~/server/utils/supabase'
 import type { CreateNewsData } from '~~/types/admin'
 
 export default defineEventHandler(async (event) => {
-
+  const admin = await getAdminFromEvent(event)
   const body = await readBody<CreateNewsData>(event)
 
   if (!body.title || !body.content) {
     throw createError({
       statusCode: 400,
-      message: 'Заголовок и контент обязательны'
+      message: 'Заголовок и контент обязательны',
     })
   }
 
@@ -31,7 +31,7 @@ export default defineEventHandler(async (event) => {
       published_at: publishedAt,
       expires_at: body.expiresAt || null,
       is_pinned: body.isPinned || false,
-      author_id: authorId
+      author_id: authorId,
     })
     .select()
     .single()
@@ -40,7 +40,7 @@ export default defineEventHandler(async (event) => {
     console.error('Failed to create news:', error)
     throw createError({
       statusCode: 500,
-      message: 'Ошибка при создании новости'
+      message: 'Ошибка при создании новости',
     })
   }
 
@@ -49,7 +49,7 @@ export default defineEventHandler(async (event) => {
     news: {
       id: data.id,
       title: data.title,
-      status: data.status
-    }
+      status: data.status,
+    },
   }
 })

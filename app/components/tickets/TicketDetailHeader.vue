@@ -31,10 +31,10 @@ const emit = defineEmits<{
     <div class="flex gap-2">
       <UiButton
         v-if="!ticket.assignedAdmin && ticket.status !== 'closed'"
+        :disabled="saving"
         variant="secondary"
         size="sm"
         @click="emit('assignToMe')"
-        :disabled="saving"
       >
         <Icon name="heroicons:hand-raised" class="w-4 h-4" />
         Взять себе

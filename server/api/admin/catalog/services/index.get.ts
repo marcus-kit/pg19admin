@@ -1,7 +1,6 @@
 import { useSupabaseAdmin } from '~~/server/utils/supabase'
 
 export default defineEventHandler(async (event) => {
-
   const query = getQuery(event)
   const supabase = useSupabaseAdmin(event)
 
@@ -21,7 +20,8 @@ export default defineEventHandler(async (event) => {
   // Фильтр по активности
   if (query.active === 'true') {
     queryBuilder = queryBuilder.eq('is_active', true)
-  } else if (query.active === 'false') {
+  }
+  else if (query.active === 'false') {
     queryBuilder = queryBuilder.eq('is_active', false)
   }
 
@@ -31,7 +31,7 @@ export default defineEventHandler(async (event) => {
     console.error('Failed to fetch services:', error)
     throw createError({
       statusCode: 500,
-      message: 'Ошибка при загрузке услуг'
+      message: 'Ошибка при загрузке услуг',
     })
   }
 
@@ -49,7 +49,7 @@ export default defineEventHandler(async (event) => {
     categoryId: item.category_id,
     category: item.category,
     createdAt: item.created_at,
-    updatedAt: item.updated_at
+    updatedAt: item.updated_at,
   }))
 
   return { services }

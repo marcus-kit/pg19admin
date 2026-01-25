@@ -1,4 +1,4 @@
-import { useSupabaseAdmin } from '~~/server/utils/supabase'
+import { getAdminFromEvent, useSupabaseAdmin } from '~~/server/utils/supabase'
 
 interface StatusBody {
   status: 'new' | 'open' | 'pending' | 'resolved' | 'closed'
@@ -7,27 +7,28 @@ interface StatusBody {
 const VALID_STATUSES = ['new', 'open', 'pending', 'resolved', 'closed']
 
 export default defineEventHandler(async (event) => {
-
+  const admin = await getAdminFromEvent(event)
   const ticketId = getRouterParam(event, 'id')
   const body = await readBody<StatusBody>(event)
 
   if (!ticketId) {
     throw createError({
       statusCode: 400,
-      message: 'ID тикета обязателен'
+      message: 'ID тикета обязателен',
     })
   }
 
   if (!body.status || !VALID_STATUSES.includes(body.status)) {
     throw createError({
       statusCode: 400,
-      message: 'Некорректный статус'
+      message: 'Некорректный статус',
     })
   }
 
-  // Проверка прав на закрытие
-  if (body.status === 'closed') {
-  }
+  // TODO: Проверка прав на закрытие
+  // if (body.status === 'closed' && !admin.permissions.canCloseTickets) {
+  //   throw createError({ statusCode: 403, message: 'Нет прав на закрытие тикетов' })
+  // }
 
   const supabase = useSupabaseAdmin(event)
 
@@ -41,7 +42,7 @@ export default defineEventHandler(async (event) => {
   if (ticketError || !ticket) {
     throw createError({
       statusCode: 404,
-      message: 'Тикет не найден'
+      message: 'Тикет не найден',
     })
   }
 
@@ -69,7 +70,7 @@ export default defineEventHandler(async (event) => {
     console.error('Failed to update ticket status:', updateError)
     throw createError({
       statusCode: 500,
-      message: 'Ошибка при обновлении статуса'
+      message: 'Ошибка при обновлении статуса',
     })
   }
 
@@ -82,12 +83,12 @@ export default defineEventHandler(async (event) => {
       admin_name: admin.fullName,
       action: 'status_change',
       old_value: ticket.status,
-      new_value: body.status
+      new_value: body.status,
     })
 
   return {
     success: true,
     oldStatus: ticket.status,
-    newStatus: body.status
+    newStatus: body.status,
   }
 })

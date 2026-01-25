@@ -1,10 +1,8 @@
 <script setup lang="ts">
 import type { Ticket, TicketHistoryItem } from '~/types/admin'
 import {
-  TICKET_STATUS,
-  TICKET_PRIORITY,
   TICKET_CATEGORY,
-  getStatusLabel
+  getStatusLabel,
 } from '~/composables/useStatusConfig'
 
 interface Props {
@@ -27,24 +25,24 @@ const statusOptions = [
   { value: 'open', label: 'В работе' },
   { value: 'pending', label: 'Ожидает ответа' },
   { value: 'resolved', label: 'Решён' },
-  { value: 'closed', label: 'Закрыт' }
+  { value: 'closed', label: 'Закрыт' },
 ]
 
 const priorityOptions = [
   { value: 'low', label: 'Низкий' },
   { value: 'normal', label: 'Обычный' },
   { value: 'high', label: 'Высокий' },
-  { value: 'urgent', label: 'Срочный' }
+  { value: 'urgent', label: 'Срочный' },
 ]
 
 const ticketStatus = computed({
   get: () => props.ticket.status,
-  set: (value: string) => emit('updateStatus', value)
+  set: (value: string) => emit('updateStatus', value),
 })
 
 const ticketPriority = computed({
   get: () => props.ticket.priority,
-  set: (value: string) => emit('updatePriority', value)
+  set: (value: string) => emit('updatePriority', value),
 })
 
 const getActionLabel = (action: string) => {
@@ -52,7 +50,7 @@ const getActionLabel = (action: string) => {
     status_change: 'Изменён статус',
     priority_change: 'Изменён приоритет',
     assigned: 'Назначен',
-    unassigned: 'Снято назначение'
+    unassigned: 'Снято назначение',
   }
   return labels[action] || action
 }
@@ -62,7 +60,7 @@ const formatDate = (dateStr: string) => {
     day: 'numeric',
     month: 'short',
     hour: '2-digit',
-    minute: '2-digit'
+    minute: '2-digit',
   })
 }
 </script>
@@ -79,19 +77,19 @@ const formatDate = (dateStr: string) => {
         <UiSelect
           v-model="ticketStatus"
           :options="statusOptions"
-          label="Статус"
-          size="sm"
           :disabled="saving"
           :placeholder="undefined"
+          label="Статус"
+          size="sm"
         />
 
         <UiSelect
           v-model="ticketPriority"
           :options="priorityOptions"
-          label="Приоритет"
-          size="sm"
           :disabled="saving || ticket.status === 'closed'"
           :placeholder="undefined"
+          label="Приоритет"
+          size="sm"
         />
 
         <div>
@@ -134,8 +132,8 @@ const formatDate = (dateStr: string) => {
     <UiCard>
       <template #header>
         <button
-          @click="showHistory = !showHistory"
           class="flex items-center justify-between w-full"
+          @click="showHistory = !showHistory"
         >
           <span class="font-medium text-[var(--text-primary)]">История</span>
           <Icon

@@ -31,7 +31,7 @@ export interface NewsItem {
 export interface NewsDetail extends NewsItem {
   content: string
   attachments: NewsAttachment[]
-  author: { id: string; fullName: string } | null
+  author: { id: string, fullName: string } | null
   updatedAt: string
 }
 
@@ -71,7 +71,7 @@ export interface User {
   phone: string | null
   avatar: string | null
   status: UserStatus
-  telegram: { id: string; username: string | null } | null
+  telegram: { id: string, username: string | null } | null
   vkId: string | null
   onlineStatus: OnlineStatus
   lastSeenAt: string | null
@@ -116,7 +116,7 @@ export interface Account {
   status: AccountStatus
   balance: number
   addressFull: string | null
-  user: { id: string; fullName: string } | null
+  user: { id: string, fullName: string } | null
   startDate: string | null
   blockedAt: string | null
   createdAt: string
@@ -124,8 +124,8 @@ export interface Account {
 }
 
 export interface AccountDetail extends Account {
-  tariff: { id: string; name: string; price: number } | null
-  services: { id: string; name: string }[]
+  tariff: { id: string, name: string, price: number } | null
+  services: { id: string, name: string }[]
   billingHistory: BillingRecord[]
 }
 
@@ -159,7 +159,7 @@ export interface Ticket {
   category: TicketCategory
   status: TicketStatus
   priority: TicketPriority
-  assignedAdmin: { id: string; fullName: string } | null
+  assignedAdmin: { id: string, fullName: string } | null
   createdAt: string
   updatedAt: string
   firstResponseAt: string | null
@@ -212,7 +212,7 @@ export interface Chat {
   userTelegramId: number | null
   status: ChatStatus
   subject: string | null
-  assignedAdmin: { id: string; fullName: string } | null
+  assignedAdmin: { id: string, fullName: string } | null
   unreadAdminCount: number
   lastMessageAt: string | null
   createdAt: string
@@ -251,8 +251,8 @@ export interface ConnectionRequest {
 
 export interface ConnectionRequestDetail extends ConnectionRequest {
   comment: string | null
-  coordinates: { lat: number; lon: number } | null
-  processedBy: { id: string; fullName: string } | null
+  coordinates: { lat: number, lon: number } | null
+  processedBy: { id: string, fullName: string } | null
   processedAt: string | null
   updatedAt: string
 }
@@ -264,7 +264,7 @@ export interface CallbackRequest {
   status: CallbackRequestStatus
   source: RequestSource | null
   createdAt: string
-  processedByAdmin: { id: string; fullName: string } | null
+  processedByAdmin: { id: string, fullName: string } | null
 }
 
 // ==================== CATALOG ====================
@@ -293,7 +293,7 @@ export interface Service {
   sortOrder: number
   isActive: boolean
   categoryId: string | null
-  category: { id: string; name: string; slug: string } | null
+  category: { id: string, name: string, slug: string } | null
   createdAt: string
   updatedAt: string
 }

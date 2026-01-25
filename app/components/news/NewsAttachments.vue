@@ -24,7 +24,7 @@ const fileInput = ref<HTMLInputElement | null>(null)
 
 const localAttachments = computed({
   get: () => props.attachments,
-  set: (val) => emit('update', val)
+  set: val => emit('update', val),
 })
 
 const getFileIcon = (mimeType?: string) => {
@@ -34,12 +34,6 @@ const getFileIcon = (mimeType?: string) => {
   if (mimeType.includes('word') || mimeType.includes('document')) return 'heroicons:document-text'
   if (mimeType.includes('excel') || mimeType.includes('spreadsheet')) return 'heroicons:table-cells'
   return 'heroicons:document'
-}
-
-const formatFileSize = (bytes: number) => {
-  if (bytes < 1024) return `${bytes} B`
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }
 
 const handleDrop = async (e: DragEvent) => {
@@ -72,19 +66,20 @@ const uploadFiles = async (files: File[]) => {
       const formData = new FormData()
       formData.append('file', file)
 
-      const response = await $fetch<{ success: boolean; attachment: Attachment }>(
+      const response = await $fetch<{ success: boolean, attachment: Attachment }>(
         `/api/admin/news/${props.newsId}/attachments`,
         {
           method: 'POST',
-          body: formData
-        }
+          body: formData,
+        },
       )
 
       if (response.success && response.attachment) {
         localAttachments.value = [...localAttachments.value, response.attachment]
         toast.success(`Файл "${file.name}" загружен`)
       }
-    } catch (error) {
+    }
+    catch (error) {
       console.error('Error uploading file:', error)
       toast.error(`Не удалось загрузить "${file.name}"`)
     }
@@ -100,15 +95,17 @@ const deleteAttachment = async (attachment: Attachment) => {
 
   try {
     await $fetch(`/api/admin/news/${props.newsId}/attachments/${attachment.id}`, {
-      method: 'DELETE'
+      method: 'DELETE',
     })
 
     localAttachments.value = localAttachments.value.filter(a => a.id !== attachment.id)
     toast.success('Файл удалён')
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Error deleting attachment:', error)
     toast.error('Не удалось удалить файл')
-  } finally {
+  }
+  finally {
     deleting.value = null
   }
 }
@@ -141,10 +138,10 @@ const deleteAttachment = async (attachment: Attachment) => {
           <Icon name="heroicons:arrow-top-right-on-square" class="w-4 h-4" />
         </a>
         <button
-          @click="deleteAttachment(att)"
           :disabled="deleting === att.id"
           class="p-1.5 rounded hover:bg-red-500/10 text-[var(--text-muted)] hover:text-red-400 transition-colors disabled:opacity-50"
           title="Удалить"
+          @click="deleteAttachment(att)"
         >
           <Icon
             :name="deleting === att.id ? 'heroicons:arrow-path' : 'heroicons:trash'"
@@ -156,16 +153,16 @@ const deleteAttachment = async (attachment: Attachment) => {
 
     <!-- Upload Zone -->
     <div
-      @dragover.prevent="dragOver = true"
-      @dragleave.prevent="dragOver = false"
-      @drop.prevent="handleDrop"
-      @click="fileInput?.click()"
       :class="[
         'border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-all',
         dragOver
           ? 'border-primary bg-primary/10'
-          : 'border-[var(--glass-border)] hover:border-primary/50 hover:bg-[var(--glass-bg)]'
+          : 'border-[var(--glass-border)] hover:border-primary/50 hover:bg-[var(--glass-bg)]',
       ]"
+      @dragover.prevent="dragOver = true"
+      @dragleave.prevent="dragOver = false"
+      @drop.prevent="handleDrop"
+      @click="fileInput?.click()"
     >
       <Icon
         :name="uploading ? 'heroicons:arrow-path' : 'heroicons:cloud-arrow-up'"
@@ -182,8 +179,8 @@ const deleteAttachment = async (attachment: Attachment) => {
     <input
       ref="fileInput"
       type="file"
-      multiple
       class="hidden"
+      multiple
       @change="handleFileSelect"
     />
   </div>

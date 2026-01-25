@@ -8,7 +8,7 @@ export default defineEventHandler(async (event) => {
   if (!id) {
     throw createError({
       statusCode: 400,
-      message: 'Некорректный ID заявки'
+      message: 'Некорректный ID заявки',
     })
   }
 
@@ -23,7 +23,7 @@ export default defineEventHandler(async (event) => {
   if (error || !data) {
     throw createError({
       statusCode: 404,
-      message: 'Заявка не найдена'
+      message: 'Заявка не найдена',
     })
   }
 
@@ -42,7 +42,7 @@ export default defineEventHandler(async (event) => {
     source: data.source || 'website',
     metadata: data.metadata,
     createdAt: data.created_at,
-    updatedAt: data.updated_at
+    updatedAt: data.updated_at,
   }
 
   return { request }

@@ -14,14 +14,13 @@ interface UpdateServiceData {
 }
 
 export default defineEventHandler(async (event) => {
-
   const id = getRouterParam(event, 'id')
   const body = await readBody<UpdateServiceData>(event)
 
   if (!id) {
     throw createError({
       statusCode: 400,
-      message: 'ID услуги обязателен'
+      message: 'ID услуги обязателен',
     })
   }
 
@@ -43,7 +42,7 @@ export default defineEventHandler(async (event) => {
   if (Object.keys(dbData).length === 0) {
     throw createError({
       statusCode: 400,
-      message: 'Нет данных для обновления'
+      message: 'Нет данных для обновления',
     })
   }
 
@@ -58,7 +57,7 @@ export default defineEventHandler(async (event) => {
     console.error('Failed to update service:', error)
     throw createError({
       statusCode: 500,
-      message: 'Ошибка при обновлении услуги'
+      message: 'Ошибка при обновлении услуги',
     })
   }
 
@@ -66,7 +65,7 @@ export default defineEventHandler(async (event) => {
     success: true,
     service: {
       id: data.id,
-      name: data.name
-    }
+      name: data.name,
+    },
   }
 })

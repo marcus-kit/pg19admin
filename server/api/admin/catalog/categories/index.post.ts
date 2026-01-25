@@ -10,20 +10,19 @@ interface CreateCategoryData {
 }
 
 export default defineEventHandler(async (event) => {
-
   const body = await readBody<CreateCategoryData>(event)
 
   if (!body.name?.trim()) {
     throw createError({
       statusCode: 400,
-      message: 'Название категории обязательно'
+      message: 'Название категории обязательно',
     })
   }
 
   if (!body.slug?.trim()) {
     throw createError({
       statusCode: 400,
-      message: 'URL (slug) обязателен'
+      message: 'URL (slug) обязателен',
     })
   }
 
@@ -46,7 +45,7 @@ export default defineEventHandler(async (event) => {
   if (existing) {
     throw createError({
       statusCode: 400,
-      message: 'Категория с таким URL уже существует'
+      message: 'Категория с таким URL уже существует',
     })
   }
 
@@ -58,7 +57,7 @@ export default defineEventHandler(async (event) => {
       description: body.description || null,
       icon: body.icon || null,
       sort_order: body.sortOrder || 0,
-      is_active: body.isActive ?? true
+      is_active: body.isActive ?? true,
     })
     .select()
     .single()
@@ -67,7 +66,7 @@ export default defineEventHandler(async (event) => {
     console.error('Failed to create category:', error)
     throw createError({
       statusCode: 500,
-      message: 'Ошибка при создании категории'
+      message: 'Ошибка при создании категории',
     })
   }
 
@@ -76,7 +75,7 @@ export default defineEventHandler(async (event) => {
     category: {
       id: data.id,
       name: data.name,
-      slug: data.slug
-    }
+      slug: data.slug,
+    },
   }
 })

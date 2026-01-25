@@ -53,6 +53,6 @@ export function useToast() {
     success: (message: string, duration?: number) => show('success', message, duration),
     error: (message: string, duration?: number) => show('error', message, duration ?? 8000),
     warning: (message: string, duration?: number) => show('warning', message, duration),
-    info: (message: string, duration?: number) => show('info', message, duration)
+    info: (message: string, duration?: number) => show('info', message, duration),
   }
 }

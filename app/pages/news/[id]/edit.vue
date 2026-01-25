@@ -1,9 +1,8 @@
 <script setup lang="ts">
-
 const toast = useToast()
 
 definePageMeta({
-  middleware: 'admin'
+  middleware: 'admin',
 })
 
 useHead({ title: 'Редактировать новость — Админ-панель' })
@@ -19,7 +18,7 @@ const form = reactive({
   content: '',
   category: 'announcement' as 'announcement' | 'protocol' | 'notification',
   status: 'draft' as 'draft' | 'published' | 'archived',
-  isPinned: false
+  isPinned: false,
 })
 
 const loading = ref(true)
@@ -30,13 +29,13 @@ const attachments = ref<any[]>([])
 const categoryOptions = [
   { label: 'Объявление', value: 'announcement' },
   { label: 'Протокол', value: 'protocol' },
-  { label: 'Уведомление', value: 'notification' }
+  { label: 'Уведомление', value: 'notification' },
 ]
 
 const statusOptions = [
   { label: 'Черновик', value: 'draft' },
   { label: 'Опубликовать', value: 'published' },
-  { label: 'Архив', value: 'archived' }
+  { label: 'Архив', value: 'archived' },
 ]
 
 // Загрузка данных новости
@@ -58,11 +57,13 @@ const fetchNews = async () => {
 
     // Сохраняем вложения
     attachments.value = news.attachments || []
-  } catch (err: any) {
+  }
+  catch (err: any) {
     console.error('Failed to fetch news:', err)
     toast.error('Не удалось загрузить новость')
     error.value = err.data?.message || 'Ошибка при загрузке новости'
-  } finally {
+  }
+  finally {
     loading.value = false
   }
 }
@@ -91,18 +92,20 @@ const saveNews = async () => {
         content: form.content,
         category: form.category,
         status: form.status,
-        isPinned: form.isPinned
-      }
+        isPinned: form.isPinned,
+      },
     })
 
     // Успех — переход к списку
     toast.success('Новость успешно сохранена')
     router.push('/news')
-  } catch (err: any) {
+  }
+  catch (err: any) {
     console.error('Failed to update news:', err)
     toast.error('Не удалось сохранить новость')
     error.value = err.data?.message || 'Ошибка при обновлении новости'
-  } finally {
+  }
+  finally {
     saving.value = false
   }
 }
@@ -137,7 +140,7 @@ onMounted(() => {
     </div>
 
     <!-- Form -->
-    <form v-else @submit.prevent="saveNews" class="space-y-6">
+    <form v-else class="space-y-6" @submit.prevent="saveNews">
       <!-- Title -->
       <div>
         <label class="block text-sm font-medium text-[var(--text-primary)] mb-2">
@@ -166,15 +169,15 @@ onMounted(() => {
         <UiSelect
           v-model="form.category"
           :options="categoryOptions"
-          label="Категория"
           :placeholder="undefined"
+          label="Категория"
         />
 
         <UiSelect
           v-model="form.status"
           :options="statusOptions"
-          label="Статус"
           :placeholder="undefined"
+          label="Статус"
         />
       </div>
 
@@ -209,16 +212,16 @@ onMounted(() => {
       <!-- Actions -->
       <div class="flex gap-3">
         <UiButton
-          type="submit"
           :loading="saving"
           :disabled="saving"
+          type="submit"
         >
           Сохранить изменения
         </UiButton>
         <UiButton
+          :disabled="saving"
           variant="ghost"
           @click="cancel"
-          :disabled="saving"
         >
           Отмена
         </UiButton>
@@ -226,4 +229,3 @@ onMounted(() => {
     </form>
   </div>
 </template>
-

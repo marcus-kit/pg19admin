@@ -20,7 +20,7 @@ interface Props {
 
 const props = withDefaults(defineProps<Props>(), {
   modelValue: false,
-  size: 'md'
+  size: 'md',
 })
 
 const emit = defineEmits<{
@@ -45,7 +45,7 @@ const trackClasses = computed(() => {
   const sizeMap: Record<string, string> = {
     sm: 'h-5 w-9',
     md: 'h-6 w-11',
-    lg: 'h-7 w-14'
+    lg: 'h-7 w-14',
   }
 
   const colorClass = props.modelValue ? 'bg-green-500' : 'bg-[var(--glass-border)]'
@@ -59,10 +59,10 @@ const handleClasses = computed(() => {
   const base = 'pointer-events-none inline-block transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out'
 
   // Размер ручки и её смещение в зависимости от состояния
-  const sizeMap: Record<string, { size: string; translate: string }> = {
+  const sizeMap: Record<string, { size: string, translate: string }> = {
     sm: { size: 'h-4 w-4', translate: props.modelValue ? 'translate-x-4' : 'translate-x-0' },
     md: { size: 'h-5 w-5', translate: props.modelValue ? 'translate-x-5' : 'translate-x-0' },
-    lg: { size: 'h-6 w-6', translate: props.modelValue ? 'translate-x-7' : 'translate-x-0' }
+    lg: { size: 'h-6 w-6', translate: props.modelValue ? 'translate-x-7' : 'translate-x-0' },
   }
 
   return `${base} ${sizeMap[props.size].size} ${sizeMap[props.size].translate}`
@@ -73,11 +73,11 @@ const handleClasses = computed(() => {
   <div class="flex items-center gap-3">
     <!-- Переключатель -->
     <button
-      type="button"
-      role="switch"
       :aria-checked="modelValue"
       :disabled="disabled"
       :class="trackClasses"
+      type="button"
+      role="switch"
       @click="toggle"
     >
       <span :class="handleClasses" />

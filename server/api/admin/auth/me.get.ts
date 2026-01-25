@@ -7,7 +7,7 @@ export default defineEventHandler(async (event) => {
   if (!user) {
     throw createError({
       statusCode: 401,
-      statusMessage: 'Не авторизован'
+      statusMessage: 'Не авторизован',
     })
   }
 
@@ -26,7 +26,7 @@ export default defineEventHandler(async (event) => {
   if (error || !admin) {
     throw createError({
       statusCode: 403,
-      statusMessage: 'Доступ запрещен'
+      statusMessage: 'Доступ запрещен',
     })
   }
 
@@ -37,7 +37,7 @@ export default defineEventHandler(async (event) => {
       fullName: admin.full_name,
       role: admin.role,
       permissions: admin.permissions || {},
-      lastLogin: admin.last_login_at
-    }
+      lastLogin: admin.last_login_at,
+    },
   }
 })

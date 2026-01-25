@@ -27,7 +27,8 @@ export default defineEventHandler(async (event) => {
   // Фильтр по статусу (active/inactive/all)
   if (query.status === 'active') {
     queryBuilder = queryBuilder.eq('is_active', true)
-  } else if (query.status === 'inactive') {
+  }
+  else if (query.status === 'inactive') {
     queryBuilder = queryBuilder.eq('is_active', false)
   }
   // По умолчанию показываем все
@@ -36,7 +37,7 @@ export default defineEventHandler(async (event) => {
   if (query.search) {
     const searchTerm = String(query.search).toLowerCase()
     queryBuilder = queryBuilder.or(
-      `question.ilike.%${searchTerm}%,answer.ilike.%${searchTerm}%`
+      `question.ilike.%${searchTerm}%,answer.ilike.%${searchTerm}%`,
     )
   }
 
@@ -51,7 +52,7 @@ export default defineEventHandler(async (event) => {
     console.error('Failed to fetch knowledge base:', error)
     throw createError({
       statusCode: 500,
-      message: 'Ошибка при загрузке базы знаний'
+      message: 'Ошибка при загрузке базы знаний',
     })
   }
 
@@ -65,11 +66,11 @@ export default defineEventHandler(async (event) => {
     priority: item.priority,
     isActive: item.is_active,
     createdAt: item.created_at,
-    updatedAt: item.updated_at
+    updatedAt: item.updated_at,
   }))
 
   return {
     items,
-    total: count || items.length
+    total: count || items.length,
   }
 })

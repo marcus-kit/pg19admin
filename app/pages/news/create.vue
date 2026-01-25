@@ -1,9 +1,8 @@
 <script setup lang="ts">
-
 const toast = useToast()
 
 definePageMeta({
-  middleware: 'admin'
+  middleware: 'admin',
 })
 
 useHead({ title: 'Создать новость — Админ-панель' })
@@ -16,7 +15,7 @@ const form = reactive({
   content: '',
   category: 'announcement' as 'announcement' | 'protocol' | 'notification',
   status: 'draft' as 'draft' | 'published' | 'archived',
-  isPinned: false
+  isPinned: false,
 })
 
 const saving = ref(false)
@@ -25,13 +24,13 @@ const error = ref('')
 const categoryOptions = [
   { label: 'Объявление', value: 'announcement' },
   { label: 'Протокол', value: 'protocol' },
-  { label: 'Уведомление', value: 'notification' }
+  { label: 'Уведомление', value: 'notification' },
 ]
 
 const statusOptions = [
   { label: 'Черновик', value: 'draft' },
   { label: 'Опубликовать', value: 'published' },
-  { label: 'Архив', value: 'archived' }
+  { label: 'Архив', value: 'archived' },
 ]
 
 const saveNews = async () => {
@@ -58,18 +57,20 @@ const saveNews = async () => {
         content: form.content,
         category: form.category,
         status: form.status,
-        isPinned: form.isPinned
-      }
+        isPinned: form.isPinned,
+      },
     })
 
     // Успех — переход к редактированию для добавления вложений
     toast.success('Новость успешно создана')
     router.push(`/news/${response.news.id}/edit`)
-  } catch (err: any) {
+  }
+  catch (err: any) {
     console.error('Failed to create news:', err)
     toast.error('Не удалось создать новость')
     error.value = err.data?.message || 'Ошибка при создании новости'
-  } finally {
+  }
+  finally {
     saving.value = false
   }
 }
@@ -94,7 +95,7 @@ const cancel = () => {
     </div>
 
     <!-- Form -->
-    <form @submit.prevent="saveNews" class="space-y-6">
+    <form class="space-y-6" @submit.prevent="saveNews">
       <!-- Title -->
       <div>
         <label class="block text-sm font-medium text-[var(--text-primary)] mb-2">
@@ -123,15 +124,15 @@ const cancel = () => {
         <UiSelect
           v-model="form.category"
           :options="categoryOptions"
-          label="Категория"
           :placeholder="undefined"
+          label="Категория"
         />
 
         <UiSelect
           v-model="form.status"
           :options="statusOptions"
-          label="Статус"
           :placeholder="undefined"
+          label="Статус"
         />
       </div>
 
@@ -169,16 +170,16 @@ const cancel = () => {
       <!-- Actions -->
       <div class="flex gap-3">
         <UiButton
-          type="submit"
           :loading="saving"
           :disabled="saving"
+          type="submit"
         >
           Сохранить
         </UiButton>
         <UiButton
+          :disabled="saving"
           variant="ghost"
           @click="cancel"
-          :disabled="saving"
         >
           Отмена
         </UiButton>
@@ -186,4 +187,3 @@ const cancel = () => {
     </form>
   </div>
 </template>
-

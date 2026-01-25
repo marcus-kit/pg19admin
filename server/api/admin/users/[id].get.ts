@@ -1,12 +1,11 @@
 import { useSupabaseAdmin } from '~~/server/utils/supabase'
 
 export default defineEventHandler(async (event) => {
-
   const id = getRouterParam(event, 'id')
   if (!id) {
     throw createError({
       statusCode: 400,
-      message: 'ID пользователя не указан'
+      message: 'ID пользователя не указан',
     })
   }
 
@@ -22,7 +21,7 @@ export default defineEventHandler(async (event) => {
   if (error || !user) {
     throw createError({
       statusCode: 404,
-      message: 'Пользователь не найден'
+      message: 'Пользователь не найден',
     })
   }
 
@@ -46,25 +45,31 @@ export default defineEventHandler(async (event) => {
       avatar: user.avatar,
       nickname: user.nickname,
       status: user.status,
-      telegram: user.telegram_id ? {
-        id: user.telegram_id,
-        username: user.telegram_username
-      } : null,
+      telegram: user.telegram_id
+        ? {
+            id: user.telegram_id,
+            username: user.telegram_username,
+          }
+        : null,
       vkId: user.vk_id,
       onlineStatus: user.online_status,
       lastSeenAt: user.last_seen_at,
       notificationsSettings: user.notifications_settings,
       communityNotifications: user.community_notifications,
-      passport: (user.passport_series || user.passport_number) ? {
-        series: user.passport_series,
-        number: user.passport_number
-      } : null,
-      registrationAddress: (user.reg_city || user.reg_street) ? {
-        city: user.reg_city,
-        street: user.reg_street,
-        building: user.reg_building,
-        apartment: user.reg_apartment
-      } : null,
+      passport: (user.passport_series || user.passport_number)
+        ? {
+            series: user.passport_series,
+            number: user.passport_number,
+          }
+        : null,
+      registrationAddress: (user.reg_city || user.reg_street)
+        ? {
+            city: user.reg_city,
+            street: user.reg_street,
+            building: user.reg_building,
+            apartment: user.reg_apartment,
+          }
+        : null,
       createdAt: user.created_at,
       updatedAt: user.date_updated,
       accounts: (accounts || []).map(acc => ({
@@ -74,8 +79,8 @@ export default defineEventHandler(async (event) => {
         status: acc.status,
         balance: acc.balance,
         addressFull: acc.address_full,
-        createdAt: acc.date_created
-      }))
-    }
+        createdAt: acc.date_created,
+      })),
+    },
   }
 })

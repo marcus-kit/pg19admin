@@ -4,7 +4,7 @@ export default defineEventHandler(async (event) => {
   if (!id) {
     throw createError({
       statusCode: 400,
-      message: 'ID новости обязателен'
+      message: 'ID новости обязателен',
     })
   }
 
@@ -31,7 +31,7 @@ export default defineEventHandler(async (event) => {
   if (newsError || !newsItem) {
     throw createError({
       statusCode: 404,
-      message: 'Новость не найдена'
+      message: 'Новость не найдена',
     })
   }
 
@@ -51,8 +51,8 @@ export default defineEventHandler(async (event) => {
         filePath: att.file_path,
         fileSize: att.file_size,
         mimeType: att.mime_type,
-        sortOrder: att.sort_order
-      }))
-    }
+        sortOrder: att.sort_order,
+      })),
+    },
   }
 })

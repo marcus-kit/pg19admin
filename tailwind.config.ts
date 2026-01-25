@@ -5,7 +5,7 @@ export default {
     './app/**/*.{vue,js,ts}',
     './components/**/*.{vue,js,ts}',
     './layouts/**/*.{vue,js,ts}',
-    './pages/**/*.{vue,js,ts}'
+    './pages/**/*.{vue,js,ts}',
   ],
   // Safelist для классов, используемых в computed properties
   safelist: [
@@ -40,7 +40,7 @@ export default {
           600: '#D67A0A',
           700: '#A45E08',
           800: '#724106',
-          900: '#402504'
+          900: '#402504',
         },
         secondary: {
           DEFAULT: '#E91E8C',
@@ -53,7 +53,7 @@ export default {
           600: '#C4146F',
           700: '#930F53',
           800: '#620A37',
-          900: '#31051C'
+          900: '#31051C',
         },
         accent: {
           DEFAULT: '#00A651',
@@ -66,7 +66,7 @@ export default {
           600: '#008541',
           700: '#006431',
           800: '#004321',
-          900: '#002110'
+          900: '#002110',
         },
         info: {
           DEFAULT: '#0054A6',
@@ -79,12 +79,12 @@ export default {
           600: '#004385',
           700: '#003264',
           800: '#002243',
-          900: '#001121'
-        }
+          900: '#001121',
+        },
       },
       fontFamily: {
         sans: ['Outfit', 'system-ui', 'sans-serif'],
-        display: ['Outfit', 'system-ui', 'sans-serif']
+        display: ['Outfit', 'system-ui', 'sans-serif'],
       },
       animation: {
         'fade-in-up': 'fadeInUp 0.6s ease-out forwards',
@@ -100,41 +100,41 @@ export default {
       keyframes: {
         fadeInUp: {
           '0%': { opacity: '0', transform: 'translateY(20px)' },
-          '100%': { opacity: '1', transform: 'translateY(0)' }
+          '100%': { opacity: '1', transform: 'translateY(0)' },
         },
         fadeIn: {
           '0%': { opacity: '0' },
-          '100%': { opacity: '1' }
+          '100%': { opacity: '1' },
         },
         float: {
           '0%, 100%': { transform: 'translateY(0)' },
-          '50%': { transform: 'translateY(-10px)' }
+          '50%': { transform: 'translateY(-10px)' },
         },
         pulseGlow: {
           '0%, 100%': { boxShadow: '0 0 20px rgba(247, 148, 29, 0.3)' },
-          '50%': { boxShadow: '0 0 40px rgba(247, 148, 29, 0.6)' }
+          '50%': { boxShadow: '0 0 40px rgba(247, 148, 29, 0.6)' },
         },
         gradientShift: {
           '0%': { backgroundPosition: '0% 50%' },
           '50%': { backgroundPosition: '100% 50%' },
-          '100%': { backgroundPosition: '0% 50%' }
+          '100%': { backgroundPosition: '0% 50%' },
         },
         slideInLeft: {
           '0%': { opacity: '0', transform: 'translateX(-30px)' },
-          '100%': { opacity: '1', transform: 'translateX(0)' }
+          '100%': { opacity: '1', transform: 'translateX(0)' },
         },
         slideInRight: {
           '0%': { opacity: '0', transform: 'translateX(30px)' },
-          '100%': { opacity: '1', transform: 'translateX(0)' }
+          '100%': { opacity: '1', transform: 'translateX(0)' },
         },
         scaleIn: {
           '0%': { opacity: '0', transform: 'scale(0.9)' },
-          '100%': { opacity: '1', transform: 'scale(1)' }
+          '100%': { opacity: '1', transform: 'scale(1)' },
         },
         bounceSubtle: {
           '0%, 100%': { transform: 'translateY(0)' },
-          '50%': { transform: 'translateY(-5px)' }
-        }
+          '50%': { transform: 'translateY(-5px)' },
+        },
       },
       backdropBlur: {
         xs: '2px',
@@ -145,8 +145,8 @@ export default {
         'glow-primary': '0 0 30px rgba(247, 148, 29, 0.4)',
         'glow-secondary': '0 0 30px rgba(233, 30, 140, 0.4)',
         'glow-accent': '0 0 30px rgba(0, 166, 81, 0.4)',
-      }
-    }
+      },
+    },
   },
-  plugins: []
+  plugins: [],
 } satisfies Config

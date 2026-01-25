@@ -11,13 +11,13 @@
  */
 
 interface Props {
-  hover?: boolean                      // Добавить hover-эффект (pointer + подсветка)
+  hover?: boolean // Добавить hover-эффект (pointer + подсветка)
   padding?: 'none' | 'sm' | 'md' | 'lg'
 }
 
 withDefaults(defineProps<Props>(), {
   hover: false,
-  padding: 'md'
+  padding: 'md',
 })
 
 // Маппинг padding на Tailwind классы
@@ -25,17 +25,17 @@ const paddingClasses: Record<string, string> = {
   none: '',
   sm: 'p-4',
   md: 'p-6',
-  lg: 'p-8'
+  lg: 'p-8',
 }
 </script>
 
 <template>
   <div
-    class="glass-card rounded-2xl"
     :class="[
       paddingClasses[padding],
-      hover && 'cursor-pointer'
+      hover && 'cursor-pointer',
     ]"
+    class="glass-card rounded-2xl"
   >
     <slot />
   </div>

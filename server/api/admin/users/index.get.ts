@@ -2,7 +2,6 @@ import { useSupabaseAdmin } from '~~/server/utils/supabase'
 import { mapUser, type DbUser } from '~~/server/utils/mappers'
 
 export default defineEventHandler(async (event) => {
-
   const query = getQuery(event)
 
   const status = query.status as string | undefined
@@ -28,7 +27,7 @@ export default defineEventHandler(async (event) => {
   if (search && search.trim()) {
     const searchTerm = `%${search.trim()}%`
     queryBuilder = queryBuilder.or(
-      `first_name.ilike.${searchTerm},last_name.ilike.${searchTerm},full_name.ilike.${searchTerm},phone.ilike.${searchTerm},email.ilike.${searchTerm},telegram_username.ilike.${searchTerm}`
+      `first_name.ilike.${searchTerm},last_name.ilike.${searchTerm},full_name.ilike.${searchTerm},phone.ilike.${searchTerm},email.ilike.${searchTerm},telegram_username.ilike.${searchTerm}`,
     )
   }
 
@@ -38,7 +37,7 @@ export default defineEventHandler(async (event) => {
     console.error('Failed to fetch users:', error)
     throw createError({
       statusCode: 500,
-      message: 'Ошибка при загрузке пользователей'
+      message: 'Ошибка при загрузке пользователей',
     })
   }
 
@@ -64,6 +63,6 @@ export default defineEventHandler(async (event) => {
     users: (users as DbUser[]).map(user => mapUser(user, accountsCounts[user.id])),
     total: count || 0,
     limit,
-    offset
+    offset,
   }
 })

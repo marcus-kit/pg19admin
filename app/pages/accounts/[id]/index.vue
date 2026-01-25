@@ -1,7 +1,6 @@
 <script setup lang="ts">
-
 definePageMeta({
-  middleware: 'admin'
+  middleware: 'admin',
 })
 
 const toast = useToast()
@@ -67,26 +66,24 @@ const editForm = ref({
     apartment: '',
     entrance: '',
     floor: '',
-    intercom: ''
-  }
+    intercom: '',
+  },
 })
-
-const showBalanceModal = ref(false)
-const balanceAdjustment = ref(0)
-const balanceReason = ref('')
 
 const fetchAccount = async () => {
   loading.value = true
   try {
     const data = await $fetch<{ account: Account }>(`/api/admin/accounts/${accountId.value}`)
     account.value = data.account
-  } catch (error: any) {
+  }
+  catch (error: any) {
     console.error('Failed to fetch account:', error)
     toast.error('Не удалось загрузить аккаунт')
     if (error.statusCode === 404) {
       router.push('/accounts')
     }
-  } finally {
+  }
+  finally {
     loading.value = false
   }
 }
@@ -107,8 +104,8 @@ const openEditModal = () => {
       apartment: account.value.address.apartment || '',
       entrance: account.value.address.entrance || '',
       floor: account.value.address.floor || '',
-      intercom: account.value.address.intercom || ''
-    }
+      intercom: account.value.address.intercom || '',
+    },
   }
   showEditModal.value = true
 }
@@ -120,16 +117,18 @@ const saveAccount = async () => {
   try {
     await $fetch(`/api/admin/accounts/${accountId.value}`, {
       method: 'PUT',
-      body: editForm.value
+      body: editForm.value,
     })
 
     await fetchAccount()
     showEditModal.value = false
     toast.success('Аккаунт сохранён')
-  } catch (error: any) {
+  }
+  catch (error: any) {
     console.error('Failed to save account:', error)
     toast.error(error.data?.message || 'Не удалось сохранить аккаунт')
-  } finally {
+  }
+  finally {
     saving.value = false
   }
 }
@@ -143,15 +142,17 @@ const updateStatus = async (newStatus: string) => {
   try {
     await $fetch(`/api/admin/accounts/${accountId.value}/status`, {
       method: 'PUT',
-      body: { status: newStatus }
+      body: { status: newStatus },
     })
 
     await fetchAccount()
     toast.success('Статус аккаунта обновлён')
-  } catch (error: any) {
+  }
+  catch (error: any) {
     console.error('Failed to update account status:', error)
     toast.error(error.data?.message || 'Не удалось обновить статус')
-  } finally {
+  }
+  finally {
     saving.value = false
   }
 }
@@ -188,7 +189,7 @@ const contractStatusOptions = [
   { value: 'draft', label: 'Черновик' },
   { value: 'active', label: 'Активный' },
   { value: 'terminated', label: 'Расторгнут' },
-  { value: 'stopped', label: 'Приостановлен' }
+  { value: 'stopped', label: 'Приостановлен' },
 ]
 
 const formatBalance = (kopeks: number) => {
@@ -200,7 +201,7 @@ const formatDate = (dateStr: string | null) => {
   return new Date(dateStr).toLocaleDateString('ru-RU', {
     day: 'numeric',
     month: 'long',
-    year: 'numeric'
+    year: 'numeric',
   })
 }
 
@@ -211,7 +212,7 @@ const formatDateTime = (dateStr: string | null) => {
     month: 'short',
     year: 'numeric',
     hour: '2-digit',
-    minute: '2-digit'
+    minute: '2-digit',
   })
 }
 
@@ -247,7 +248,7 @@ onMounted(() => {
 
         <div class="flex gap-2">
           <UiButton
-            
+
             variant="secondary"
             size="sm"
             @click="openEditModal"
@@ -342,13 +343,13 @@ onMounted(() => {
             </template>
 
             <div
-              @click="router.push(`/users/${account.user.id}`)"
               class="flex items-center gap-4 p-3 rounded-lg bg-[var(--glass-bg)] border border-[var(--glass-border)] hover:border-primary/30 cursor-pointer transition-colors"
+              @click="router.push(`/users/${account.user.id}`)"
             >
               <div
                 v-if="account.user.avatar"
-                class="w-12 h-12 rounded-full bg-cover bg-center"
                 :style="{ backgroundImage: `url(${account.user.avatar})` }"
+                class="w-12 h-12 rounded-full bg-cover bg-center"
               />
               <div
                 v-else
@@ -380,7 +381,7 @@ onMounted(() => {
               <p
                 :class="[
                   'text-3xl font-bold',
-                  account.balance >= 0 ? 'text-green-400' : 'text-red-400'
+                  account.balance >= 0 ? 'text-green-400' : 'text-red-400',
                 ]"
               >
                 {{ formatBalance(account.balance) }}
@@ -389,7 +390,7 @@ onMounted(() => {
           </UiCard>
 
           <!-- Status Management -->
-          <UiCard >
+          <UiCard>
             <template #header>
               <span class="font-medium text-[var(--text-primary)]">Управление статусом</span>
             </template>
@@ -397,33 +398,33 @@ onMounted(() => {
             <div class="space-y-2">
               <UiButton
                 v-if="account.status !== 'active'"
+                :disabled="saving"
                 variant="secondary"
                 size="sm"
                 class="w-full justify-center"
                 @click="updateStatus('active')"
-                :disabled="saving"
               >
                 <Icon name="heroicons:check-circle" class="w-4 h-4 text-green-400" />
                 Активировать
               </UiButton>
               <UiButton
                 v-if="account.status !== 'blocked'"
+                :disabled="saving"
                 variant="secondary"
                 size="sm"
                 class="w-full justify-center"
                 @click="updateStatus('blocked')"
-                :disabled="saving"
               >
                 <Icon name="heroicons:no-symbol" class="w-4 h-4 text-red-400" />
                 Заблокировать
               </UiButton>
               <UiButton
                 v-if="account.status !== 'closed'"
+                :disabled="saving"
                 variant="secondary"
                 size="sm"
                 class="w-full justify-center"
                 @click="updateStatus('closed')"
-                :disabled="saving"
               >
                 <Icon name="heroicons:x-circle" class="w-4 h-4 text-gray-400" />
                 Закрыть
@@ -468,7 +469,7 @@ onMounted(() => {
         <div class="relative w-full max-w-2xl glass-card rounded-xl p-6 max-h-[90vh] overflow-y-auto">
           <h3 class="text-xl font-bold text-[var(--text-primary)] mb-6">Редактировать аккаунт</h3>
 
-          <form @submit.prevent="saveAccount" class="space-y-6">
+          <form class="space-y-6" @submit.prevent="saveAccount">
             <!-- Contract Info -->
             <div>
               <h4 class="text-sm font-medium text-[var(--text-muted)] mb-3">Договор</h4>
@@ -482,8 +483,8 @@ onMounted(() => {
                 <UiSelect
                   v-model="editForm.contractStatus"
                   :options="contractStatusOptions"
-                  label="Статус договора"
                   :placeholder="undefined"
+                  label="Статус договора"
                 />
                 <UiInput v-model="editForm.startDate" label="Дата начала" type="date" />
                 <UiInput v-model="editForm.endDate" label="Дата окончания" type="date" />
@@ -517,10 +518,10 @@ onMounted(() => {
             </div>
 
             <div class="flex justify-end gap-3 pt-4">
-              <UiButton variant="ghost" @click="showEditModal = false" :disabled="saving">
+              <UiButton :disabled="saving" variant="ghost" @click="showEditModal = false">
                 Отмена
               </UiButton>
-              <UiButton type="submit" :loading="saving" :disabled="saving">
+              <UiButton :loading="saving" :disabled="saving" type="submit">
                 Сохранить
               </UiButton>
             </div>

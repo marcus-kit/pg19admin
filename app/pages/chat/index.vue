@@ -4,11 +4,11 @@ import {
   CHAT_STATUS,
   CHAT_STATUS_OPTIONS,
   getStatusLabel,
-  getStatusBadgeClass
+  getStatusBadgeClass,
 } from '~/composables/useStatusConfig'
 
 definePageMeta({
-  middleware: 'admin'
+  middleware: 'admin',
 })
 
 useHead({ title: 'Чаты поддержки — Админ-панель' })
@@ -35,10 +35,12 @@ const fetchChats = async () => {
 
     const data = await $fetch<{ chats: Chat[] }>(`/api/admin/chat?${params}`)
     chats.value = data.chats
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to fetch chats:', error)
     toast.error('Не удалось загрузить чаты')
-  } finally {
+  }
+  finally {
     loading.value = false
   }
 }
@@ -67,9 +69,9 @@ watch([statusFilter, showMine], () => {
         <UiButton
           v-for="opt in CHAT_STATUS_OPTIONS"
           :key="opt.value"
+          :class="{ 'bg-primary/20': statusFilter === opt.value }"
           variant="ghost"
           size="sm"
-          :class="{ 'bg-primary/20': statusFilter === opt.value }"
           @click="statusFilter = opt.value"
         >
           {{ opt.label }}

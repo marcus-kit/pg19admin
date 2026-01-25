@@ -1,7 +1,6 @@
 import { useSupabaseAdmin } from '~~/server/utils/supabase'
 
 export default defineEventHandler(async (event) => {
-
   const id = getRouterParam(event, 'id')
   const query = getQuery(event)
 
@@ -11,7 +10,7 @@ export default defineEventHandler(async (event) => {
   if (!id) {
     throw createError({
       statusCode: 400,
-      message: 'ID чата обязателен'
+      message: 'ID чата обязателен',
     })
   }
 
@@ -30,7 +29,7 @@ export default defineEventHandler(async (event) => {
   if (chatError || !chat) {
     throw createError({
       statusCode: 404,
-      message: 'Чат не найден'
+      message: 'Чат не найден',
     })
   }
 
@@ -52,7 +51,7 @@ export default defineEventHandler(async (event) => {
     console.error('Failed to fetch messages:', messagesError)
     throw createError({
       statusCode: 500,
-      message: 'Ошибка при загрузке сообщений'
+      message: 'Ошибка при загрузке сообщений',
     })
   }
 
@@ -72,7 +71,7 @@ export default defineEventHandler(async (event) => {
       lastMessageAt: chat.last_message_at,
       createdAt: chat.created_at,
       closedAt: chat.closed_at,
-      metadata: chat.metadata
+      metadata: chat.metadata,
     },
     messages: messages.reverse().map(msg => ({
       id: msg.id,
@@ -89,8 +88,8 @@ export default defineEventHandler(async (event) => {
       readAt: msg.read_at,
       createdAt: msg.created_at,
       editedAt: msg.edited_at,
-      systemAction: msg.system_action
+      systemAction: msg.system_action,
     })),
-    hasMore: messages.length === limit
+    hasMore: messages.length === limit,
   }
 })

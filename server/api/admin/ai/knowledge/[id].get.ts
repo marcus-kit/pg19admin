@@ -12,7 +12,7 @@ export default defineEventHandler(async (event) => {
   if (!id) {
     throw createError({
       statusCode: 400,
-      message: 'ID обязателен'
+      message: 'ID обязателен',
     })
   }
 
@@ -27,7 +27,7 @@ export default defineEventHandler(async (event) => {
   if (error || !item) {
     throw createError({
       statusCode: 404,
-      message: 'Запись не найдена'
+      message: 'Запись не найдена',
     })
   }
 
@@ -43,7 +43,7 @@ export default defineEventHandler(async (event) => {
       hasEmbedding: item.embedding !== null,
       createdAt: item.created_at,
       updatedAt: item.updated_at,
-      createdBy: item.created_by
-    }
+      createdBy: item.created_by,
+    },
   }
 })

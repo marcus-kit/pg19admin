@@ -30,21 +30,21 @@ withDefaults(defineProps<Props>(), {
   size: 'md',
   disabled: false,
   loading: false,
-  block: false
+  block: false,
 })
 </script>
 
 <template>
   <button
     :type="type"
-    class="u-btn"
     :class="[
       `u-btn--${variant}`,
       `u-btn--${size}`,
       block && 'u-btn--block',
-      (disabled || loading) && 'u-btn--disabled'
+      (disabled || loading) && 'u-btn--disabled',
     ]"
     :disabled="disabled || loading"
+    class="u-btn"
   >
     <!-- Спиннер при загрузке -->
     <Icon v-if="loading" name="heroicons:arrow-path" class="w-4 h-4 animate-spin" />

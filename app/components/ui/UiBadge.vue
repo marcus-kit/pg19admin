@@ -19,7 +19,7 @@ interface Props {
 
 const props = withDefaults(defineProps<Props>(), {
   variant: 'neutral',
-  size: 'md'
+  size: 'md',
 })
 
 // Собираем классы динамически
@@ -32,13 +32,13 @@ const classes = computed(() => {
     warning: 'bg-primary/20 text-primary',
     danger: 'bg-red-500/20 text-red-400',
     info: 'bg-info/20 text-blue-400',
-    neutral: 'bg-white/10 text-gray-300'
+    neutral: 'bg-white/10 text-gray-300',
   }
 
   // Размеры (padding + font-size)
   const sizes: Record<string, string> = {
     sm: 'px-2 py-0.5 text-xs',
-    md: 'px-3 py-1 text-sm'
+    md: 'px-3 py-1 text-sm',
   }
 
   return [base, variants[props.variant], sizes[props.size]]

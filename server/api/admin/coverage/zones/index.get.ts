@@ -1,7 +1,6 @@
 import { serverSupabaseServiceRole } from '#supabase/server'
 
 export default defineEventHandler(async (event) => {
-
   const query = getQuery(event)
   const supabase = serverSupabaseServiceRole(event)
 
@@ -20,7 +19,8 @@ export default defineEventHandler(async (event) => {
 
     if (query.active === 'true') {
       pg19Query = pg19Query.eq('is_active', true)
-    } else if (query.active === 'false') {
+    }
+    else if (query.active === 'false') {
       pg19Query = pg19Query.eq('is_active', false)
     }
 
@@ -32,7 +32,8 @@ export default defineEventHandler(async (event) => {
 
     if (pg19Error) {
       console.error('Failed to fetch coverage_zones:', pg19Error)
-    } else {
+    }
+    else {
       zones.push(...(pg19Data || []).map((item: any) => ({
         id: item.id,
         source: 'coverage_zones',
@@ -48,7 +49,7 @@ export default defineEventHandler(async (event) => {
         isActive: item.is_active,
         sortOrder: item.sort_order,
         createdAt: item.created_at,
-        updatedAt: item.updated_at
+        updatedAt: item.updated_at,
       })))
     }
   }
@@ -62,7 +63,8 @@ export default defineEventHandler(async (event) => {
 
     if (query.active === 'true') {
       partnerQuery = partnerQuery.eq('active', true)
-    } else if (query.active === 'false') {
+    }
+    else if (query.active === 'false') {
       partnerQuery = partnerQuery.eq('active', false)
     }
 
@@ -74,7 +76,8 @@ export default defineEventHandler(async (event) => {
 
     if (partnerError) {
       console.error('Failed to fetch partner_coverage_zones:', partnerError)
-    } else {
+    }
+    else {
       zones.push(...(partnerData || []).map((item: any) => ({
         id: item.id,
         source: 'partner_coverage_zones',
@@ -90,7 +93,7 @@ export default defineEventHandler(async (event) => {
         isActive: item.active,
         sortOrder: 0,
         createdAt: item.created_at,
-        updatedAt: item.updated_at
+        updatedAt: item.updated_at,
       })))
     }
   }

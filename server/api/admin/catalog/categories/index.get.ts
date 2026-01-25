@@ -1,7 +1,6 @@
 import { useSupabaseAdmin } from '~~/server/utils/supabase'
 
 export default defineEventHandler(async (event) => {
-
   const query = getQuery(event)
   const supabase = useSupabaseAdmin(event)
 
@@ -13,7 +12,8 @@ export default defineEventHandler(async (event) => {
   // Фильтр по активности
   if (query.active === 'true') {
     queryBuilder = queryBuilder.eq('is_active', true)
-  } else if (query.active === 'false') {
+  }
+  else if (query.active === 'false') {
     queryBuilder = queryBuilder.eq('is_active', false)
   }
 
@@ -23,7 +23,7 @@ export default defineEventHandler(async (event) => {
     console.error('Failed to fetch categories:', error)
     throw createError({
       statusCode: 500,
-      message: 'Ошибка при загрузке категорий'
+      message: 'Ошибка при загрузке категорий',
     })
   }
 
@@ -36,7 +36,7 @@ export default defineEventHandler(async (event) => {
     sortOrder: item.sort_order,
     isActive: item.is_active,
     createdAt: item.created_at,
-    updatedAt: item.updated_at
+    updatedAt: item.updated_at,
   }))
 
   return { categories }

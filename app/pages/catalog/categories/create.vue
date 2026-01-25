@@ -1,6 +1,6 @@
 <script setup lang="ts">
 definePageMeta({
-  middleware: 'admin'
+  middleware: 'admin',
 })
 
 useHead({ title: 'Создать категорию — Админ-панель' })
@@ -14,7 +14,7 @@ const form = reactive({
   description: '',
   icon: 'heroicons:folder',
   sortOrder: 0,
-  isActive: true
+  isActive: true,
 })
 
 const saving = ref(false)
@@ -28,7 +28,7 @@ const iconOptions = [
   { label: 'Звезда', value: 'heroicons:star' },
   { label: 'Молния', value: 'heroicons:bolt' },
   { label: 'Глобус', value: 'heroicons:globe-alt' },
-  { label: 'Телефон', value: 'heroicons:phone' }
+  { label: 'Телефон', value: 'heroicons:phone' },
 ]
 
 const generateSlug = () => {
@@ -37,11 +37,11 @@ const generateSlug = () => {
       .toLowerCase()
       .replace(/[а-яё]/g, (char) => {
         const map: Record<string, string> = {
-          'а': 'a', 'б': 'b', 'в': 'v', 'г': 'g', 'д': 'd', 'е': 'e', 'ё': 'yo',
-          'ж': 'zh', 'з': 'z', 'и': 'i', 'й': 'y', 'к': 'k', 'л': 'l', 'м': 'm',
-          'н': 'n', 'о': 'o', 'п': 'p', 'р': 'r', 'с': 's', 'т': 't', 'у': 'u',
-          'ф': 'f', 'х': 'h', 'ц': 'ts', 'ч': 'ch', 'ш': 'sh', 'щ': 'sch', 'ъ': '',
-          'ы': 'y', 'ь': '', 'э': 'e', 'ю': 'yu', 'я': 'ya'
+          а: 'a', б: 'b', в: 'v', г: 'g', д: 'd', е: 'e', ё: 'yo',
+          ж: 'zh', з: 'z', и: 'i', й: 'y', к: 'k', л: 'l', м: 'm',
+          н: 'n', о: 'o', п: 'p', р: 'r', с: 's', т: 't', у: 'u',
+          ф: 'f', х: 'h', ц: 'ts', ч: 'ch', ш: 'sh', щ: 'sch', ъ: '',
+          ы: 'y', ь: '', э: 'e', ю: 'yu', я: 'ya',
         }
         return map[char] || char
       })
@@ -73,17 +73,19 @@ const save = async () => {
         description: form.description || null,
         icon: form.icon || null,
         sortOrder: form.sortOrder,
-        isActive: form.isActive
-      }
+        isActive: form.isActive,
+      },
     })
 
     toast.success('Категория создана')
     router.push('/catalog')
-  } catch (err: any) {
+  }
+  catch (err: any) {
     console.error('Failed to create category:', err)
     error.value = err.data?.message || 'Ошибка при создании категории'
     toast.error('Не удалось создать категорию')
-  } finally {
+  }
+  finally {
     saving.value = false
   }
 }
@@ -101,7 +103,7 @@ const save = async () => {
       {{ error }}
     </div>
 
-    <form @submit.prevent="save" class="space-y-6 max-w-2xl">
+    <form class="space-y-6 max-w-2xl" @submit.prevent="save">
       <div>
         <label class="block text-sm font-medium text-[var(--text-primary)] mb-2">
           Название *
@@ -176,10 +178,10 @@ const save = async () => {
       </div>
 
       <div class="flex gap-3">
-        <UiButton type="submit" :loading="saving" :disabled="saving">
+        <UiButton :loading="saving" :disabled="saving" type="submit">
           Сохранить
         </UiButton>
-        <UiButton variant="ghost" @click="router.push('/catalog')" :disabled="saving">
+        <UiButton :disabled="saving" variant="ghost" @click="router.push('/catalog')">
           Отмена
         </UiButton>
       </div>

@@ -80,7 +80,7 @@ export default defineEventHandler(async (event): Promise<DashboardStats> => {
     ticketsTotal,
     ticketsOpen,
     ticketsPending,
-    ticketsResolved
+    ticketsResolved,
   ] = await Promise.all([
     // Новости
     supabase.from('news').select('*', { count: 'exact', head: true }),
@@ -111,7 +111,7 @@ export default defineEventHandler(async (event): Promise<DashboardStats> => {
     supabase.from('tickets').select('*', { count: 'exact', head: true }),
     supabase.from('tickets').select('*', { count: 'exact', head: true }).eq('status', 'open'),
     supabase.from('tickets').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
-    supabase.from('tickets').select('*', { count: 'exact', head: true }).eq('status', 'resolved')
+    supabase.from('tickets').select('*', { count: 'exact', head: true }).eq('status', 'resolved'),
   ])
 
   return {
@@ -119,37 +119,37 @@ export default defineEventHandler(async (event): Promise<DashboardStats> => {
       total: newsTotal.count ?? 0,
       published: newsPublished.count ?? 0,
       draft: newsDraft.count ?? 0,
-      archived: newsArchived.count ?? 0
+      archived: newsArchived.count ?? 0,
     },
     users: {
       total: usersTotal.count ?? 0,
       active: usersActive.count ?? 0,
       newToday: usersNewToday.count ?? 0,
-      activeContracts: contractsActive.count ?? 0
+      activeContracts: contractsActive.count ?? 0,
     },
     catalog: {
       services: servicesTotal.count ?? 0,
       activeServices: servicesActive.count ?? 0,
       categories: categoriesTotal.count ?? 0,
-      activeCategories: categoriesActive.count ?? 0
+      activeCategories: categoriesActive.count ?? 0,
     },
     requests: {
       total: requestsTotal.count ?? 0,
       new: requestsNew.count ?? 0,
       inProgress: requestsInProgress.count ?? 0,
-      completed: requestsCompleted.count ?? 0
+      completed: requestsCompleted.count ?? 0,
     },
     chats: {
       total: chatsTotal.count ?? 0,
       waiting: chatsWaiting.count ?? 0,
       active: chatsActive.count ?? 0,
-      closed: chatsClosed.count ?? 0
+      closed: chatsClosed.count ?? 0,
     },
     tickets: {
       total: ticketsTotal.count ?? 0,
       open: ticketsOpen.count ?? 0,
       pending: ticketsPending.count ?? 0,
-      resolved: ticketsResolved.count ?? 0
-    }
+      resolved: ticketsResolved.count ?? 0,
+    },
   }
 })

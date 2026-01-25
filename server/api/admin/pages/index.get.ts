@@ -16,7 +16,8 @@ export default defineEventHandler(async (event) => {
   // Фильтр по статусу публикации
   if (query.published === 'true') {
     queryBuilder = queryBuilder.eq('is_published', true)
-  } else if (query.published === 'false') {
+  }
+  else if (query.published === 'false') {
     queryBuilder = queryBuilder.eq('is_published', false)
   }
 
@@ -26,7 +27,7 @@ export default defineEventHandler(async (event) => {
     console.error('Failed to fetch pages:', error)
     throw createError({
       statusCode: 500,
-      message: 'Ошибка при загрузке страниц'
+      message: 'Ошибка при загрузке страниц',
     })
   }
 
@@ -43,7 +44,7 @@ export default defineEventHandler(async (event) => {
     authorId: item.author_id,
     publishedAt: item.published_at,
     createdAt: item.created_at,
-    updatedAt: item.updated_at
+    updatedAt: item.updated_at,
   }))
 
   return { pages }

@@ -1,8 +1,8 @@
-import { useSupabaseAdmin } from '~~/server/utils/supabase'
+import { getAdminFromEvent, useSupabaseAdmin } from '~~/server/utils/supabase'
 import { mapChat, type DbChat } from '~~/server/utils/mappers'
 
 export default defineEventHandler(async (event) => {
-
+  const admin = await getAdminFromEvent(event)
   const query = getQuery(event)
   const status = query.status as string | undefined
   const assignedToMe = query.assignedToMe === 'true'
@@ -19,7 +19,8 @@ export default defineEventHandler(async (event) => {
 
   if (status && ['active', 'waiting', 'closed'].includes(status)) {
     queryBuilder = queryBuilder.eq('status', status)
-  } else {
+  }
+  else {
     queryBuilder = queryBuilder.in('status', ['active', 'waiting'])
   }
 
@@ -33,11 +34,11 @@ export default defineEventHandler(async (event) => {
     console.error('Failed to fetch chats:', error)
     throw createError({
       statusCode: 500,
-      message: 'Ошибка при загрузке чатов'
+      message: 'Ошибка при загрузке чатов',
     })
   }
 
   return {
-    chats: (chats as DbChat[]).map(mapChat)
+    chats: (chats as DbChat[]).map(mapChat),
   }
 })

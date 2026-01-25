@@ -10,12 +10,12 @@
  */
 
 interface Props {
-  date: string | null | undefined  // ISO дата или null
-  fallback?: string                // Fallback при отсутствии даты
+  date: string | null | undefined // ISO дата или null
+  fallback?: string // Fallback при отсутствии даты
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  fallback: '—'
+  fallback: '—',
 })
 
 const { formatRelativeDate } = useFormatters()
@@ -24,8 +24,8 @@ const { formatRelativeDate } = useFormatters()
 // STATE
 // =============================================================================
 
-const displayValue = ref(props.fallback)  // Текст для отображения
-const mounted = ref(false)                 // Флаг клиентского рендера
+const displayValue = ref(props.fallback) // Текст для отображения
+const mounted = ref(false) // Флаг клиентского рендера
 let interval: ReturnType<typeof setInterval> | null = null
 
 // =============================================================================
@@ -60,7 +60,8 @@ onUnmounted(() => {
 watch(() => props.date, (newDate) => {
   if (mounted.value && newDate) {
     displayValue.value = formatRelativeDate(newDate)
-  } else if (!newDate) {
+  }
+  else if (!newDate) {
     displayValue.value = props.fallback
   }
 })

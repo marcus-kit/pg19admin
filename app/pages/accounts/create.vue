@@ -1,6 +1,6 @@
 <script setup lang="ts">
 definePageMeta({
-  middleware: 'admin'
+  middleware: 'admin',
 })
 
 useHead({ title: 'Создать аккаунт — Админ-панель' })
@@ -41,15 +41,15 @@ const form = ref({
     apartment: '',
     entrance: '',
     floor: '',
-    intercom: ''
-  }
+    intercom: '',
+  },
 })
 
 const contractStatusOptions = [
   { value: 'draft', label: 'Черновик' },
   { value: 'active', label: 'Активный' },
   { value: 'terminated', label: 'Расторгнут' },
-  { value: 'stopped', label: 'Приостановлен' }
+  { value: 'stopped', label: 'Приостановлен' },
 ]
 
 const searchUsers = async (query: string) => {
@@ -62,11 +62,13 @@ const searchUsers = async (query: string) => {
   try {
     const data = await $fetch<{ users: User[] }>(`/api/admin/users?search=${encodeURIComponent(query)}&limit=10`)
     userSearchResults.value = data.users
-  } catch (e) {
+  }
+  catch (e) {
     console.error('User search failed:', e)
     toast.error('Не удалось найти пользователей')
     userSearchResults.value = []
-  } finally {
+  }
+  finally {
     userSearchLoading.value = false
   }
 }
@@ -102,19 +104,21 @@ const createAccount = async () => {
 
   saving.value = true
   try {
-    const response = await $fetch<{ success: boolean; account: { id: string } }>('/api/admin/accounts', {
+    const response = await $fetch<{ success: boolean, account: { id: string } }>('/api/admin/accounts', {
       method: 'POST',
-      body: form.value
+      body: form.value,
     })
 
     if (response.success && response.account?.id) {
       toast.success('Аккаунт создан')
       router.push(`/accounts/${response.account.id}`)
     }
-  } catch (e: any) {
+  }
+  catch (e: any) {
     error.value = e.data?.message || 'Ошибка при создании аккаунта'
     toast.error('Не удалось создать аккаунт')
-  } finally {
+  }
+  finally {
     saving.value = false
   }
 }
@@ -157,7 +161,7 @@ onUnmounted(() => {
 
     <!-- Form -->
     <div class="max-w-2xl">
-      <form @submit.prevent="createAccount" class="space-y-6">
+      <form class="space-y-6" @submit.prevent="createAccount">
         <!-- Владелец -->
         <UiCard>
           <template #header>
@@ -202,8 +206,8 @@ onUnmounted(() => {
                 <div
                   v-for="user in userSearchResults"
                   :key="user.id"
-                  @click="selectUser(user)"
                   class="px-4 py-2 cursor-pointer hover:bg-[var(--glass-bg)] transition-colors"
+                  @click="selectUser(user)"
                 >
                   <p class="font-medium text-[var(--text-primary)]">{{ user.fullName }}</p>
                   <p class="text-sm text-[var(--text-muted)]">
@@ -239,8 +243,8 @@ onUnmounted(() => {
               <UiSelect
                 v-model="form.contractStatus"
                 :options="contractStatusOptions"
-                label="Статус договора"
                 :placeholder="undefined"
+                label="Статус договора"
               />
             </div>
             <div class="grid grid-cols-2 gap-4">
@@ -292,11 +296,11 @@ onUnmounted(() => {
 
         <!-- Actions -->
         <div class="flex gap-3">
-          <UiButton type="submit" :loading="saving" :disabled="saving">
+          <UiButton :loading="saving" :disabled="saving" type="submit">
             <Icon name="heroicons:plus" class="w-4 h-4" />
             Создать
           </UiButton>
-          <UiButton variant="ghost" @click="cancel" :disabled="saving">
+          <UiButton :disabled="saving" variant="ghost" @click="cancel">
             Отмена
           </UiButton>
         </div>

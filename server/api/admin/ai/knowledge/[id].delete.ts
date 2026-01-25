@@ -12,7 +12,7 @@ export default defineEventHandler(async (event) => {
   if (!id) {
     throw createError({
       statusCode: 400,
-      message: 'ID обязателен'
+      message: 'ID обязателен',
     })
   }
 
@@ -32,10 +32,11 @@ export default defineEventHandler(async (event) => {
       console.error('Failed to hard delete knowledge item:', error)
       throw createError({
         statusCode: 500,
-        message: 'Ошибка при удалении записи'
+        message: 'Ошибка при удалении записи',
       })
     }
-  } else {
+  }
+  else {
     // Soft delete — деактивация
     const { error } = await supabase
       .from('ai_knowledge_base')
@@ -46,7 +47,7 @@ export default defineEventHandler(async (event) => {
       console.error('Failed to soft delete knowledge item:', error)
       throw createError({
         statusCode: 500,
-        message: 'Ошибка при деактивации записи'
+        message: 'Ошибка при деактивации записи',
       })
     }
   }

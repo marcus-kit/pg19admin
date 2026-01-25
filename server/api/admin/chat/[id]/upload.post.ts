@@ -10,16 +10,15 @@ const ALLOWED_TYPES = [
   'application/msword',
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
   'application/vnd.ms-excel',
-  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
 ]
 
 export default defineEventHandler(async (event) => {
-
   const chatId = getRouterParam(event, 'id')
   if (!chatId) {
     throw createError({
       statusCode: 400,
-      message: 'ID чата обязателен'
+      message: 'ID чата обязателен',
     })
   }
 
@@ -30,7 +29,7 @@ export default defineEventHandler(async (event) => {
   if (!file || !(file instanceof File)) {
     throw createError({
       statusCode: 400,
-      message: 'Файл не загружен'
+      message: 'Файл не загружен',
     })
   }
 
@@ -38,7 +37,7 @@ export default defineEventHandler(async (event) => {
   if (file.size > 10 * 1024 * 1024) {
     throw createError({
       statusCode: 400,
-      message: 'Размер файла не должен превышать 10 МБ'
+      message: 'Размер файла не должен превышать 10 МБ',
     })
   }
 
@@ -46,7 +45,7 @@ export default defineEventHandler(async (event) => {
   if (!ALLOWED_TYPES.includes(file.type)) {
     throw createError({
       statusCode: 400,
-      message: 'Недопустимый тип файла. Разрешены: изображения (JPEG, PNG, GIF, WebP), PDF, Word, Excel'
+      message: 'Недопустимый тип файла. Разрешены: изображения (JPEG, PNG, GIF, WebP), PDF, Word, Excel',
     })
   }
 
@@ -62,14 +61,14 @@ export default defineEventHandler(async (event) => {
   if (chatError || !chat) {
     throw createError({
       statusCode: 404,
-      message: 'Чат не найден'
+      message: 'Чат не найден',
     })
   }
 
   if (chat.status === 'closed') {
     throw createError({
       statusCode: 400,
-      message: 'Чат закрыт'
+      message: 'Чат закрыт',
     })
   }
 
@@ -87,14 +86,14 @@ export default defineEventHandler(async (event) => {
     .from('chat-attachments')
     .upload(storagePath, buffer, {
       contentType: file.type,
-      upsert: false
+      upsert: false,
     })
 
   if (uploadError) {
     console.error('Error uploading chat attachment:', uploadError)
     throw createError({
       statusCode: 500,
-      message: 'Ошибка при загрузке файла'
+      message: 'Ошибка при загрузке файла',
     })
   }
 
@@ -108,6 +107,6 @@ export default defineEventHandler(async (event) => {
     name: file.name,
     size: file.size,
     type: file.type,
-    isImage: file.type.startsWith('image/')
+    isImage: file.type.startsWith('image/'),
   }
 })

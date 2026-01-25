@@ -2,7 +2,7 @@
 import type { Ticket, TicketComment, TicketHistoryItem } from '~/types/admin'
 
 definePageMeta({
-  middleware: 'admin'
+  middleware: 'admin',
 })
 
 const route = useRoute()
@@ -22,19 +22,21 @@ const history = ref<TicketHistoryItem[]>([])
 const fetchTicket = async () => {
   loading.value = true
   try {
-    const data = await $fetch<{ ticket: Ticket; comments: TicketComment[]; history: TicketHistoryItem[] }>(
-      `/api/admin/tickets/${ticketId.value}`
+    const data = await $fetch<{ ticket: Ticket, comments: TicketComment[], history: TicketHistoryItem[] }>(
+      `/api/admin/tickets/${ticketId.value}`,
     )
     ticket.value = data.ticket
     comments.value = data.comments
     history.value = data.history
-  } catch (error: any) {
+  }
+  catch (error: any) {
     console.error('Failed to fetch ticket:', error)
     toast.error('Не удалось загрузить тикет')
     if (error.statusCode === 404) {
       router.push('/tickets')
     }
-  } finally {
+  }
+  finally {
     loading.value = false
   }
 }
@@ -46,7 +48,7 @@ const handleAddComment = async (content: string, isInternal: boolean) => {
   try {
     const response = await $fetch<{ comment: TicketComment }>(`/api/admin/tickets/${ticketId.value}/comment`, {
       method: 'POST',
-      body: { content, isInternal }
+      body: { content, isInternal },
     })
 
     comments.value.push(response.comment)
@@ -54,10 +56,12 @@ const handleAddComment = async (content: string, isInternal: boolean) => {
     if (ticket.value?.status === 'new') {
       ticket.value.status = 'open'
     }
-  } catch (error: any) {
+  }
+  catch (error: any) {
     console.error('Failed to add comment:', error)
     toast.error('Ошибка при добавлении комментария')
-  } finally {
+  }
+  finally {
     saving.value = false
   }
 }
@@ -69,15 +73,17 @@ const handleUpdateStatus = async (newStatus: string) => {
   try {
     await $fetch(`/api/admin/tickets/${ticketId.value}/status`, {
       method: 'PUT',
-      body: { status: newStatus }
+      body: { status: newStatus },
     })
 
     ticket.value.status = newStatus as Ticket['status']
     await fetchTicket()
-  } catch (error: any) {
+  }
+  catch (error: any) {
     console.error('Failed to update status:', error)
     toast.error('Ошибка при обновлении статуса')
-  } finally {
+  }
+  finally {
     saving.value = false
   }
 }
@@ -89,14 +95,16 @@ const handleUpdatePriority = async (newPriority: string) => {
   try {
     await $fetch(`/api/admin/tickets/${ticketId.value}/priority`, {
       method: 'PUT',
-      body: { priority: newPriority }
+      body: { priority: newPriority },
     })
 
     ticket.value.priority = newPriority as Ticket['priority']
-  } catch (error: any) {
+  }
+  catch (error: any) {
     console.error('Failed to update priority:', error)
     toast.error('Ошибка при обновлении приоритета')
-  } finally {
+  }
+  finally {
     saving.value = false
   }
 }
@@ -108,14 +116,16 @@ const handleAssignToMe = async () => {
   try {
     await $fetch(`/api/admin/tickets/${ticketId.value}/assign`, {
       method: 'POST',
-      body: { adminId: user.value.sub }
+      body: { adminId: user.value.sub },
     })
 
     await fetchTicket()
-  } catch (error: any) {
+  }
+  catch (error: any) {
     console.error('Failed to assign ticket:', error)
     toast.error('Ошибка при назначении тикета')
-  } finally {
+  }
+  finally {
     saving.value = false
   }
 }
@@ -126,7 +136,7 @@ const formatFullDate = (dateStr: string) => {
     month: 'long',
     year: 'numeric',
     hour: '2-digit',
-    minute: '2-digit'
+    minute: '2-digit',
   })
 }
 

@@ -1,13 +1,12 @@
 import { useSupabaseAdmin } from '~~/server/utils/supabase'
 
 export default defineEventHandler(async (event) => {
-
   const id = getRouterParam(event, 'id')
 
   if (!id) {
     throw createError({
       statusCode: 400,
-      message: 'ID услуги обязателен'
+      message: 'ID услуги обязателен',
     })
   }
 
@@ -25,7 +24,7 @@ export default defineEventHandler(async (event) => {
   if (error || !service) {
     throw createError({
       statusCode: 404,
-      message: 'Услуга не найдена'
+      message: 'Услуга не найдена',
     })
   }
 
@@ -44,7 +43,7 @@ export default defineEventHandler(async (event) => {
       categoryId: service.category_id,
       category: service.category,
       createdAt: service.created_at,
-      updatedAt: service.updated_at
-    }
+      updatedAt: service.updated_at,
+    },
   }
 })

@@ -2,7 +2,7 @@
 import type { ConnectionRequest, CallbackRequest } from '~/types/admin'
 
 definePageMeta({
-  middleware: 'admin'
+  middleware: 'admin',
 })
 
 useHead({ title: 'Заявки — Админ-панель' })
@@ -31,10 +31,12 @@ const fetchConnectionRequests = async () => {
 
     const data = await $fetch<{ requests: ConnectionRequest[] }>(`/api/admin/requests?${params}`)
     connectionRequests.value = data.requests
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to fetch connection requests:', error)
     toast.error('Не удалось загрузить заявки на подключение')
-  } finally {
+  }
+  finally {
     connectionLoading.value = false
   }
 }
@@ -54,10 +56,12 @@ const fetchCallbackRequests = async () => {
 
     const data = await $fetch<{ callbacks: CallbackRequest[] }>(`/api/admin/callbacks?${params}`)
     callbackRequests.value = data.callbacks
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to fetch callback requests:', error)
     toast.error('Не удалось загрузить заявки на обратный звонок')
-  } finally {
+  }
+  finally {
     callbackLoading.value = false
   }
 }
@@ -66,11 +70,12 @@ const updateCallbackStatus = async (callback: CallbackRequest, newStatus: string
   try {
     await $fetch(`/api/admin/callbacks/${callback.id}`, {
       method: 'PUT',
-      body: { status: newStatus }
+      body: { status: newStatus },
     })
     callback.status = newStatus as CallbackRequest['status']
     toast.success('Статус заявки обновлён')
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to update callback status:', error)
     toast.error('Не удалось обновить статус заявки')
   }
@@ -78,10 +83,10 @@ const updateCallbackStatus = async (callback: CallbackRequest, newStatus: string
 
 // Counters for new requests
 const newConnectionCount = computed(() =>
-  connectionRequests.value.filter(r => r.status === 'new').length
+  connectionRequests.value.filter(r => r.status === 'new').length,
 )
 const newCallbackCount = computed(() =>
-  callbackRequests.value.filter(r => r.status === 'new').length
+  callbackRequests.value.filter(r => r.status === 'new').length,
 )
 
 // ==================== LIFECYCLE ====================
@@ -105,7 +110,8 @@ watch(callbackStatusFilter, () => {
 watch(activeTab, (newTab) => {
   if (newTab === 'connection' && connectionRequests.value.length === 0) {
     fetchConnectionRequests()
-  } else if (newTab === 'callback' && callbackRequests.value.length === 0) {
+  }
+  else if (newTab === 'callback' && callbackRequests.value.length === 0) {
     fetchCallbackRequests()
   }
 })
@@ -123,37 +129,37 @@ watch(activeTab, (newTab) => {
     <!-- Tabs -->
     <div class="flex gap-2 mb-6">
       <button
-        class="px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
         :class="activeTab === 'connection'
           ? 'bg-primary text-white'
           : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'"
         :style="activeTab !== 'connection' ? 'background: var(--glass-bg);' : ''"
+        class="px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
         @click="activeTab = 'connection'"
       >
         <Icon name="heroicons:home" class="w-4 h-4" />
         Подключение
         <span
           v-if="newConnectionCount > 0"
-          class="px-1.5 py-0.5 text-xs rounded-full"
           :class="activeTab === 'connection' ? 'bg-white/20' : 'bg-primary/20 text-primary'"
+          class="px-1.5 py-0.5 text-xs rounded-full"
         >
           {{ newConnectionCount }}
         </span>
       </button>
       <button
-        class="px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
         :class="activeTab === 'callback'
           ? 'bg-primary text-white'
           : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'"
         :style="activeTab !== 'callback' ? 'background: var(--glass-bg);' : ''"
+        class="px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
         @click="activeTab = 'callback'"
       >
         <Icon name="heroicons:phone" class="w-4 h-4" />
         Обратный звонок
         <span
           v-if="newCallbackCount > 0"
-          class="px-1.5 py-0.5 text-xs rounded-full"
           :class="activeTab === 'callback' ? 'bg-white/20' : 'bg-primary/20 text-primary'"
+          class="px-1.5 py-0.5 text-xs rounded-full"
         >
           {{ newCallbackCount }}
         </span>
@@ -163,18 +169,18 @@ watch(activeTab, (newTab) => {
     <!-- CONNECTION TAB -->
     <ConnectionRequestsTab
       v-show="activeTab === 'connection'"
-      :requests="connectionRequests"
-      :loading="connectionLoading"
       v-model:status-filter="connectionStatusFilter"
       v-model:only-in-coverage="onlyInCoverage"
+      :requests="connectionRequests"
+      :loading="connectionLoading"
     />
 
     <!-- CALLBACK TAB -->
     <CallbackRequestsTab
       v-show="activeTab === 'callback'"
+      v-model:status-filter="callbackStatusFilter"
       :requests="callbackRequests"
       :loading="callbackLoading"
-      v-model:status-filter="callbackStatusFilter"
       @update-status="updateCallbackStatus"
     />
   </div>

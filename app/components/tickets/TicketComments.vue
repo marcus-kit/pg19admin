@@ -21,7 +21,7 @@ const formatDate = (dateStr: string) => {
     day: 'numeric',
     month: 'short',
     hour: '2-digit',
-    minute: '2-digit'
+    minute: '2-digit',
   })
 }
 
@@ -51,7 +51,7 @@ const handleSubmit = () => {
             ? comment.isInternal
               ? 'bg-yellow-500/10 border border-yellow-500/20'
               : 'bg-primary/10 border border-primary/20'
-            : 'bg-[var(--glass-bg)] border border-[var(--glass-border)]'
+            : 'bg-[var(--glass-bg)] border border-[var(--glass-border)]',
         ]"
       >
         <div class="flex items-center justify-between mb-2">
@@ -91,9 +91,9 @@ const handleSubmit = () => {
           <span class="text-sm text-[var(--text-secondary)]">Внутренний комментарий</span>
         </label>
         <UiButton
-          @click="handleSubmit"
           :loading="saving"
           :disabled="!newComment.trim() || saving"
+          @click="handleSubmit"
         >
           Отправить
         </UiButton>

@@ -8,12 +8,12 @@ interface Props {
 
 const props = withDefaults(defineProps<Props>(), {
   title: 'Подтверждение удаления',
-  message: 'Это действие необратимо. Для подтверждения введите:'
+  message: 'Это действие необратимо. Для подтверждения введите:',
 })
 
 const emit = defineEmits<{
-  'close': []
-  'confirm': []
+  close: []
+  confirm: []
 }>()
 
 const confirmInput = ref('')
@@ -46,7 +46,8 @@ watch(() => props.show, (newVal) => {
   if (newVal) {
     document.addEventListener('keydown', handleEscape)
     document.body.style.overflow = 'hidden'
-  } else {
+  }
+  else {
     document.removeEventListener('keydown', handleEscape)
     document.body.style.overflow = ''
     confirmInput.value = ''
@@ -119,9 +120,9 @@ onUnmounted(() => {
               Отмена
             </UiButton>
             <UiButton
+              :disabled="!isValid"
               variant="danger"
               class="flex-1"
-              :disabled="!isValid"
               @click="handleConfirm"
             >
               <Icon name="heroicons:trash" class="w-4 h-4 mr-2" />

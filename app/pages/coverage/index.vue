@@ -1,7 +1,6 @@
 <script setup lang="ts">
-
 definePageMeta({
-  middleware: 'admin'
+  middleware: 'admin',
 })
 
 useHead({ title: 'Карта покрытия — Админ-панель' })
@@ -14,7 +13,7 @@ interface CoverageZone {
   description: string | null
   type: 'pg19' | 'partner'
   partnerId: string | null
-  partner: { id: string; name: string } | null
+  partner: { id: string, name: string } | null
   geometry: object
   color: string
   fillOpacity: number
@@ -53,10 +52,12 @@ const fetchPartners = async () => {
   try {
     const data = await $fetch<{ partners: Partner[] }>('/api/admin/partners')
     partners.value = data.partners
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to fetch partners:', error)
     toast.error('Не удалось загрузить список партнёров')
-  } finally {
+  }
+  finally {
     loadingPartners.value = false
   }
 }
@@ -65,13 +66,14 @@ const selectPartner = (partnerId: string) => {
   if (selectedPartnerId.value === partnerId) {
     // Повторный клик — сбросить выбор
     selectedPartnerId.value = null
-  } else {
+  }
+  else {
     selectedPartnerId.value = partnerId
   }
 }
 
 const filteredZones = computed(() => {
-  return zones.value.filter(zone => {
+  return zones.value.filter((zone) => {
     // Фильтр по конкретному партнёру
     if (selectedPartnerId.value) {
       if (zone.partnerId !== selectedPartnerId.value) return false
@@ -89,16 +91,17 @@ const visibleZonesForMap = computed(() => {
   return filteredZones.value.filter(zone => !hiddenZoneIds.value.has(zone.id))
 })
 
-
 const fetchZones = async () => {
   loading.value = true
   try {
     const data = await $fetch<{ zones: CoverageZone[] }>('/api/admin/coverage/zones')
     zones.value = data.zones
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to fetch zones:', error)
     toast.error('Не удалось загрузить зоны покрытия')
-  } finally {
+  }
+  finally {
     loading.value = false
   }
 }
@@ -107,23 +110,24 @@ const handleZoneClick = (zone: CoverageZone) => {
   selectedZone.value = zone
 }
 
-const handleImport = async (data: { geojson: any; type: string; partnerId?: string; replaceExisting: boolean }) => {
+const handleImport = async (data: { geojson: any, type: string, partnerId?: string, replaceExisting: boolean }) => {
   try {
-    const result = await $fetch<{ success: boolean; imported: number }>('/api/admin/coverage/import', {
+    const result = await $fetch<{ success: boolean, imported: number }>('/api/admin/coverage/import', {
       method: 'POST',
       body: {
         geojson: data.geojson,
         type: data.type,
         partnerId: data.partnerId,
-        replaceExisting: data.replaceExisting
-      }
+        replaceExisting: data.replaceExisting,
+      },
     })
 
     if (result.success) {
       toast.success(`Импортировано ${result.imported} зон`)
       await fetchZones()
     }
-  } catch (error: any) {
+  }
+  catch (error: any) {
     console.error('Failed to import zones:', error)
     toast.error(error.data?.message || 'Не удалось импортировать зоны')
   }
@@ -155,7 +159,8 @@ const confirmDelete = async () => {
     showDeleteModal.value = false
     zoneToDelete.value = null
     toast.success('Зона покрытия удалена')
-  } catch (error: any) {
+  }
+  catch (error: any) {
     console.error('Failed to delete zone:', error)
     toast.error(error.data?.message || 'Не удалось удалить зону')
   }
@@ -166,7 +171,8 @@ const toggleZoneVisibility = (zone: CoverageZone) => {
   const newHidden = new Set(hiddenZoneIds.value)
   if (newHidden.has(zone.id)) {
     newHidden.delete(zone.id)
-  } else {
+  }
+  else {
     newHidden.add(zone.id)
   }
   hiddenZoneIds.value = newHidden
@@ -184,7 +190,8 @@ onMounted(() => {
     try {
       const ids = JSON.parse(saved) as number[]
       hiddenZoneIds.value = new Set(ids)
-    } catch {
+    }
+    catch {
       // Ignore invalid data
     }
   }
@@ -218,9 +225,9 @@ onMounted(() => {
 
             <!-- Кнопка "Все" -->
             <UiButton
+              :class="{ 'bg-white/10': !selectedPartnerId }"
               variant="ghost"
               size="sm"
-              :class="{ 'bg-white/10': !selectedPartnerId }"
               @click="selectedPartnerId = null"
             >
               Все
@@ -230,15 +237,15 @@ onMounted(() => {
             <UiButton
               v-for="partner in partners"
               :key="partner.id"
-              variant="ghost"
-              size="sm"
               :class="{ 'ring-2 ring-offset-1 ring-offset-transparent': selectedPartnerId === partner.id }"
               :style="selectedPartnerId === partner.id ? { ringColor: partner.color } : {}"
+              variant="ghost"
+              size="sm"
               @click="selectPartner(partner.id)"
             >
               <span
-                class="w-3 h-3 rounded-full mr-2"
                 :style="{ backgroundColor: partner.color }"
+                class="w-3 h-3 rounded-full mr-2"
               />
               {{ partner.name }}
             </UiButton>
@@ -295,19 +302,19 @@ onMounted(() => {
             <div
               v-for="zone in filteredZones"
               :key="zone.id"
-              class="p-3 rounded-lg border border-[var(--glass-border)] hover:bg-[var(--glass-bg)] transition-colors cursor-pointer"
               :class="{
                 'ring-2 ring-primary': selectedZone?.id === zone.id,
-                'opacity-50': isZoneHidden(zone.id)
+                'opacity-50': isZoneHidden(zone.id),
               }"
+              class="p-3 rounded-lg border border-[var(--glass-border)] hover:bg-[var(--glass-bg)] transition-colors cursor-pointer"
               @click="handleZoneClick(zone)"
             >
               <div class="flex items-start justify-between gap-2">
                 <div class="flex-1 min-w-0">
                   <div class="flex items-center gap-2 mb-1">
                     <span
-                      class="w-3 h-3 rounded-full flex-shrink-0"
                       :style="{ backgroundColor: zone.color }"
+                      class="w-3 h-3 rounded-full flex-shrink-0"
                     />
                     <span class="font-medium text-sm text-[var(--text-primary)] truncate">
                       {{ zone.name }}
@@ -315,8 +322,8 @@ onMounted(() => {
                   </div>
                   <div class="flex gap-1 flex-wrap">
                     <UiBadge
-                      size="sm"
                       :variant="zone.type === 'pg19' ? 'warning' : 'info'"
+                      size="sm"
                     >
                       {{ zone.type === 'pg19' ? 'ПЖ19' : zone.partner?.name || 'Партнёр' }}
                     </UiBadge>
@@ -339,8 +346,8 @@ onMounted(() => {
 
                 <div class="flex gap-1 flex-shrink-0">
                   <button
-                    class="p-1 hover:bg-[var(--glass-bg)] rounded"
                     :title="isZoneHidden(zone.id) ? 'Показать на карте' : 'Скрыть на карте'"
+                    class="p-1 hover:bg-[var(--glass-bg)] rounded"
                     @click.stop="toggleZoneVisibility(zone)"
                   >
                     <Icon
@@ -406,8 +413,8 @@ onMounted(() => {
             <div class="flex items-center gap-2">
               <span class="text-[var(--text-muted)]">Цвет:</span>
               <span
-                class="w-5 h-5 rounded"
                 :style="{ backgroundColor: selectedZone.color }"
+                class="w-5 h-5 rounded"
               />
               <span class="text-[var(--text-primary)] font-mono text-xs">
                 {{ selectedZone.color }}
@@ -417,9 +424,9 @@ onMounted(() => {
             <div>
               <span class="text-[var(--text-muted)]">Статус:</span>
               <UiBadge
+                :variant="selectedZone.isActive ? 'success' : 'neutral'"
                 class="ml-2"
                 size="sm"
-                :variant="selectedZone.isActive ? 'success' : 'neutral'"
               >
                 {{ selectedZone.isActive ? 'Активна' : 'Неактивна' }}
               </UiBadge>

@@ -1,13 +1,13 @@
-import { useSupabaseAdmin } from '~~/server/utils/supabase'
+import { getAdminFromEvent, useSupabaseAdmin } from '~~/server/utils/supabase'
 
 export default defineEventHandler(async (event) => {
-
+  const admin = await getAdminFromEvent(event)
   const chatId = getRouterParam(event, 'id')
 
   if (!chatId) {
     throw createError({
       statusCode: 400,
-      message: 'ID чата обязателен'
+      message: 'ID чата обязателен',
     })
   }
 
@@ -23,14 +23,14 @@ export default defineEventHandler(async (event) => {
   if (chatError || !chat) {
     throw createError({
       statusCode: 404,
-      message: 'Чат не найден'
+      message: 'Чат не найден',
     })
   }
 
   if (chat.status === 'closed') {
     throw createError({
       statusCode: 400,
-      message: 'Чат уже закрыт'
+      message: 'Чат уже закрыт',
     })
   }
 
@@ -39,7 +39,7 @@ export default defineEventHandler(async (event) => {
     .from('chats')
     .update({
       status: 'closed',
-      closed_at: new Date().toISOString()
+      closed_at: new Date().toISOString(),
     })
     .eq('id', chatId)
 
@@ -47,7 +47,7 @@ export default defineEventHandler(async (event) => {
     console.error('Failed to close chat:', updateError)
     throw createError({
       statusCode: 500,
-      message: 'Ошибка при закрытии чата'
+      message: 'Ошибка при закрытии чата',
     })
   }
 
@@ -61,7 +61,7 @@ export default defineEventHandler(async (event) => {
       sender_name: admin.fullName,
       content: `Чат закрыт оператором ${admin.fullName}`,
       content_type: 'system',
-      system_action: 'chat_closed'
+      system_action: 'chat_closed',
     })
 
   return { success: true }

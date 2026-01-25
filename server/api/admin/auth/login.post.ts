@@ -12,7 +12,7 @@ export default defineEventHandler(async (event) => {
   if (!body.email || !body.password) {
     throw createError({
       statusCode: 400,
-      statusMessage: 'Email и пароль обязательны'
+      statusMessage: 'Email и пароль обязательны',
     })
   }
 
@@ -21,7 +21,7 @@ export default defineEventHandler(async (event) => {
   if (!emailRegex.test(body.email)) {
     throw createError({
       statusCode: 400,
-      statusMessage: 'Некорректный формат email'
+      statusMessage: 'Некорректный формат email',
     })
   }
 
@@ -30,14 +30,14 @@ export default defineEventHandler(async (event) => {
   const supabase = await serverSupabaseClient(event)
   const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
     email: body.email,
-    password: body.password
+    password: body.password,
   })
 
   if (authError || !authData.user) {
     console.warn(`[Auth] Failed admin login for: ${body.email}`)
     throw createError({
       statusCode: 401,
-      statusMessage: 'Неверные учётные данные'
+      statusMessage: 'Неверные учётные данные',
     })
   }
 
@@ -56,7 +56,7 @@ export default defineEventHandler(async (event) => {
     await supabase.auth.signOut()
     throw createError({
       statusCode: 401,
-      statusMessage: 'Неверные учётные данные'
+      statusMessage: 'Неверные учётные данные',
     })
   }
 
@@ -75,7 +75,7 @@ export default defineEventHandler(async (event) => {
       fullName: admin.full_name,
       role: admin.role,
       permissions: admin.permissions || {},
-      lastLogin: admin.last_login_at
-    }
+      lastLogin: admin.last_login_at,
+    },
   }
 })

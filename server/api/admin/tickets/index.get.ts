@@ -1,8 +1,8 @@
-import { useSupabaseAdmin } from '~~/server/utils/supabase'
+import { getAdminFromEvent, useSupabaseAdmin } from '~~/server/utils/supabase'
 import { mapTicket, type DbTicket } from '~~/server/utils/mappers'
 
 export default defineEventHandler(async (event) => {
-
+  const admin = await getAdminFromEvent(event)
   const query = getQuery(event)
   const status = query.status as string | undefined
   const priority = query.priority as string | undefined
@@ -20,13 +20,17 @@ export default defineEventHandler(async (event) => {
 
   if (status === 'in_progress') {
     queryBuilder = queryBuilder.in('status', ['open', 'pending'])
-  } else if (status === 'closed') {
+  }
+  else if (status === 'closed') {
     queryBuilder = queryBuilder.in('status', ['resolved', 'closed'])
-  } else if (status === 'all') {
+  }
+  else if (status === 'all') {
     // All tickets - no filter
-  } else if (status && ['new', 'open', 'pending', 'resolved'].includes(status)) {
+  }
+  else if (status && ['new', 'open', 'pending', 'resolved'].includes(status)) {
     queryBuilder = queryBuilder.eq('status', status)
-  } else {
+  }
+  else {
     queryBuilder = queryBuilder.eq('status', 'new')
   }
 
@@ -44,12 +48,12 @@ export default defineEventHandler(async (event) => {
     console.error('Failed to fetch tickets:', error)
     throw createError({
       statusCode: 500,
-      message: 'Ошибка при загрузке тикетов'
+      message: 'Ошибка при загрузке тикетов',
     })
   }
 
   const adminIds = [...new Set(tickets.filter(t => t.assigned_admin_id).map(t => t.assigned_admin_id))]
-  let adminsMap: Record<string, { id: string; fullName: string }> = {}
+  let adminsMap: Record<string, { id: string, fullName: string }> = {}
 
   if (adminIds.length > 0) {
     const { data: admins } = await supabase
@@ -64,10 +68,10 @@ export default defineEventHandler(async (event) => {
 
   return {
     tickets: (tickets as DbTicket[]).map(ticket =>
-      mapTicket(ticket, ticket.assigned_admin_id ? adminsMap[ticket.assigned_admin_id] : null)
+      mapTicket(ticket, ticket.assigned_admin_id ? adminsMap[ticket.assigned_admin_id] : null),
     ),
     total: count || 0,
     limit,
-    offset
+    offset,
   }
 })

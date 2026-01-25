@@ -1,7 +1,6 @@
 import { serverSupabaseServiceRole } from '#supabase/server'
 
 export default defineEventHandler(async (event) => {
-
   const query = getQuery(event)
   const supabase = serverSupabaseServiceRole(event)
 
@@ -42,8 +41,8 @@ export default defineEventHandler(async (event) => {
         color: zone.color,
         fillOpacity: zone.fill_opacity,
         strokeWidth: zone.stroke_width,
-        isActive: zone.is_active
-      }
+        isActive: zone.is_active,
+      },
     })))
   }
 
@@ -80,15 +79,15 @@ export default defineEventHandler(async (event) => {
         color: '#E91E8C',
         fillOpacity: 0.3,
         strokeWidth: 2,
-        isActive: zone.active
-      }
+        isActive: zone.active,
+      },
     })))
   }
 
   // Build GeoJSON FeatureCollection
   const featureCollection = {
     type: 'FeatureCollection',
-    features
+    features,
   }
 
   // Set headers for file download

@@ -19,9 +19,9 @@ const handleLogout = async () => {
             Админ-панель
           </h2>
           <button
-            @click="handleLogout"
             class="p-2 text-[var(--text-muted)] hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
             title="Выйти"
+            @click="handleLogout"
           >
             <Icon name="heroicons:arrow-right-on-rectangle" class="w-5 h-5" />
           </button>
@@ -107,7 +107,7 @@ const handleLogout = async () => {
           <span class="text-xs">Тикеты</span>
         </NuxtLink>
 
-        <button @click="handleLogout" class="mobile-nav-item text-red-400">
+        <button class="mobile-nav-item text-red-400" @click="handleLogout">
           <Icon name="heroicons:arrow-right-on-rectangle" class="w-5 h-5" />
           <span class="text-xs">Выйти</span>
         </button>

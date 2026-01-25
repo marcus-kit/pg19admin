@@ -1,10 +1,10 @@
 // PUT /api/admin/callbacks/:id
 // Обновление статуса заявки на обратный звонок
 
-import { useSupabaseAdmin } from '~~/server/utils/supabase'
+import { getAdminFromEvent, useSupabaseAdmin } from '~~/server/utils/supabase'
 
 export default defineEventHandler(async (event) => {
-
+  const admin = await getAdminFromEvent(event)
   const callbackId = getRouterParam(event, 'id')
 
   if (!callbackId) {
@@ -23,7 +23,7 @@ export default defineEventHandler(async (event) => {
   // Подготавливаем данные для обновления
   const updateData: Record<string, any> = {
     status,
-    updated_at: new Date().toISOString()
+    updated_at: new Date().toISOString(),
   }
 
   // Если статус меняется на processing/completed/rejected — записываем кто обработал
@@ -43,7 +43,7 @@ export default defineEventHandler(async (event) => {
     console.error('Failed to update callback:', error)
     throw createError({
       statusCode: 500,
-      message: 'Ошибка при обновлении заявки'
+      message: 'Ошибка при обновлении заявки',
     })
   }
 
@@ -55,7 +55,7 @@ export default defineEventHandler(async (event) => {
       status: callback.status,
       processedBy: callback.processed_by,
       processedAt: callback.processed_at,
-      updatedAt: callback.updated_at
-    }
+      updatedAt: callback.updated_at,
+    },
   }
 })

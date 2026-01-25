@@ -40,7 +40,7 @@ export default defineEventHandler(async (event) => {
     if (!body.systemPrompt.trim()) {
       throw createError({
         statusCode: 400,
-        message: 'Системный промпт не может быть пустым'
+        message: 'Системный промпт не может быть пустым',
       })
     }
     updateData.system_prompt = body.systemPrompt.trim()
@@ -51,7 +51,7 @@ export default defineEventHandler(async (event) => {
     if (!allowedModels.includes(body.model)) {
       throw createError({
         statusCode: 400,
-        message: `Недопустимая модель. Разрешены: ${allowedModels.join(', ')}`
+        message: `Недопустимая модель. Разрешены: ${allowedModels.join(', ')}`,
       })
     }
     updateData.model = body.model
@@ -61,7 +61,7 @@ export default defineEventHandler(async (event) => {
     if (body.maxTokens < 50 || body.maxTokens > 4000) {
       throw createError({
         statusCode: 400,
-        message: 'maxTokens должен быть от 50 до 4000'
+        message: 'maxTokens должен быть от 50 до 4000',
       })
     }
     updateData.max_tokens = body.maxTokens
@@ -71,17 +71,17 @@ export default defineEventHandler(async (event) => {
     if (!Array.isArray(body.escalationKeywords)) {
       throw createError({
         statusCode: 400,
-        message: 'escalationKeywords должен быть массивом'
+        message: 'escalationKeywords должен быть массивом',
       })
     }
-    updateData.escalation_keywords = body.escalationKeywords.filter((k) => k.trim())
+    updateData.escalation_keywords = body.escalationKeywords.filter(k => k.trim())
   }
 
   if (body.maxBotMessages !== undefined) {
     if (body.maxBotMessages < 1 || body.maxBotMessages > 20) {
       throw createError({
         statusCode: 400,
-        message: 'maxBotMessages должен быть от 1 до 20'
+        message: 'maxBotMessages должен быть от 1 до 20',
       })
     }
     updateData.max_bot_messages = body.maxBotMessages
@@ -95,7 +95,7 @@ export default defineEventHandler(async (event) => {
     if (body.ragMatchThreshold < 0 || body.ragMatchThreshold > 1) {
       throw createError({
         statusCode: 400,
-        message: 'ragMatchThreshold должен быть от 0 до 1'
+        message: 'ragMatchThreshold должен быть от 0 до 1',
       })
     }
     updateData.rag_match_threshold = body.ragMatchThreshold
@@ -105,7 +105,7 @@ export default defineEventHandler(async (event) => {
     if (body.ragMatchCount < 1 || body.ragMatchCount > 20) {
       throw createError({
         statusCode: 400,
-        message: 'ragMatchCount должен быть от 1 до 20'
+        message: 'ragMatchCount должен быть от 1 до 20',
       })
     }
     updateData.rag_match_count = body.ragMatchCount
@@ -114,7 +114,7 @@ export default defineEventHandler(async (event) => {
   if (Object.keys(updateData).length === 0) {
     throw createError({
       statusCode: 400,
-      message: 'Нечего обновлять'
+      message: 'Нечего обновлять',
     })
   }
 
@@ -128,7 +128,7 @@ export default defineEventHandler(async (event) => {
   if (!existing) {
     throw createError({
       statusCode: 404,
-      message: 'Настройки AI-бота не найдены'
+      message: 'Настройки AI-бота не найдены',
     })
   }
 
@@ -144,7 +144,7 @@ export default defineEventHandler(async (event) => {
     console.error('Failed to update AI settings:', error)
     throw createError({
       statusCode: 500,
-      message: 'Ошибка при обновлении настроек AI'
+      message: 'Ошибка при обновлении настроек AI',
     })
   }
 
@@ -162,7 +162,7 @@ export default defineEventHandler(async (event) => {
       ragMatchThreshold: Number(settings.rag_match_threshold),
       ragMatchCount: settings.rag_match_count,
       createdAt: settings.created_at,
-      updatedAt: settings.updated_at
-    }
+      updatedAt: settings.updated_at,
+    },
   }
 })

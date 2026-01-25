@@ -4,7 +4,6 @@
 import { serverSupabaseServiceRole } from '#supabase/server'
 
 export default defineEventHandler(async (event) => {
-
   const supabase = serverSupabaseServiceRole(event)
 
   const { data: partners, error } = await supabase
@@ -18,7 +17,7 @@ export default defineEventHandler(async (event) => {
     console.error('Failed to fetch partners:', error)
     throw createError({
       statusCode: 500,
-      message: 'Ошибка при загрузке партнёров'
+      message: 'Ошибка при загрузке партнёров',
     })
   }
 
@@ -26,7 +25,7 @@ export default defineEventHandler(async (event) => {
     partners: (partners || []).map(p => ({
       id: p.id,
       name: p.organization_name,
-      color: p.color || '#E91E8C'
-    }))
+      color: p.color || '#E91E8C',
+    })),
   }
 })

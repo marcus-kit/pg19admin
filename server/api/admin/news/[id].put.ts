@@ -2,14 +2,13 @@ import { useSupabaseAdmin } from '~~/server/utils/supabase'
 import type { UpdateNewsData } from '~~/types/admin'
 
 export default defineEventHandler(async (event) => {
-
   const id = getRouterParam(event, 'id')
   const body = await readBody<UpdateNewsData>(event)
 
   if (!id) {
     throw createError({
       statusCode: 400,
-      message: 'ID новости обязателен'
+      message: 'ID новости обязателен',
     })
   }
 
@@ -35,7 +34,7 @@ export default defineEventHandler(async (event) => {
   if (Object.keys(dbData).length === 0) {
     throw createError({
       statusCode: 400,
-      message: 'Нет данных для обновления'
+      message: 'Нет данных для обновления',
     })
   }
 
@@ -50,7 +49,7 @@ export default defineEventHandler(async (event) => {
     console.error('Failed to update news:', error)
     throw createError({
       statusCode: 500,
-      message: 'Ошибка при обновлении новости'
+      message: 'Ошибка при обновлении новости',
     })
   }
 
@@ -59,7 +58,7 @@ export default defineEventHandler(async (event) => {
     news: {
       id: data.id,
       title: data.title,
-      status: data.status
-    }
+      status: data.status,
+    },
   }
 })

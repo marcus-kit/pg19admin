@@ -15,8 +15,8 @@ function formatTime(dateStr: string): string {
 
 function isImageAttachment(message: ChatMessage): boolean {
   if (!message.attachmentUrl) return false
-  return /\.(jpg|jpeg|png|gif|webp)$/i.test(message.attachmentUrl) ||
-    (message.attachmentName ? /\.(jpg|jpeg|png|gif|webp)$/i.test(message.attachmentName) : false)
+  return /\.(jpg|jpeg|png|gif|webp)$/i.test(message.attachmentUrl)
+    || (message.attachmentName ? /\.(jpg|jpeg|png|gif|webp)$/i.test(message.attachmentName) : false)
 }
 </script>
 
@@ -28,7 +28,7 @@ function isImageAttachment(message: ChatMessage): boolean {
         ? 'justify-end'
         : message.senderType === 'system'
           ? 'justify-center'
-          : 'justify-start'
+          : 'justify-start',
     ]"
   >
     <!-- System Message -->

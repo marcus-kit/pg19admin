@@ -1,12 +1,11 @@
 import { useSupabaseAdmin } from '~~/server/utils/supabase'
 
 export default defineEventHandler(async (event) => {
-
   const id = getRouterParam(event, 'id')
   if (!id) {
     throw createError({
       statusCode: 400,
-      message: 'ID пользователя не указан'
+      message: 'ID пользователя не указан',
     })
   }
 
@@ -23,13 +22,13 @@ export default defineEventHandler(async (event) => {
   if (fetchError || !existingUser) {
     throw createError({
       statusCode: 404,
-      message: 'Пользователь не найден'
+      message: 'Пользователь не найден',
     })
   }
 
   // Собираем поля для обновления
   const updateData: Record<string, any> = {
-    date_updated: new Date().toISOString()
+    date_updated: new Date().toISOString(),
   }
 
   // Основные данные
@@ -73,7 +72,7 @@ export default defineEventHandler(async (event) => {
     console.error('Failed to update user:', updateError)
     throw createError({
       statusCode: 500,
-      message: 'Ошибка при обновлении пользователя'
+      message: 'Ошибка при обновлении пользователя',
     })
   }
 
@@ -91,7 +90,7 @@ export default defineEventHandler(async (event) => {
       nickname: updatedUser.nickname,
       avatar: updatedUser.avatar,
       status: updatedUser.status,
-      updatedAt: updatedUser.date_updated
-    }
+      updatedAt: updatedUser.date_updated,
+    },
   }
 })

@@ -3,8 +3,8 @@
  * Создание записи в базе знаний с генерацией embedding
  */
 
-import { useSupabaseAdmin } from '~~/server/utils/supabase'
-// generateEmbedding auto-imported from base layer
+import { getAdminFromEvent, useSupabaseAdmin } from '~~/server/utils/supabase'
+import { generateEmbedding } from '~~/server/utils/openai'
 
 interface CreateKnowledgeRequest {
   category?: string
@@ -16,22 +16,21 @@ interface CreateKnowledgeRequest {
 }
 
 export default defineEventHandler(async (event) => {
-  // Проверка авторизации и прав
-
+  const admin = await getAdminFromEvent(event)
   const body = await readBody<CreateKnowledgeRequest>(event)
 
   // Валидация
   if (!body.question?.trim()) {
     throw createError({
       statusCode: 400,
-      message: 'Вопрос обязателен'
+      message: 'Вопрос обязателен',
     })
   }
 
   if (!body.answer?.trim()) {
     throw createError({
       statusCode: 400,
-      message: 'Ответ обязателен'
+      message: 'Ответ обязателен',
     })
   }
 
@@ -41,7 +40,8 @@ export default defineEventHandler(async (event) => {
   let embedding: number[] | null = null
   try {
     embedding = await generateEmbedding(body.question.trim())
-  } catch (embeddingError) {
+  }
+  catch (embeddingError) {
     console.error('Failed to generate embedding:', embeddingError)
     // Продолжаем без embedding — можно сгенерировать позже
   }
@@ -53,11 +53,11 @@ export default defineEventHandler(async (event) => {
       category: body.category?.trim() || null,
       question: body.question.trim(),
       answer: body.answer.trim(),
-      keywords: body.keywords?.filter((k) => k.trim()) || [],
+      keywords: body.keywords?.filter(k => k.trim()) || [],
       priority: body.priority ?? 0,
       is_active: body.isActive ?? true,
       embedding,
-      created_by: admin.id
+      created_by: admin.id,
     })
     .select('id, category, question, answer, keywords, priority, is_active, created_at, updated_at')
     .single()
@@ -66,7 +66,7 @@ export default defineEventHandler(async (event) => {
     console.error('Failed to create knowledge item:', error)
     throw createError({
       statusCode: 500,
-      message: 'Ошибка при создании записи'
+      message: 'Ошибка при создании записи',
     })
   }
 
@@ -81,7 +81,7 @@ export default defineEventHandler(async (event) => {
       isActive: item.is_active,
       hasEmbedding: embedding !== null,
       createdAt: item.created_at,
-      updatedAt: item.updated_at
-    }
+      updatedAt: item.updated_at,
+    },
   }
 })

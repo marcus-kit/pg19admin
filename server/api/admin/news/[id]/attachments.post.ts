@@ -1,12 +1,11 @@
 import { serverSupabaseServiceRole } from '#supabase/server'
 
 export default defineEventHandler(async (event) => {
-
   const newsId = getRouterParam(event, 'id')
   if (!newsId) {
     throw createError({
       statusCode: 400,
-      message: 'ID новости обязателен'
+      message: 'ID новости обязателен',
     })
   }
 
@@ -17,7 +16,7 @@ export default defineEventHandler(async (event) => {
   if (!file || !(file instanceof File)) {
     throw createError({
       statusCode: 400,
-      message: 'Файл не загружен'
+      message: 'Файл не загружен',
     })
   }
 
@@ -25,7 +24,7 @@ export default defineEventHandler(async (event) => {
   if (file.size > 10 * 1024 * 1024) {
     throw createError({
       statusCode: 400,
-      message: 'Размер файла не должен превышать 10 МБ'
+      message: 'Размер файла не должен превышать 10 МБ',
     })
   }
 
@@ -41,13 +40,12 @@ export default defineEventHandler(async (event) => {
   if (newsError || !news) {
     throw createError({
       statusCode: 404,
-      message: 'Новость не найдена'
+      message: 'Новость не найдена',
     })
   }
 
   // Generate unique filename
   const timestamp = Date.now()
-  const ext = file.name.split('.').pop() || 'bin'
   const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_')
   const storagePath = `${newsId}/${timestamp}_${safeFileName}`
 
@@ -56,18 +54,18 @@ export default defineEventHandler(async (event) => {
   const buffer = new Uint8Array(arrayBuffer)
 
   // Upload to Supabase Storage
-  const { data: uploadData, error: uploadError } = await supabase.storage
+  const { error: uploadError } = await supabase.storage
     .from('news-attachments')
     .upload(storagePath, buffer, {
       contentType: file.type,
-      upsert: false
+      upsert: false,
     })
 
   if (uploadError) {
     console.error('Error uploading attachment:', uploadError)
     throw createError({
       statusCode: 500,
-      message: 'Ошибка при загрузке файла'
+      message: 'Ошибка при загрузке файла',
     })
   }
 
@@ -83,7 +81,7 @@ export default defineEventHandler(async (event) => {
       news_id: newsId,
       file_name: file.name,
       storage_path: urlData.publicUrl,
-      mime_type: file.type
+      mime_type: file.type,
     })
     .select()
     .single()
@@ -94,7 +92,7 @@ export default defineEventHandler(async (event) => {
     await supabase.storage.from('news-attachments').remove([storagePath])
     throw createError({
       statusCode: 500,
-      message: 'Ошибка при сохранении вложения'
+      message: 'Ошибка при сохранении вложения',
     })
   }
 
@@ -104,7 +102,7 @@ export default defineEventHandler(async (event) => {
       id: attachment.id,
       fileName: attachment.file_name,
       filePath: attachment.storage_path,
-      mimeType: attachment.mime_type
-    }
+      mimeType: attachment.mime_type,
+    },
   }
 })

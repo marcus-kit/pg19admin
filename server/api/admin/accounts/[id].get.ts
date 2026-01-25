@@ -1,12 +1,11 @@
 import { useSupabaseAdmin } from '~~/server/utils/supabase'
 
 export default defineEventHandler(async (event) => {
-
   const id = getRouterParam(event, 'id')
   if (!id) {
     throw createError({
       statusCode: 400,
-      message: 'ID аккаунта не указан'
+      message: 'ID аккаунта не указан',
     })
   }
 
@@ -22,7 +21,7 @@ export default defineEventHandler(async (event) => {
   if (error || !account) {
     throw createError({
       statusCode: 404,
-      message: 'Аккаунт не найден'
+      message: 'Аккаунт не найден',
     })
   }
 
@@ -44,7 +43,7 @@ export default defineEventHandler(async (event) => {
         email: userData.email,
         phone: userData.phone,
         avatar: userData.avatar,
-        status: userData.status
+        status: userData.status,
       }
     }
   }
@@ -69,11 +68,11 @@ export default defineEventHandler(async (event) => {
         apartment: account.address_apartment,
         entrance: account.address_entrance,
         floor: account.address_floor,
-        intercom: account.address_intercom
+        intercom: account.address_intercom,
       },
       user,
       createdAt: account.date_created,
-      updatedAt: account.date_updated
-    }
+      updatedAt: account.date_updated,
+    },
   }
 })

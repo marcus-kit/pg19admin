@@ -1,22 +1,21 @@
 import { useSupabaseAdmin } from '~~/server/utils/supabase'
 
 export default defineEventHandler(async (event) => {
-
   const id = getRouterParam(event, 'id')
   if (!id) {
     throw createError({
       statusCode: 400,
-      message: 'ID пользователя не указан'
+      message: 'ID пользователя не указан',
     })
   }
 
   const body = await readBody(event)
-  const { status, reason } = body
+  const { status, reason: _reason } = body
 
   if (!status || !['active', 'suspended', 'terminated'].includes(status)) {
     throw createError({
       statusCode: 400,
-      message: 'Некорректный статус. Допустимые значения: active, suspended, terminated'
+      message: 'Некорректный статус. Допустимые значения: active, suspended, terminated',
     })
   }
 
@@ -32,7 +31,7 @@ export default defineEventHandler(async (event) => {
   if (fetchError || !existingUser) {
     throw createError({
       statusCode: 404,
-      message: 'Пользователь не найден'
+      message: 'Пользователь не найден',
     })
   }
 
@@ -41,7 +40,7 @@ export default defineEventHandler(async (event) => {
     .from('users')
     .update({
       status,
-      date_updated: new Date().toISOString()
+      date_updated: new Date().toISOString(),
     })
     .eq('id', id)
     .select('id, status, date_updated')
@@ -51,7 +50,7 @@ export default defineEventHandler(async (event) => {
     console.error('Failed to update user status:', updateError)
     throw createError({
       statusCode: 500,
-      message: 'Ошибка при обновлении статуса'
+      message: 'Ошибка при обновлении статуса',
     })
   }
 
@@ -60,7 +59,7 @@ export default defineEventHandler(async (event) => {
     user: {
       id: updatedUser.id,
       status: updatedUser.status,
-      updatedAt: updatedUser.date_updated
-    }
+      updatedAt: updatedUser.date_updated,
+    },
   }
 })

@@ -14,20 +14,19 @@ interface CreateServiceData {
 }
 
 export default defineEventHandler(async (event) => {
-
   const body = await readBody<CreateServiceData>(event)
 
   if (!body.name?.trim()) {
     throw createError({
       statusCode: 400,
-      message: 'Название услуги обязательно'
+      message: 'Название услуги обязательно',
     })
   }
 
   if (body.priceMonthly === undefined || body.priceMonthly < 0) {
     throw createError({
       statusCode: 400,
-      message: 'Укажите корректную ежемесячную стоимость'
+      message: 'Укажите корректную ежемесячную стоимость',
     })
   }
 
@@ -45,7 +44,7 @@ export default defineEventHandler(async (event) => {
       features: body.features || [],
       sort_order: body.sortOrder || 0,
       is_active: body.isActive ?? true,
-      category_id: body.categoryId || null
+      category_id: body.categoryId || null,
     })
     .select()
     .single()
@@ -54,7 +53,7 @@ export default defineEventHandler(async (event) => {
     console.error('Failed to create service:', error)
     throw createError({
       statusCode: 500,
-      message: 'Ошибка при создании услуги'
+      message: 'Ошибка при создании услуги',
     })
   }
 
@@ -62,7 +61,7 @@ export default defineEventHandler(async (event) => {
     success: true,
     service: {
       id: data.id,
-      name: data.name
-    }
+      name: data.name,
+    },
   }
 })

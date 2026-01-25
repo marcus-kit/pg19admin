@@ -1,11 +1,10 @@
 <script setup lang="ts">
 definePageMeta({
-  middleware: 'admin'
+  middleware: 'admin',
 })
 
 useHead({ title: 'Админ-панель — ПЖ19' })
 
-const user = useSupabaseUser()
 const toast = useToast()
 
 interface DashboardStats {
@@ -54,7 +53,7 @@ const stats = ref<DashboardStats>({
   catalog: { services: 0, activeServices: 0, categories: 0, activeCategories: 0 },
   requests: { total: 0, new: 0, inProgress: 0, completed: 0 },
   chats: { total: 0, waiting: 0, active: 0, closed: 0 },
-  tickets: { total: 0, open: 0, pending: 0, resolved: 0 }
+  tickets: { total: 0, open: 0, pending: 0, resolved: 0 },
 })
 
 const fetchDashboardData = async () => {
@@ -62,10 +61,12 @@ const fetchDashboardData = async () => {
   try {
     const data = await $fetch<DashboardStats>('/api/admin/dashboard/stats')
     stats.value = data
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to fetch dashboard data:', error)
     toast.error('Не удалось загрузить статистику')
-  } finally {
+  }
+  finally {
     loading.value = false
   }
 }
@@ -265,7 +266,7 @@ onMounted(() => {
       </div>
 
       <!-- Requests Stats -->
-      <div >
+      <div>
         <h2 class="text-lg font-semibold text-[var(--text-secondary)] mb-4 flex items-center gap-2">
           <Icon name="heroicons:clipboard-document-list" class="w-5 h-5" />
           Заявки на подключение
@@ -322,7 +323,7 @@ onMounted(() => {
       </div>
 
       <!-- Chats Stats -->
-      <div >
+      <div>
         <h2 class="text-lg font-semibold text-[var(--text-secondary)] mb-4 flex items-center gap-2">
           <Icon name="heroicons:chat-bubble-left-right" class="w-5 h-5" />
           Чаты поддержки
@@ -379,7 +380,7 @@ onMounted(() => {
       </div>
 
       <!-- Tickets Stats -->
-      <div >
+      <div>
         <h2 class="text-lg font-semibold text-[var(--text-secondary)] mb-4 flex items-center gap-2">
           <Icon name="heroicons:ticket" class="w-5 h-5" />
           Тикеты

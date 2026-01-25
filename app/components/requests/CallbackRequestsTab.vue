@@ -5,7 +5,7 @@ import {
   CALLBACK_STATUS_OPTIONS,
   REQUEST_SOURCE,
   getStatusLabel,
-  getStatusBadgeClass
+  getStatusBadgeClass,
 } from '~/composables/useStatusConfig'
 
 interface Props {
@@ -18,14 +18,14 @@ const props = defineProps<Props>()
 
 const emit = defineEmits<{
   'update:statusFilter': [value: string]
-  updateStatus: [callback: CallbackRequest, status: string]
+  'updateStatus': [callback: CallbackRequest, status: string]
 }>()
 
 const { formatPhone, formatDateTime } = useFormatters()
 
 const localStatusFilter = computed({
   get: () => props.statusFilter,
-  set: (value: string) => emit('update:statusFilter', value)
+  set: (value: string) => emit('update:statusFilter', value),
 })
 
 const handleStatusUpdate = (callback: CallbackRequest, status: string) => {
@@ -41,9 +41,9 @@ const handleStatusUpdate = (callback: CallbackRequest, status: string) => {
         <UiButton
           v-for="opt in CALLBACK_STATUS_OPTIONS"
           :key="opt.value"
+          :class="{ 'bg-primary/20': localStatusFilter === opt.value }"
           variant="ghost"
           size="sm"
-          :class="{ 'bg-primary/20': localStatusFilter === opt.value }"
           @click="localStatusFilter = opt.value"
         >
           {{ opt.label }}

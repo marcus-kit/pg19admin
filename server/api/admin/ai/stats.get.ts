@@ -155,33 +155,33 @@ export default defineEventHandler(async (event) => {
           ? Math.round((totalMessages || 0) / 7)
           : period === 'month'
             ? Math.round((totalMessages || 0) / 30)
-            : totalMessages || 0
+            : totalMessages || 0,
       },
       tokens: {
         prompt: totalPromptTokens,
         completion: totalCompletionTokens,
-        total: totalTokens
+        total: totalTokens,
       },
       latency: {
         average: avgLatency,
-        unit: 'ms'
+        unit: 'ms',
       },
       cost: {
         estimated: Math.round(estimatedCost * 100) / 100,
-        currency: 'USD'
+        currency: 'USD',
       },
       escalations: {
         total: totalEscalations || 0,
         rate: escalationRate,
-        reasons: escalationReasons
+        reasons: escalationReasons,
       },
       chats: {
-        withBot: totalBotChats || 0
+        withBot: totalBotChats || 0,
       },
       knowledge: {
-        activeItems: knowledgeCount || 0
+        activeItems: knowledgeCount || 0,
       },
-      models: modelStats
-    }
+      models: modelStats,
+    },
   }
 })

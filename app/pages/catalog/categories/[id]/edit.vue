@@ -1,6 +1,6 @@
 <script setup lang="ts">
 definePageMeta({
-  middleware: 'admin'
+  middleware: 'admin',
 })
 
 useHead({ title: 'Редактировать категорию — Админ-панель' })
@@ -16,7 +16,7 @@ const form = reactive({
   description: '',
   icon: 'heroicons:folder',
   sortOrder: 0,
-  isActive: true
+  isActive: true,
 })
 
 const loading = ref(true)
@@ -31,7 +31,7 @@ const iconOptions = [
   { label: 'Звезда', value: 'heroicons:star' },
   { label: 'Молния', value: 'heroicons:bolt' },
   { label: 'Глобус', value: 'heroicons:globe-alt' },
-  { label: 'Телефон', value: 'heroicons:phone' }
+  { label: 'Телефон', value: 'heroicons:phone' },
 ]
 
 const fetchCategory = async () => {
@@ -45,11 +45,13 @@ const fetchCategory = async () => {
     form.icon = cat.icon || 'heroicons:folder'
     form.sortOrder = cat.sortOrder
     form.isActive = cat.isActive
-  } catch (err: any) {
+  }
+  catch (err: any) {
     console.error('Failed to fetch category:', err)
     error.value = err.data?.message || 'Ошибка при загрузке категории'
     toast.error('Не удалось загрузить категорию')
-  } finally {
+  }
+  finally {
     loading.value = false
   }
 }
@@ -72,17 +74,19 @@ const save = async () => {
         description: form.description || null,
         icon: form.icon || null,
         sortOrder: form.sortOrder,
-        isActive: form.isActive
-      }
+        isActive: form.isActive,
+      },
     })
 
     toast.success('Категория сохранена')
     router.push('/catalog')
-  } catch (err: any) {
+  }
+  catch (err: any) {
     console.error('Failed to update category:', err)
     error.value = err.data?.message || 'Ошибка при обновлении категории'
     toast.error('Не удалось сохранить категорию')
-  } finally {
+  }
+  finally {
     saving.value = false
   }
 }
@@ -108,7 +112,7 @@ onMounted(() => {
       {{ error }}
     </div>
 
-    <form v-else @submit.prevent="save" class="space-y-6 max-w-2xl">
+    <form v-else class="space-y-6 max-w-2xl" @submit.prevent="save">
       <div v-if="error" class="p-4 bg-red-500/20 border border-red-500/30 rounded-lg text-red-400">
         {{ error }}
       </div>
@@ -182,10 +186,10 @@ onMounted(() => {
       </div>
 
       <div class="flex gap-3">
-        <UiButton type="submit" :loading="saving" :disabled="saving">
+        <UiButton :loading="saving" :disabled="saving" type="submit">
           Сохранить изменения
         </UiButton>
-        <UiButton variant="ghost" @click="router.push('/catalog')" :disabled="saving">
+        <UiButton :disabled="saving" variant="ghost" @click="router.push('/catalog')">
           Отмена
         </UiButton>
       </div>

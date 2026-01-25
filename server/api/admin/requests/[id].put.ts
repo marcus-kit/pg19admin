@@ -13,7 +13,7 @@ export default defineEventHandler(async (event) => {
   if (!id) {
     throw createError({
       statusCode: 400,
-      message: 'Некорректный ID заявки'
+      message: 'Некорректный ID заявки',
     })
   }
 
@@ -22,7 +22,7 @@ export default defineEventHandler(async (event) => {
   if (body.status && !validStatuses.includes(body.status)) {
     throw createError({
       statusCode: 400,
-      message: 'Некорректный статус'
+      message: 'Некорректный статус',
     })
   }
 
@@ -38,7 +38,7 @@ export default defineEventHandler(async (event) => {
   if (findError || !existing) {
     throw createError({
       statusCode: 404,
-      message: 'Заявка не найдена'
+      message: 'Заявка не найдена',
     })
   }
 
@@ -51,7 +51,7 @@ export default defineEventHandler(async (event) => {
   if (Object.keys(updateData).length === 0) {
     throw createError({
       statusCode: 400,
-      message: 'Нет данных для обновления'
+      message: 'Нет данных для обновления',
     })
   }
 
@@ -66,7 +66,7 @@ export default defineEventHandler(async (event) => {
     console.error('Failed to update connection request:', error)
     throw createError({
       statusCode: 500,
-      message: 'Ошибка при обновлении заявки'
+      message: 'Ошибка при обновлении заявки',
     })
   }
 
@@ -74,7 +74,7 @@ export default defineEventHandler(async (event) => {
     success: true,
     request: {
       id: data.id,
-      status: data.status
-    }
+      status: data.status,
+    },
   }
 })

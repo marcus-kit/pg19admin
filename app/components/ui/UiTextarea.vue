@@ -25,7 +25,7 @@ interface Props {
 const props = withDefaults(defineProps<Props>(), {
   modelValue: '',
   rows: 4,
-  required: false
+  required: false,
 })
 
 const emit = defineEmits<{
@@ -35,7 +35,7 @@ const emit = defineEmits<{
 // Двусторонняя привязка для v-model
 const textareaValue = computed({
   get: () => props.modelValue,
-  set: (value) => emit('update:modelValue', value)
+  set: value => emit('update:modelValue', value),
 })
 </script>
 
@@ -55,12 +55,12 @@ const textareaValue = computed({
       :disabled="disabled"
       :required="required"
       :maxlength="maxlength"
-      class="w-full px-4 py-3 rounded-xl text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed resize-none"
       :class="{ 'border-red-500 focus:border-red-500 focus:ring-red-500/20': error }"
       :style="{
         background: 'var(--glass-bg)',
-        border: '1px solid var(--glass-border)'
+        border: '1px solid var(--glass-border)',
       }"
+      class="w-full px-4 py-3 rounded-xl text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed resize-none"
     />
 
     <!-- Счётчик символов (если задан maxlength) -->

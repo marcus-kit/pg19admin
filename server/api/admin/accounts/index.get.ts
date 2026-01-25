@@ -2,7 +2,6 @@ import { useSupabaseAdmin } from '~~/server/utils/supabase'
 import { mapAccount, mapUserShort, type DbAccount, type DbUser } from '~~/server/utils/mappers'
 
 export default defineEventHandler(async (event) => {
-
   const query = getQuery(event)
 
   const status = query.status as string | undefined
@@ -42,7 +41,8 @@ export default defineEventHandler(async (event) => {
     // Если число - ищем по номеру договора
     if (/^\d+$/.test(searchTerm)) {
       queryBuilder = queryBuilder.eq('contract_number', parseInt(searchTerm))
-    } else {
+    }
+    else {
       // Иначе ищем по адресу
       queryBuilder = queryBuilder.ilike('address_full', `%${searchTerm}%`)
     }
@@ -54,13 +54,13 @@ export default defineEventHandler(async (event) => {
     console.error('Failed to fetch accounts:', error)
     throw createError({
       statusCode: 500,
-      message: 'Ошибка при загрузке аккаунтов'
+      message: 'Ошибка при загрузке аккаунтов',
     })
   }
 
   // Получаем данные пользователей
   const userIds = [...new Set(accounts.filter(a => a.user_id).map(a => a.user_id))]
-  let usersMap: Record<string, { id: string; fullName: string }> = {}
+  let usersMap: Record<string, { id: string, fullName: string }> = {}
 
   if (userIds.length > 0) {
     type UserShort = Pick<DbUser, 'id' | 'first_name' | 'last_name' | 'full_name'>
@@ -71,17 +71,17 @@ export default defineEventHandler(async (event) => {
 
     if (users) {
       usersMap = Object.fromEntries(
-        (users as UserShort[]).map(u => [u.id, mapUserShort(u)])
+        (users as UserShort[]).map(u => [u.id, mapUserShort(u)]),
       )
     }
   }
 
   return {
     accounts: (accounts as DbAccount[]).map(acc =>
-      mapAccount(acc, acc.user_id ? usersMap[acc.user_id] : null)
+      mapAccount(acc, acc.user_id ? usersMap[acc.user_id] : null),
     ),
     total: count || 0,
     limit,
-    offset
+    offset,
   }
 })

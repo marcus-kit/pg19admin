@@ -19,7 +19,7 @@ interface Props {
 withDefaults(defineProps<Props>(), {
   icon: 'heroicons:inbox',
   title: 'Нет данных',
-  description: ''
+  description: '',
 })
 </script>
 

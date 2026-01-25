@@ -3,14 +3,13 @@ import type { User } from '~/types/admin'
 import {
   USER_STATUS,
   USER_STATUS_OPTIONS,
-  ONLINE_STATUS,
   getStatusLabel,
-  getStatusBadgeClass
+  getStatusBadgeClass,
 } from '~/composables/useStatusConfig'
 import { useAdminList } from '~/composables/useAdminList'
 
 definePageMeta({
-  middleware: 'admin'
+  middleware: 'admin',
 })
 
 useHead({ title: 'Пользователи — Админ-панель' })
@@ -24,11 +23,11 @@ const {
   total,
   filters,
   searchQuery,
-  onSearchInput
+  onSearchInput,
 } = useAdminList<User, { status: string }>({
   endpoint: '/api/admin/users',
   responseKey: 'users',
-  initialFilters: { status: 'all' }
+  initialFilters: { status: 'all' },
 })
 
 // Online status uses simple class mapping (not badgeClass)
@@ -52,7 +51,7 @@ const getOnlineStatusClass = (status: string) => {
         </span>
       </h1>
       <UiButton
-        
+
         @click="router.push('/users/create')"
       >
         <Icon name="heroicons:plus" class="w-4 h-4" />
@@ -67,9 +66,9 @@ const getOnlineStatusClass = (status: string) => {
         <UiButton
           v-for="opt in USER_STATUS_OPTIONS"
           :key="opt.value"
+          :class="{ 'bg-primary/20': filters.status === opt.value }"
           variant="ghost"
           size="sm"
-          :class="{ 'bg-primary/20': filters.status === opt.value }"
           @click="filters.status = opt.value"
         >
           {{ opt.label }}
@@ -123,8 +122,8 @@ const getOnlineStatusClass = (status: string) => {
                 <div class="relative">
                   <div
                     v-if="user.avatar"
-                    class="w-10 h-10 rounded-full bg-cover bg-center"
                     :style="{ backgroundImage: `url(${user.avatar})` }"
+                    class="w-10 h-10 rounded-full bg-cover bg-center"
                   />
                   <div
                     v-else

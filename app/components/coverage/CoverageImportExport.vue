@@ -12,12 +12,12 @@ interface Props {
 
 const props = withDefaults(defineProps<Props>(), {
   loading: false,
-  partners: () => []
+  partners: () => [],
 })
 
 const emit = defineEmits<{
-  'import': [data: { geojson: any; type: string; partnerId?: string; replaceExisting: boolean }]
-  'export': [query: string]
+  import: [data: { geojson: any, type: string, partnerId?: string, replaceExisting: boolean }]
+  export: [query: string]
 }>()
 
 const fileInput = ref<HTMLInputElement | null>(null)
@@ -31,7 +31,7 @@ const importOwner = ref<string>('pg19')
 // Опции для импорта: ПЖ19 + все партнёры
 const importOwnerOptions = computed(() => [
   { value: 'pg19', label: 'ПЖ19' },
-  ...props.partners.map(p => ({ value: p.id, label: p.name }))
+  ...props.partners.map(p => ({ value: p.id, label: p.name })),
 ])
 
 // Экспорт: выбор партнёра (все или конкретный)
@@ -40,7 +40,7 @@ const exportPartnerId = ref<string>('all')
 // Опции для экспорта: Все + все партнёры
 const exportPartnerOptions = computed(() => [
   { value: 'all', label: 'Все зоны' },
-  ...props.partners.map(p => ({ value: p.id, label: p.name }))
+  ...props.partners.map(p => ({ value: p.id, label: p.name })),
 ])
 
 const triggerFileInput = () => {
@@ -77,11 +77,13 @@ const handleFileSelect = async (event: Event) => {
       geojson,
       type: isPg19 ? 'pg19' : 'partner',
       partnerId: isPg19 ? undefined : importOwner.value,
-      replaceExisting: replaceExisting.value
+      replaceExisting: replaceExisting.value,
     })
-  } catch (err: any) {
+  }
+  catch (err: any) {
     error.value = err.message || 'Ошибка при чтении файла'
-  } finally {
+  }
+  finally {
     importing.value = false
     // Reset file input
     if (fileInput.value) {
@@ -116,7 +118,7 @@ const clearError = () => {
         class="p-3 bg-red-500/20 border border-red-500/30 rounded-lg text-red-400 text-sm flex items-center justify-between"
       >
         <span>{{ error }}</span>
-        <button @click="clearError" class="ml-2 hover:text-red-300">
+        <button class="ml-2 hover:text-red-300" @click="clearError">
           <Icon name="heroicons:x-mark" class="w-4 h-4" />
         </button>
       </div>
@@ -131,8 +133,8 @@ const clearError = () => {
           <UiSelect
             v-model="importOwner"
             :options="importOwnerOptions"
-            size="sm"
             :placeholder="undefined"
+            size="sm"
           />
 
           <label class="flex items-center gap-2 text-sm text-[var(--text-secondary)] cursor-pointer">
@@ -154,9 +156,9 @@ const clearError = () => {
         />
 
         <UiButton
-          variant="secondary"
           :loading="importing"
           :disabled="loading || importing"
+          variant="secondary"
           class="w-full"
           @click="triggerFileInput"
         >
@@ -180,13 +182,13 @@ const clearError = () => {
         <UiSelect
           v-model="exportPartnerId"
           :options="exportPartnerOptions"
-          size="sm"
           :placeholder="undefined"
+          size="sm"
         />
 
         <UiButton
-          variant="ghost"
           :disabled="loading"
+          variant="ghost"
           class="w-full"
           @click="handleExport"
         >

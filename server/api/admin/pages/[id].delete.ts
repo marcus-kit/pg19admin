@@ -8,7 +8,7 @@ export default defineEventHandler(async (event) => {
   if (!id) {
     throw createError({
       statusCode: 400,
-      message: 'ID страницы обязателен'
+      message: 'ID страницы обязателен',
     })
   }
 
@@ -23,11 +23,11 @@ export default defineEventHandler(async (event) => {
     console.error('Failed to delete page:', error)
     throw createError({
       statusCode: 500,
-      message: 'Ошибка при удалении страницы'
+      message: 'Ошибка при удалении страницы',
     })
   }
 
   return {
-    success: true
+    success: true,
   }
 })

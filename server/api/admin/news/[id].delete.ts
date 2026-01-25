@@ -1,13 +1,12 @@
 import { useSupabaseAdmin } from '~~/server/utils/supabase'
 
 export default defineEventHandler(async (event) => {
-
   const id = getRouterParam(event, 'id')
 
   if (!id) {
     throw createError({
       statusCode: 400,
-      message: 'ID новости обязателен'
+      message: 'ID новости обязателен',
     })
   }
 
@@ -23,11 +22,11 @@ export default defineEventHandler(async (event) => {
     console.error('Failed to delete news:', error)
     throw createError({
       statusCode: 500,
-      message: 'Ошибка при удалении новости'
+      message: 'Ошибка при удалении новости',
     })
   }
 
   return {
-    success: true
+    success: true,
   }
 })

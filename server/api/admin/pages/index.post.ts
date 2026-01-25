@@ -1,4 +1,4 @@
-import { useSupabaseAdmin } from '~~/server/utils/supabase'
+import { getAdminFromEvent, useSupabaseAdmin } from '~~/server/utils/supabase'
 
 interface CreatePageData {
   slug: string
@@ -11,29 +11,28 @@ interface CreatePageData {
 }
 
 export default defineEventHandler(async (event) => {
-  // Проверка авторизации и прав
-
+  const admin = await getAdminFromEvent(event)
   const body = await readBody<CreatePageData>(event)
 
   // Валидация
   if (!body.slug || !body.slug.trim()) {
     throw createError({
       statusCode: 400,
-      message: 'URL (slug) обязателен'
+      message: 'URL (slug) обязателен',
     })
   }
 
   if (!body.title || !body.title.trim()) {
     throw createError({
       statusCode: 400,
-      message: 'Заголовок обязателен'
+      message: 'Заголовок обязателен',
     })
   }
 
   if (!body.content) {
     throw createError({
       statusCode: 400,
-      message: 'Контент обязателен'
+      message: 'Контент обязателен',
     })
   }
 
@@ -57,7 +56,7 @@ export default defineEventHandler(async (event) => {
   if (existing) {
     throw createError({
       statusCode: 400,
-      message: 'Страница с таким URL уже существует'
+      message: 'Страница с таким URL уже существует',
     })
   }
 
@@ -74,7 +73,7 @@ export default defineEventHandler(async (event) => {
       is_published: body.isPublished || false,
       sort_order: body.sortOrder || 0,
       author_id: admin.id,
-      published_at: publishedAt
+      published_at: publishedAt,
     })
     .select()
     .single()
@@ -83,7 +82,7 @@ export default defineEventHandler(async (event) => {
     console.error('Failed to create page:', error)
     throw createError({
       statusCode: 500,
-      message: 'Ошибка при создании страницы'
+      message: 'Ошибка при создании страницы',
     })
   }
 
@@ -93,7 +92,7 @@ export default defineEventHandler(async (event) => {
       id: data.id,
       slug: data.slug,
       title: data.title,
-      isPublished: data.is_published
-    }
+      isPublished: data.is_published,
+    },
   }
 })

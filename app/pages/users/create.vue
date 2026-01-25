@@ -1,6 +1,6 @@
 <script setup lang="ts">
 definePageMeta({
-  middleware: 'admin'
+  middleware: 'admin',
 })
 
 useHead({ title: 'Создать пользователя — Админ-панель' })
@@ -25,7 +25,7 @@ const form = ref({
   regCity: '',
   regStreet: '',
   regBuilding: '',
-  regApartment: ''
+  regApartment: '',
 })
 
 const createUser = async () => {
@@ -45,19 +45,21 @@ const createUser = async () => {
 
   saving.value = true
   try {
-    const response = await $fetch<{ success: boolean; user: { id: string } }>('/api/admin/users', {
+    const response = await $fetch<{ success: boolean, user: { id: string } }>('/api/admin/users', {
       method: 'POST',
-      body: form.value
+      body: form.value,
     })
 
     if (response.success && response.user?.id) {
       toast.success('Пользователь создан')
       router.push(`/users/${response.user.id}`)
     }
-  } catch (e: any) {
+  }
+  catch (e: any) {
     error.value = e.data?.message || 'Ошибка при создании пользователя'
     toast.error('Не удалось создать пользователя')
-  } finally {
+  }
+  finally {
     saving.value = false
   }
 }
@@ -84,7 +86,7 @@ const cancel = () => {
 
     <!-- Form -->
     <div class="max-w-2xl">
-      <form @submit.prevent="createUser" class="space-y-6">
+      <form class="space-y-6" @submit.prevent="createUser">
         <!-- Основные данные -->
         <UiCard>
           <template #header>
@@ -202,11 +204,11 @@ const cancel = () => {
 
         <!-- Actions -->
         <div class="flex gap-3">
-          <UiButton type="submit" :loading="saving" :disabled="saving">
+          <UiButton :loading="saving" :disabled="saving" type="submit">
             <Icon name="heroicons:plus" class="w-4 h-4" />
             Создать
           </UiButton>
-          <UiButton variant="ghost" @click="cancel" :disabled="saving">
+          <UiButton :disabled="saving" variant="ghost" @click="cancel">
             Отмена
           </UiButton>
         </div>

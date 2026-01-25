@@ -1,28 +1,28 @@
-import { useSupabaseAdmin } from '~~/server/utils/supabase'
+import { getAdminFromEvent, useSupabaseAdmin } from '~~/server/utils/supabase'
 
 interface CommentBody {
   content: string
   isInternal?: boolean
   isSolution?: boolean
-  attachments?: { url: string; name: string; size: number; type: string }[]
+  attachments?: { url: string, name: string, size: number, type: string }[]
 }
 
 export default defineEventHandler(async (event) => {
-
+  const admin = await getAdminFromEvent(event)
   const ticketId = getRouterParam(event, 'id')
   const body = await readBody<CommentBody>(event)
 
   if (!ticketId) {
     throw createError({
       statusCode: 400,
-      message: 'ID тикета обязателен'
+      message: 'ID тикета обязателен',
     })
   }
 
   if (!body.content?.trim()) {
     throw createError({
       statusCode: 400,
-      message: 'Комментарий не может быть пустым'
+      message: 'Комментарий не может быть пустым',
     })
   }
 
@@ -38,14 +38,14 @@ export default defineEventHandler(async (event) => {
   if (ticketError || !ticket) {
     throw createError({
       statusCode: 404,
-      message: 'Тикет не найден'
+      message: 'Тикет не найден',
     })
   }
 
   if (ticket.status === 'closed') {
     throw createError({
       statusCode: 400,
-      message: 'Нельзя добавлять комментарии в закрытый тикет'
+      message: 'Нельзя добавлять комментарии в закрытый тикет',
     })
   }
 
@@ -60,7 +60,7 @@ export default defineEventHandler(async (event) => {
       content: body.content.trim(),
       is_internal: body.isInternal || false,
       is_solution: body.isSolution || false,
-      attachments: body.attachments || []
+      attachments: body.attachments || [],
     })
     .select()
     .single()
@@ -69,7 +69,7 @@ export default defineEventHandler(async (event) => {
     console.error('Failed to create comment:', commentError)
     throw createError({
       statusCode: 500,
-      message: 'Ошибка при добавлении комментария'
+      message: 'Ошибка при добавлении комментария',
     })
   }
 
@@ -89,7 +89,7 @@ export default defineEventHandler(async (event) => {
         admin_name: admin.fullName,
         action: 'status_change',
         old_value: 'new',
-        new_value: 'open'
+        new_value: 'open',
       })
   }
 
@@ -104,7 +104,7 @@ export default defineEventHandler(async (event) => {
       content: comment.content,
       isInternal: comment.is_internal,
       isSolution: comment.is_solution,
-      createdAt: comment.created_at
-    }
+      createdAt: comment.created_at,
+    },
   }
 })

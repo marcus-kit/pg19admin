@@ -9,7 +9,6 @@ interface ImportOptions {
 }
 
 export default defineEventHandler(async (event) => {
-
   const body = await readBody<ImportOptions>(event)
 
   if (!body.geojson) {
@@ -22,11 +21,14 @@ export default defineEventHandler(async (event) => {
   // Support both FeatureCollection and single Feature
   if (geojson.type === 'FeatureCollection') {
     features = geojson.features || []
-  } else if (geojson.type === 'Feature') {
+  }
+  else if (geojson.type === 'Feature') {
     features = [geojson]
-  } else if (geojson.type === 'Polygon' || geojson.type === 'MultiPolygon') {
+  }
+  else if (geojson.type === 'Polygon' || geojson.type === 'MultiPolygon') {
     features = [{ type: 'Feature', geometry: geojson, properties: {} }]
-  } else {
+  }
+  else {
     throw createError({ statusCode: 400, message: 'Неподдерживаемый формат GeoJSON' })
   }
 
@@ -74,7 +76,7 @@ export default defineEventHandler(async (event) => {
       fill_opacity: props.fillOpacity ?? 0.3,
       stroke_width: props.strokeWidth ?? 2,
       is_active: props.isActive ?? true,
-      sort_order: props.sortOrder ?? index
+      sort_order: props.sortOrder ?? index,
     }
   })
 
@@ -83,7 +85,7 @@ export default defineEventHandler(async (event) => {
   if (invalidPartnerZones.length > 0) {
     throw createError({
       statusCode: 400,
-      message: `Для партнёрских зон требуется partner_id. Не указан для: ${invalidPartnerZones.map(z => z.name).join(', ')}`
+      message: `Для партнёрских зон требуется partner_id. Не указан для: ${invalidPartnerZones.map(z => z.name).join(', ')}`,
     })
   }
 
@@ -100,6 +102,6 @@ export default defineEventHandler(async (event) => {
   return {
     success: true,
     imported: data.length,
-    zones: data
+    zones: data,
   }
 })

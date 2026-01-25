@@ -1,18 +1,18 @@
-import { useSupabaseAdmin } from '~~/server/utils/supabase'
+import { getAdminFromEvent, useSupabaseAdmin } from '~~/server/utils/supabase'
 
 interface AssignBody {
   adminId: string | null // null для снятия назначения
 }
 
 export default defineEventHandler(async (event) => {
-
+  const currentAdmin = await getAdminFromEvent(event)
   const chatId = getRouterParam(event, 'id')
   const body = await readBody<AssignBody>(event)
 
   if (!chatId) {
     throw createError({
       statusCode: 400,
-      message: 'ID чата обязателен'
+      message: 'ID чата обязателен',
     })
   }
 
@@ -28,7 +28,7 @@ export default defineEventHandler(async (event) => {
   if (chatError || !chat) {
     throw createError({
       statusCode: 404,
-      message: 'Чат не найден'
+      message: 'Чат не найден',
     })
   }
 
@@ -44,7 +44,7 @@ export default defineEventHandler(async (event) => {
     if (adminError || !assignedAdmin) {
       throw createError({
         statusCode: 400,
-        message: 'Указанный администратор не найден'
+        message: 'Указанный администратор не найден',
       })
     }
     assignedAdminName = assignedAdmin.full_name
@@ -60,7 +60,7 @@ export default defineEventHandler(async (event) => {
     console.error('Failed to assign chat:', updateError)
     throw createError({
       statusCode: 500,
-      message: 'Ошибка при назначении чата'
+      message: 'Ошибка при назначении чата',
     })
   }
 
@@ -80,12 +80,12 @@ export default defineEventHandler(async (event) => {
       sender_name: currentAdmin.fullName,
       content: systemMessage,
       content_type: 'system',
-      system_action: 'admin_assigned'
+      system_action: 'admin_assigned',
     })
 
   return {
     success: true,
     assignedAdminId: body.adminId,
-    assignedAdminName
+    assignedAdminName,
   }
 })

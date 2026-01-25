@@ -46,7 +46,7 @@ export function formatRelativeDate(dateStr: string | null | undefined): string {
   return date.toLocaleDateString('ru-RU', {
     day: 'numeric',
     month: 'short',
-    year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined
+    year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined,
   })
 }
 
@@ -61,7 +61,7 @@ export function formatDateTime(dateStr: string | null | undefined): string {
     day: 'numeric',
     month: 'short',
     hour: '2-digit',
-    minute: '2-digit'
+    minute: '2-digit',
   })
 }
 
@@ -74,7 +74,7 @@ export function formatDate(dateStr: string | null | undefined): string {
   return new Date(dateStr).toLocaleDateString('ru-RU', {
     day: 'numeric',
     month: 'long',
-    year: 'numeric'
+    year: 'numeric',
   })
 }
 
@@ -90,7 +90,7 @@ export function formatDateShort(dateStr: string | null | undefined): string {
   return date.toLocaleDateString('ru-RU', {
     day: 'numeric',
     month: 'short',
-    year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined
+    year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined,
   })
 }
 
@@ -105,7 +105,7 @@ export function formatKopeks(kopeks: number | null | undefined): string {
 
   return (kopeks / 100).toLocaleString('ru-RU', {
     minimumFractionDigits: 0,
-    maximumFractionDigits: 2
+    maximumFractionDigits: 2,
   })
 }
 
@@ -146,7 +146,7 @@ export function formatBalance(kopeks: number | null | undefined): string {
   const rubles = kopeks / 100
   return rubles.toLocaleString('ru-RU', {
     minimumFractionDigits: 2,
-    maximumFractionDigits: 2
+    maximumFractionDigits: 2,
   }) + ' ₽'
 }
 
@@ -165,6 +165,6 @@ export function useFormatters() {
     formatFileSize,
     truncateText,
     formatContractNumber,
-    formatBalance
+    formatBalance,
   }
 }

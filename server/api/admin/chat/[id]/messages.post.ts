@@ -1,4 +1,4 @@
-import { useSupabaseAdmin } from '~~/server/utils/supabase'
+import { getAdminFromEvent, useSupabaseAdmin } from '~~/server/utils/supabase'
 
 interface SendMessageBody {
   content: string
@@ -9,14 +9,14 @@ interface SendMessageBody {
 }
 
 export default defineEventHandler(async (event) => {
-
+  const admin = await getAdminFromEvent(event)
   const chatId = getRouterParam(event, 'id')
   const body = await readBody<SendMessageBody>(event)
 
   if (!chatId) {
     throw createError({
       statusCode: 400,
-      message: 'ID чата обязателен'
+      message: 'ID чата обязателен',
     })
   }
 
@@ -24,7 +24,7 @@ export default defineEventHandler(async (event) => {
   if (!body.content?.trim() && !body.attachmentUrl) {
     throw createError({
       statusCode: 400,
-      message: 'Сообщение или вложение обязательно'
+      message: 'Сообщение или вложение обязательно',
     })
   }
 
@@ -40,14 +40,14 @@ export default defineEventHandler(async (event) => {
   if (chatError || !chat) {
     throw createError({
       statusCode: 404,
-      message: 'Чат не найден'
+      message: 'Чат не найден',
     })
   }
 
   if (chat.status === 'closed') {
     throw createError({
       statusCode: 400,
-      message: 'Нельзя отправлять сообщения в закрытый чат'
+      message: 'Нельзя отправлять сообщения в закрытый чат',
     })
   }
 
@@ -63,7 +63,7 @@ export default defineEventHandler(async (event) => {
       content_type: body.contentType || 'text',
       attachment_url: body.attachmentUrl || null,
       attachment_name: body.attachmentName || null,
-      attachment_size: body.attachmentSize || null
+      attachment_size: body.attachmentSize || null,
     })
     .select()
     .single()
@@ -72,7 +72,7 @@ export default defineEventHandler(async (event) => {
     console.error('Failed to send message:', messageError)
     throw createError({
       statusCode: 500,
-      message: 'Ошибка при отправке сообщения'
+      message: 'Ошибка при отправке сообщения',
     })
   }
 
@@ -94,7 +94,7 @@ export default defineEventHandler(async (event) => {
       senderName: message.sender_name,
       content: message.content,
       contentType: message.content_type,
-      createdAt: message.created_at
-    }
+      createdAt: message.created_at,
+    },
   }
 })

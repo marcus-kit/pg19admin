@@ -3,15 +3,14 @@ import type { Ticket } from '~/types/admin'
 import {
   TICKET_STATUS,
   TICKET_PRIORITY,
-  TICKET_CATEGORY,
   TICKET_STATUS_OPTIONS,
   TICKET_PRIORITY_OPTIONS,
   getStatusLabel,
-  getStatusBadgeClass
+  getStatusBadgeClass,
 } from '~/composables/useStatusConfig'
 
 definePageMeta({
-  middleware: 'admin'
+  middleware: 'admin',
 })
 
 useHead({ title: 'Тикеты — Админ-панель' })
@@ -49,13 +48,15 @@ const fetchTickets = async () => {
       params.set('assignedToMe', 'true')
     }
 
-    const data = await $fetch<{ tickets: Ticket[]; total: number }>(`/api/admin/tickets?${params}`)
+    const data = await $fetch<{ tickets: Ticket[], total: number }>(`/api/admin/tickets?${params}`)
     tickets.value = data.tickets
     total.value = data.total
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to fetch tickets:', error)
     toast.error('Не удалось загрузить тикеты')
-  } finally {
+  }
+  finally {
     loading.value = false
   }
 }
@@ -88,9 +89,9 @@ watch([statusFilter, priorityFilter, showMine], () => {
         <UiButton
           v-for="opt in TICKET_STATUS_OPTIONS"
           :key="opt.value"
+          :class="{ 'bg-primary/20': statusFilter === opt.value }"
           variant="ghost"
           size="sm"
-          :class="{ 'bg-primary/20': statusFilter === opt.value }"
           @click="statusFilter = opt.value"
         >
           {{ opt.label }}
@@ -102,8 +103,8 @@ watch([statusFilter, priorityFilter, showMine], () => {
         <UiSelect
           v-model="priorityFilter"
           :options="TICKET_PRIORITY_OPTIONS"
-          size="sm"
           :placeholder="undefined"
+          size="sm"
         />
 
         <!-- My Tickets -->

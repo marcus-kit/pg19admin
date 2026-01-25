@@ -1,22 +1,21 @@
 import { useSupabaseAdmin } from '~~/server/utils/supabase'
 
 export default defineEventHandler(async (event) => {
-
   const id = getRouterParam(event, 'id')
   if (!id) {
     throw createError({
       statusCode: 400,
-      message: 'ID аккаунта не указан'
+      message: 'ID аккаунта не указан',
     })
   }
 
   const body = await readBody(event)
-  const { status, reason } = body
+  const { status, reason: _reason } = body
 
   if (!status || !['active', 'blocked', 'closed'].includes(status)) {
     throw createError({
       statusCode: 400,
-      message: 'Некорректный статус. Допустимые значения: active, blocked, closed'
+      message: 'Некорректный статус. Допустимые значения: active, blocked, closed',
     })
   }
 
@@ -32,20 +31,21 @@ export default defineEventHandler(async (event) => {
   if (fetchError || !existingAccount) {
     throw createError({
       statusCode: 404,
-      message: 'Аккаунт не найден'
+      message: 'Аккаунт не найден',
     })
   }
 
   // Обновляем статус
   const updateData: Record<string, any> = {
     status,
-    date_updated: new Date().toISOString()
+    date_updated: new Date().toISOString(),
   }
 
   // Устанавливаем blocked_at при блокировке
   if (status === 'blocked') {
     updateData.blocked_at = new Date().toISOString()
-  } else if (status === 'active' && existingAccount.status === 'blocked') {
+  }
+  else if (status === 'active' && existingAccount.status === 'blocked') {
     // Сбрасываем blocked_at при разблокировке
     updateData.blocked_at = null
   }
@@ -61,7 +61,7 @@ export default defineEventHandler(async (event) => {
     console.error('Failed to update account status:', updateError)
     throw createError({
       statusCode: 500,
-      message: 'Ошибка при обновлении статуса'
+      message: 'Ошибка при обновлении статуса',
     })
   }
 
@@ -71,7 +71,7 @@ export default defineEventHandler(async (event) => {
       id: updatedAccount.id,
       status: updatedAccount.status,
       blockedAt: updatedAccount.blocked_at,
-      updatedAt: updatedAccount.date_updated
-    }
+      updatedAt: updatedAccount.date_updated,
+    },
   }
 })

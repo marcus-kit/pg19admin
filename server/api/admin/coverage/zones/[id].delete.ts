@@ -1,7 +1,8 @@
 import { serverSupabaseServiceRole } from '#supabase/server'
+import { getAdminFromEvent } from '~~/server/utils/supabase'
 
 export default defineEventHandler(async (event) => {
-
+  const admin = await getAdminFromEvent(event)
   const id = getRouterParam(event, 'id')
 
   if (!id) {
@@ -46,7 +47,7 @@ export default defineEventHandler(async (event) => {
       .update({
         active: false,
         deleted_by: admin.authUserId,
-        deleted_at: new Date().toISOString()
+        deleted_at: new Date().toISOString(),
       })
       .eq('id', id)
 

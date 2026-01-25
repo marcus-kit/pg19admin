@@ -1,7 +1,6 @@
 <script setup lang="ts">
-
 definePageMeta({
-  middleware: 'admin'
+  middleware: 'admin',
 })
 
 const toast = useToast()
@@ -33,14 +32,14 @@ interface User {
   avatar: string | null
   nickname: string | null
   status: 'active' | 'suspended' | 'terminated'
-  telegram: { id: string; username: string | null } | null
+  telegram: { id: string, username: string | null } | null
   vkId: string | null
   onlineStatus: string
   lastSeenAt: string | null
   notificationsSettings: object | null
   communityNotifications: boolean
-  passport: { series: string; number: string } | null
-  registrationAddress: { city: string; street: string; building: string; apartment: string } | null
+  passport: { series: string, number: string } | null
+  registrationAddress: { city: string, street: string, building: string, apartment: string } | null
   createdAt: string
   updatedAt: string
   accounts: Account[]
@@ -67,7 +66,7 @@ const editForm = ref({
   regCity: '',
   regStreet: '',
   regBuilding: '',
-  regApartment: ''
+  regApartment: '',
 })
 
 const fetchUser = async () => {
@@ -75,13 +74,15 @@ const fetchUser = async () => {
   try {
     const data = await $fetch<{ user: User }>(`/api/admin/users/${userId.value}`)
     user.value = data.user
-  } catch (error: any) {
+  }
+  catch (error: any) {
     console.error('Failed to fetch user:', error)
     toast.error('Не удалось загрузить пользователя')
     if (error.statusCode === 404) {
       router.push('/users')
     }
-  } finally {
+  }
+  finally {
     loading.value = false
   }
 }
@@ -104,7 +105,7 @@ const openEditModal = () => {
     regCity: user.value.registrationAddress?.city || '',
     regStreet: user.value.registrationAddress?.street || '',
     regBuilding: user.value.registrationAddress?.building || '',
-    regApartment: user.value.registrationAddress?.apartment || ''
+    regApartment: user.value.registrationAddress?.apartment || '',
   }
   showEditModal.value = true
 }
@@ -116,16 +117,18 @@ const saveUser = async () => {
   try {
     await $fetch(`/api/admin/users/${userId.value}`, {
       method: 'PUT',
-      body: editForm.value
+      body: editForm.value,
     })
 
     await fetchUser()
     showEditModal.value = false
     toast.success('Пользователь сохранён')
-  } catch (error: any) {
+  }
+  catch (error: any) {
     console.error('Failed to save user:', error)
     toast.error(error.data?.message || 'Не удалось сохранить пользователя')
-  } finally {
+  }
+  finally {
     saving.value = false
   }
 }
@@ -139,15 +142,17 @@ const updateStatus = async (newStatus: string) => {
   try {
     await $fetch(`/api/admin/users/${userId.value}/status`, {
       method: 'PUT',
-      body: { status: newStatus }
+      body: { status: newStatus },
     })
 
     user.value.status = newStatus as User['status']
     toast.success('Статус пользователя обновлён')
-  } catch (error: any) {
+  }
+  catch (error: any) {
     console.error('Failed to update user status:', error)
     toast.error(error.data?.message || 'Не удалось обновить статус')
-  } finally {
+  }
+  finally {
     saving.value = false
   }
 }
@@ -197,7 +202,7 @@ const formatDate = (dateStr: string | null) => {
   return new Date(dateStr).toLocaleDateString('ru-RU', {
     day: 'numeric',
     month: 'long',
-    year: 'numeric'
+    year: 'numeric',
   })
 }
 
@@ -208,7 +213,7 @@ const formatDateTime = (dateStr: string | null) => {
     month: 'short',
     year: 'numeric',
     hour: '2-digit',
-    minute: '2-digit'
+    minute: '2-digit',
   })
 }
 
@@ -241,8 +246,8 @@ onMounted(() => {
             <div class="relative">
               <div
                 v-if="user.avatar"
-                class="w-16 h-16 rounded-full bg-cover bg-center"
                 :style="{ backgroundImage: `url(${user.avatar})` }"
+                class="w-16 h-16 rounded-full bg-cover bg-center"
               />
               <div
                 v-else
@@ -262,7 +267,7 @@ onMounted(() => {
 
         <div class="flex gap-2">
           <UiButton
-            
+
             variant="secondary"
             size="sm"
             @click="openEditModal"
@@ -324,8 +329,8 @@ onMounted(() => {
               <div
                 v-for="account in user.accounts"
                 :key="account.id"
-                @click="router.push(`/accounts/${account.id}`)"
                 class="p-4 rounded-lg bg-[var(--glass-bg)] border border-[var(--glass-border)] hover:border-primary/30 cursor-pointer transition-colors"
+                @click="router.push(`/accounts/${account.id}`)"
               >
                 <div class="flex items-center justify-between mb-2">
                   <span class="font-mono text-primary">
@@ -375,7 +380,7 @@ onMounted(() => {
         <!-- Sidebar -->
         <div class="space-y-6">
           <!-- Status Management -->
-          <UiCard >
+          <UiCard>
             <template #header>
               <span class="font-medium text-[var(--text-primary)]">Управление статусом</span>
             </template>
@@ -383,33 +388,33 @@ onMounted(() => {
             <div class="space-y-2">
               <UiButton
                 v-if="user.status !== 'active'"
+                :disabled="saving"
                 variant="secondary"
                 size="sm"
                 class="w-full justify-center"
                 @click="updateStatus('active')"
-                :disabled="saving"
               >
                 <Icon name="heroicons:check-circle" class="w-4 h-4 text-green-400" />
                 Активировать
               </UiButton>
               <UiButton
                 v-if="user.status !== 'suspended'"
+                :disabled="saving"
                 variant="secondary"
                 size="sm"
                 class="w-full justify-center"
                 @click="updateStatus('suspended')"
-                :disabled="saving"
               >
                 <Icon name="heroicons:pause-circle" class="w-4 h-4 text-yellow-400" />
                 Приостановить
               </UiButton>
               <UiButton
                 v-if="user.status !== 'terminated'"
+                :disabled="saving"
                 variant="secondary"
                 size="sm"
                 class="w-full justify-center"
                 @click="updateStatus('terminated')"
-                :disabled="saving"
               >
                 <Icon name="heroicons:x-circle" class="w-4 h-4 text-red-400" />
                 Удалить
@@ -453,7 +458,7 @@ onMounted(() => {
         <div class="relative w-full max-w-2xl glass-card rounded-xl p-6 my-8">
           <h3 class="text-xl font-bold text-[var(--text-primary)] mb-6">Редактировать пользователя</h3>
 
-          <form @submit.prevent="saveUser" class="space-y-6">
+          <form class="space-y-6" @submit.prevent="saveUser">
             <!-- Основные данные -->
             <div>
               <h4 class="text-sm font-medium text-[var(--text-muted)] mb-3">Основные данные</h4>
@@ -500,10 +505,10 @@ onMounted(() => {
             </div>
 
             <div class="flex justify-end gap-3 pt-4 border-t border-[var(--glass-border)]">
-              <UiButton variant="ghost" @click="showEditModal = false" :disabled="saving">
+              <UiButton :disabled="saving" variant="ghost" @click="showEditModal = false">
                 Отмена
               </UiButton>
-              <UiButton type="submit" :loading="saving" :disabled="saving">
+              <UiButton :loading="saving" :disabled="saving" type="submit">
                 Сохранить
               </UiButton>
             </div>

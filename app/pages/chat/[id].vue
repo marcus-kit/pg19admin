@@ -2,14 +2,13 @@
 import type { Chat, ChatMessage } from '~/types/admin'
 
 definePageMeta({
-  middleware: 'admin'
+  middleware: 'admin',
 })
 
 const route = useRoute()
 const router = useRouter()
 const chatId = computed(() => route.params.id as string)
 const toast = useToast()
-const config = useRuntimeConfig()
 const user = useSupabaseUser()
 
 useHead({ title: 'Чат — Админ-панель' })
@@ -20,14 +19,14 @@ const chat = ref<Chat | null>(null)
 const messages = ref<ChatMessage[]>([])
 const messagesContainer = ref<HTMLElement | null>(null)
 
-// Supabase Realtime (anon key для RLS)
-let supabase: ReturnType<typeof createClient> | null = null
+// Supabase Realtime
+const supabase = useSupabaseClient()
 let subscription: any = null
 
 const fetchChat = async () => {
   loading.value = true
   try {
-    const data = await $fetch<{ chat: Chat; messages: ChatMessage[] }>(`/api/admin/chat/${chatId.value}`)
+    const data = await $fetch<{ chat: Chat, messages: ChatMessage[] }>(`/api/admin/chat/${chatId.value}`)
     chat.value = data.chat
     messages.value = data.messages
 
@@ -37,13 +36,15 @@ const fetchChat = async () => {
 
     await nextTick()
     scrollToBottom()
-  } catch (error: any) {
+  }
+  catch (error: any) {
     console.error('Failed to fetch chat:', error)
     toast.error('Не удалось загрузить чат')
     if (error.statusCode === 404) {
       router.push('/chat')
     }
-  } finally {
+  }
+  finally {
     loading.value = false
   }
 }
@@ -60,7 +61,7 @@ const uploadFile = async (file: File) => {
     isImage: boolean
   }>(`/api/admin/chat/${chatId.value}/upload`, {
     method: 'POST',
-    body: formData
+    body: formData,
   })
 }
 
@@ -69,7 +70,7 @@ const handleSendMessage = async (content: string, file: File | null) => {
 
   sending.value = true
   try {
-    let attachment: { url: string; name: string; size: number; isImage: boolean } | null = null
+    let attachment: { url: string, name: string, size: number, isImage: boolean } | null = null
     if (file) {
       attachment = await uploadFile(file)
     }
@@ -81,8 +82,8 @@ const handleSendMessage = async (content: string, file: File | null) => {
         contentType: attachment ? (attachment.isImage ? 'image' : 'file') : 'text',
         attachmentUrl: attachment?.url,
         attachmentName: attachment?.name,
-        attachmentSize: attachment?.size
-      }
+        attachmentSize: attachment?.size,
+      },
     })
 
     if (!messages.value.some(m => m.id === response.message.id)) {
@@ -91,10 +92,12 @@ const handleSendMessage = async (content: string, file: File | null) => {
 
     await nextTick()
     scrollToBottom()
-  } catch (error: any) {
+  }
+  catch (error: any) {
     console.error('Failed to send message:', error)
     toast.error('Ошибка при отправке сообщения')
-  } finally {
+  }
+  finally {
     sending.value = false
   }
 }
@@ -107,7 +110,8 @@ const handleClose = async () => {
     if (chat.value) {
       chat.value.status = 'closed'
     }
-  } catch (error: any) {
+  }
+  catch (error: any) {
     console.error('Failed to close chat:', error)
     toast.error('Ошибка при закрытии чата')
   }
@@ -119,10 +123,11 @@ const handleAssignToMe = async () => {
   try {
     await $fetch(`/api/admin/chat/${chatId.value}/assign`, {
       method: 'POST',
-      body: { adminId: user.value.sub }
+      body: { adminId: user.value.sub },
     })
     await fetchChat()
-  } catch (error: any) {
+  }
+  catch (error: any) {
     console.error('Failed to assign chat:', error)
     toast.error('Ошибка при назначении чата')
   }
@@ -151,13 +156,13 @@ const formatDate = (dateStr: string) => {
   return date.toLocaleDateString('ru-RU', {
     day: 'numeric',
     month: 'long',
-    year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined
+    year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined,
   })
 }
 
 // Группируем сообщения по дате
 const groupedMessages = computed(() => {
-  const groups: { date: string; messages: ChatMessage[] }[] = []
+  const groups: { date: string, messages: ChatMessage[] }[] = []
   let currentDate = ''
 
   for (const msg of messages.value) {
@@ -172,10 +177,8 @@ const groupedMessages = computed(() => {
   return groups
 })
 
-// Подписка на Realtime (anon key для работы с RLS)
+// Подписка на Realtime
 const setupRealtime = () => {
-  supabase = createClient(config.public.supabaseUrl, config.public.supabaseKey)
-
   subscription = supabase
     .channel(`chat:${chatId.value}`)
     .on(
@@ -184,7 +187,7 @@ const setupRealtime = () => {
         event: 'INSERT',
         schema: 'public',
         table: 'chat_messages',
-        filter: `chat_id=eq.${chatId.value}`
+        filter: `chat_id=eq.${chatId.value}`,
       },
       (payload) => {
         const newMsg = payload.new as any
@@ -200,7 +203,7 @@ const setupRealtime = () => {
             attachmentName: newMsg.attachment_name,
             attachmentSize: newMsg.attachment_size,
             isRead: newMsg.is_read,
-            createdAt: newMsg.created_at
+            createdAt: newMsg.created_at,
           })
           nextTick(() => scrollToBottom())
 
@@ -208,7 +211,7 @@ const setupRealtime = () => {
             $fetch(`/api/admin/chat/${chatId.value}/read`, { method: 'POST' })
           }
         }
-      }
+      },
     )
     .subscribe()
 }

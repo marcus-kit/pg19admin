@@ -12,14 +12,14 @@
 
 interface Props {
   variant?: 'text' | 'circle' | 'rect'
-  width?: string   // CSS width (например, '100%', '200px', '50%')
-  height?: string  // CSS height
+  width?: string // CSS width (например, '100%', '200px', '50%')
+  height?: string // CSS height
   rounded?: 'none' | 'sm' | 'md' | 'lg' | 'xl' | 'full'
 }
 
 const props = withDefaults(defineProps<Props>(), {
   variant: 'text',
-  rounded: 'md'
+  rounded: 'md',
 })
 
 // Классы скругления
@@ -29,7 +29,7 @@ const roundedClasses: Record<string, string> = {
   md: 'rounded',
   lg: 'rounded-lg',
   xl: 'rounded-xl',
-  full: 'rounded-full'
+  full: 'rounded-full',
 }
 
 // Стили по умолчанию для каждого варианта
@@ -38,17 +38,17 @@ const defaultStyles = computed(() => {
     case 'circle':
       return {
         width: props.width || '40px',
-        height: props.height || '40px'
+        height: props.height || '40px',
       }
     case 'rect':
       return {
         width: props.width || '100%',
-        height: props.height || '100px'
+        height: props.height || '100px',
       }
     default: // text
       return {
         width: props.width || '100%',
-        height: props.height || '16px'
+        height: props.height || '16px',
       }
   }
 })
@@ -62,11 +62,11 @@ const roundedClass = computed(() => {
 
 <template>
   <div
-    class="animate-pulse bg-[var(--glass-bg)]"
     :class="roundedClass"
     :style="{
       width: defaultStyles.width,
-      height: defaultStyles.height
+      height: defaultStyles.height,
     }"
+    class="animate-pulse bg-[var(--glass-bg)]"
   />
 </template>

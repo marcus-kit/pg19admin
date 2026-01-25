@@ -37,7 +37,7 @@ interface Props {
 const props = withDefaults(defineProps<Props>(), {
   modelValue: null,
   placeholder: 'Выберите...',
-  size: 'md'
+  size: 'md',
 })
 
 const emit = defineEmits<{
@@ -51,7 +51,7 @@ const emit = defineEmits<{
 // Двусторонняя привязка для v-model
 const selectValue = computed({
   get: () => props.modelValue,
-  set: (value) => emit('update:modelValue', value)
+  set: value => emit('update:modelValue', value),
 })
 
 // Классы размеров для select элемента
@@ -59,7 +59,7 @@ const sizeClasses = computed(() => {
   switch (props.size) {
     case 'sm': return 'px-3 py-2 text-sm pr-9'
     case 'lg': return 'px-5 py-4 text-lg pr-12'
-    default:   return 'px-4 py-3 pr-10'
+    default: return 'px-4 py-3 pr-10'
   }
 })
 
@@ -68,7 +68,7 @@ const iconSize = computed(() => {
   switch (props.size) {
     case 'sm': return 'w-4 h-4'
     case 'lg': return 'w-6 h-6'
-    default:   return 'w-5 h-5'
+    default: return 'w-5 h-5'
   }
 })
 
@@ -77,7 +77,7 @@ const iconPosition = computed(() => {
   switch (props.size) {
     case 'sm': return 'right-2.5'
     case 'lg': return 'right-4'
-    default:   return 'right-3'
+    default: return 'right-3'
   }
 })
 </script>
@@ -94,14 +94,14 @@ const iconPosition = computed(() => {
       <select
         v-model="selectValue"
         :disabled="disabled"
-        class="w-full rounded-xl text-[var(--text-primary)] bg-[var(--glass-bg)] border border-[var(--glass-border)] focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed appearance-none cursor-pointer hover:border-[var(--text-muted)]"
         :class="[
           sizeClasses,
-          { 'border-red-500 focus:border-red-500 focus:ring-red-500/20': error }
+          { 'border-red-500 focus:border-red-500 focus:ring-red-500/20': error },
         ]"
+        class="w-full rounded-xl text-[var(--text-primary)] bg-[var(--glass-bg)] border border-[var(--glass-border)] focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed appearance-none cursor-pointer hover:border-[var(--text-muted)]"
       >
         <!-- Placeholder опция -->
-        <option v-if="placeholder" value="" disabled :selected="!modelValue" class="text-[var(--text-muted)]">
+        <option v-if="placeholder" :selected="!modelValue" value="" class="text-[var(--text-muted)]" disabled>
           {{ placeholder }}
         </option>
 
@@ -118,13 +118,13 @@ const iconPosition = computed(() => {
 
       <!-- Кастомная стрелка (заменяет системную, скрытую через appearance-none) -->
       <div
-        class="pointer-events-none absolute inset-y-0 flex items-center"
         :class="iconPosition"
+        class="pointer-events-none absolute inset-y-0 flex items-center"
       >
         <Icon
+          :class="iconSize"
           name="heroicons:chevron-down"
           class="text-[var(--text-muted)] transition-colors"
-          :class="iconSize"
         />
       </div>
     </div>

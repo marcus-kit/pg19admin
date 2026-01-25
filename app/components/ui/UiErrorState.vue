@@ -17,11 +17,11 @@ interface Props {
   retryText?: string
 }
 
-const props = withDefaults(defineProps<Props>(), {
+withDefaults(defineProps<Props>(), {
   icon: 'heroicons:exclamation-triangle',
   title: 'Произошла ошибка',
   description: 'Не удалось загрузить данные. Попробуйте позже.',
-  retryText: 'Повторить'
+  retryText: 'Повторить',
 })
 
 const emit = defineEmits<{

@@ -1,14 +1,13 @@
 import { serverSupabaseServiceRole } from '#supabase/server'
 
 export default defineEventHandler(async (event) => {
-
   const newsId = getRouterParam(event, 'id')
   const attachmentId = getRouterParam(event, 'attachmentId')
 
   if (!newsId || !attachmentId) {
     throw createError({
       statusCode: 400,
-      message: 'ID новости и вложения обязательны'
+      message: 'ID новости и вложения обязательны',
     })
   }
 
@@ -25,7 +24,7 @@ export default defineEventHandler(async (event) => {
   if (fetchError || !attachment) {
     throw createError({
       statusCode: 404,
-      message: 'Вложение не найдено'
+      message: 'Вложение не найдено',
     })
   }
 
@@ -54,7 +53,7 @@ export default defineEventHandler(async (event) => {
     console.error('Error deleting attachment:', deleteError)
     throw createError({
       statusCode: 500,
-      message: 'Ошибка при удалении вложения'
+      message: 'Ошибка при удалении вложения',
     })
   }
 

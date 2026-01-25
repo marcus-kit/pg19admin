@@ -21,7 +21,7 @@ interface Props {
 const props = withDefaults(defineProps<Props>(), {
   size: 'md',
   closeOnBackdrop: true,
-  closeOnEscape: true
+  closeOnEscape: true,
 })
 
 const emit = defineEmits<{
@@ -52,7 +52,7 @@ const sizeClasses: Record<string, string> = {
   sm: 'max-w-sm',
   md: 'max-w-md',
   lg: 'max-w-lg',
-  xl: 'max-w-xl'
+  xl: 'max-w-xl',
 }
 
 // Блокировка скролла body
@@ -60,7 +60,8 @@ watch(() => props.modelValue, (isOpen) => {
   if (isOpen) {
     document.body.style.overflow = 'hidden'
     document.addEventListener('keydown', handleEscape)
-  } else {
+  }
+  else {
     document.body.style.overflow = ''
     document.removeEventListener('keydown', handleEscape)
   }
@@ -95,8 +96,8 @@ onUnmounted(() => {
         >
           <div
             v-if="modelValue"
-            class="w-full rounded-2xl"
             :class="sizeClasses[size]"
+            class="w-full rounded-2xl"
             style="background: var(--bg-surface); border: 1px solid var(--glass-border);"
           >
             <slot />

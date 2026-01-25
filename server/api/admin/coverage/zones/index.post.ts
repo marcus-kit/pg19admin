@@ -14,7 +14,6 @@ interface CreateZoneData {
 }
 
 export default defineEventHandler(async (event) => {
-
   const body = await readBody<CreateZoneData>(event)
   const supabase = serverSupabaseServiceRole(event)
 
@@ -43,7 +42,7 @@ export default defineEventHandler(async (event) => {
       fill_opacity: body.fillOpacity ?? 0.3,
       stroke_width: body.strokeWidth ?? 2,
       is_active: body.isActive ?? true,
-      sort_order: body.sortOrder ?? 0
+      sort_order: body.sortOrder ?? 0,
     })
     .select()
     .single()

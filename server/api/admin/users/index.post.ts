@@ -1,7 +1,6 @@
 import { useSupabaseAdmin } from '~~/server/utils/supabase'
 
 export default defineEventHandler(async (event) => {
-
   const body = await readBody(event)
   const supabase = useSupabaseAdmin(event)
 
@@ -9,21 +8,21 @@ export default defineEventHandler(async (event) => {
   if (!body.firstName?.trim()) {
     throw createError({
       statusCode: 400,
-      message: 'Имя обязательно'
+      message: 'Имя обязательно',
     })
   }
 
   if (!body.lastName?.trim()) {
     throw createError({
       statusCode: 400,
-      message: 'Фамилия обязательна'
+      message: 'Фамилия обязательна',
     })
   }
 
   // Собираем данные для вставки
   const insertData: Record<string, any> = {
     first_name: body.firstName.trim(),
-    last_name: body.lastName.trim()
+    last_name: body.lastName.trim(),
   }
 
   // Опциональные поля
@@ -44,7 +43,7 @@ export default defineEventHandler(async (event) => {
   insertData.full_name = [
     body.lastName?.trim(),
     body.firstName?.trim(),
-    body.middleName?.trim()
+    body.middleName?.trim(),
   ].filter(Boolean).join(' ')
 
   const { data: newUser, error } = await supabase
@@ -57,7 +56,7 @@ export default defineEventHandler(async (event) => {
     console.error('Failed to create user:', error)
     throw createError({
       statusCode: 500,
-      message: 'Ошибка при создании пользователя'
+      message: 'Ошибка при создании пользователя',
     })
   }
 
@@ -72,7 +71,7 @@ export default defineEventHandler(async (event) => {
       phone: newUser.phone,
       email: newUser.email,
       status: newUser.status,
-      createdAt: newUser.created_at
-    }
+      createdAt: newUser.created_at,
+    },
   }
 })

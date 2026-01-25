@@ -1,13 +1,12 @@
 import { useSupabaseAdmin } from '~~/server/utils/supabase'
 
 export default defineEventHandler(async (event) => {
-
   const id = getRouterParam(event, 'id')
 
   if (!id) {
     throw createError({
       statusCode: 400,
-      message: 'ID тикета обязателен'
+      message: 'ID тикета обязателен',
     })
   }
 
@@ -24,7 +23,7 @@ export default defineEventHandler(async (event) => {
     console.error('Ticket fetch error:', ticketError, 'ID:', id)
     throw createError({
       statusCode: 404,
-      message: 'Тикет не найден'
+      message: 'Тикет не найден',
     })
   }
 
@@ -86,7 +85,7 @@ export default defineEventHandler(async (event) => {
       firstResponseAt: ticket.first_response_at,
       resolvedAt: ticket.resolved_at,
       closedAt: ticket.closed_at,
-      slaDeadline: ticket.sla_deadline
+      slaDeadline: ticket.sla_deadline,
     },
     comments: (comments || []).map(c => ({
       id: c.id,
@@ -99,7 +98,7 @@ export default defineEventHandler(async (event) => {
       isSolution: c.is_solution,
       attachments: c.attachments,
       createdAt: c.created_at,
-      editedAt: c.edited_at
+      editedAt: c.edited_at,
     })),
     history: (history || []).map(h => ({
       id: h.id,
@@ -107,7 +106,7 @@ export default defineEventHandler(async (event) => {
       action: h.action,
       oldValue: h.old_value,
       newValue: h.new_value,
-      createdAt: h.created_at
-    }))
+      createdAt: h.created_at,
+    })),
   }
 })

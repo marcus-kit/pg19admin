@@ -1,18 +1,18 @@
-import { useSupabaseAdmin } from '~~/server/utils/supabase'
+import { getAdminFromEvent, useSupabaseAdmin } from '~~/server/utils/supabase'
 
 interface AssignBody {
   adminId: string | null
 }
 
 export default defineEventHandler(async (event) => {
-
+  const currentAdmin = await getAdminFromEvent(event)
   const ticketId = getRouterParam(event, 'id')
   const body = await readBody<AssignBody>(event)
 
   if (!ticketId) {
     throw createError({
       statusCode: 400,
-      message: 'ID тикета обязателен'
+      message: 'ID тикета обязателен',
     })
   }
 
@@ -28,7 +28,7 @@ export default defineEventHandler(async (event) => {
   if (ticketError || !ticket) {
     throw createError({
       statusCode: 404,
-      message: 'Тикет не найден'
+      message: 'Тикет не найден',
     })
   }
 
@@ -44,7 +44,7 @@ export default defineEventHandler(async (event) => {
     if (adminError || !assignedAdmin) {
       throw createError({
         statusCode: 400,
-        message: 'Указанный администратор не найден'
+        message: 'Указанный администратор не найден',
       })
     }
     assignedAdminName = assignedAdmin.full_name
@@ -60,13 +60,13 @@ export default defineEventHandler(async (event) => {
     console.error('Failed to assign ticket:', updateError)
     throw createError({
       statusCode: 500,
-      message: 'Ошибка при назначении тикета'
+      message: 'Ошибка при назначении тикета',
     })
   }
 
   // Определяем действие для истории
   let action = 'assigned'
-  let oldValue = null
+  const oldValue = null
   let newValue = assignedAdminName
 
   if (body.adminId === null) {
@@ -83,12 +83,12 @@ export default defineEventHandler(async (event) => {
       admin_name: currentAdmin.fullName,
       action,
       old_value: oldValue,
-      new_value: newValue
+      new_value: newValue,
     })
 
   return {
     success: true,
     assignedAdminId: body.adminId,
-    assignedAdminName
+    assignedAdminName,
   }
 })

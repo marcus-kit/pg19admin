@@ -5,15 +5,12 @@ import {
   NEWS_CATEGORY,
   NEWS_STATUS_OPTIONS,
   getStatusLabel,
-  getStatusBadgeClass
+  getStatusBadgeClass,
 } from '~/composables/useStatusConfig'
-import { formatDateShort } from '~/composables/useFormatters'
 import { useAdminList } from '~/composables/useAdminList'
 
-const toast = useToast()
-
 definePageMeta({
-  middleware: 'admin'
+  middleware: 'admin',
 })
 
 useHead({ title: 'Управление новостями — Админ-панель' })
@@ -23,11 +20,11 @@ const {
   items: news,
   loading,
   filters,
-  deleteItem
+  deleteItem,
 } = useAdminList<NewsItem, { status: string }>({
   endpoint: '/api/admin/news',
   responseKey: 'news',
-  initialFilters: { status: 'all' }
+  initialFilters: { status: 'all' },
 })
 
 const deleteNews = (id: string) => deleteItem(id, 'Удалить эту новость?')
@@ -51,8 +48,8 @@ const deleteNews = (id: string) => deleteItem(id, 'Удалить эту нов�
       <UiButton
         v-for="opt in NEWS_STATUS_OPTIONS"
         :key="opt.value"
-        variant="ghost"
         :class="{ 'bg-primary/20': filters.status === opt.value }"
+        variant="ghost"
         @click="filters.status = opt.value"
       >
         {{ opt.label }}
@@ -107,16 +104,16 @@ const deleteNews = (id: string) => deleteItem(id, 'Удалить эту нов�
             <UiButton
               variant="ghost"
               size="sm"
-              @click="$router.push(`/news/${item.id}/edit`)"
               title="Редактировать"
+              @click="$router.push(`/news/${item.id}/edit`)"
             >
               <Icon name="heroicons:pencil" class="w-4 h-4" />
             </UiButton>
             <UiButton
               variant="ghost"
               size="sm"
-              @click="deleteNews(item.id)"
               title="Удалить"
+              @click="deleteNews(item.id)"
             >
               <Icon name="heroicons:trash" class="w-4 h-4 text-red-400" />
             </UiButton>

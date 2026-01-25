@@ -6,7 +6,7 @@ interface DbCallback {
   phone: string
   status: string
   source: string | null
-  processed_by_admin?: { id: string; full_name: string } | null
+  processed_by_admin?: { id: string, full_name: string } | null
   created_at: string
 }
 
@@ -20,12 +20,11 @@ function mapCallback(cb: DbCallback) {
     processedByAdmin: cb.processed_by_admin
       ? { id: cb.processed_by_admin.id, fullName: cb.processed_by_admin.full_name }
       : null,
-    createdAt: cb.created_at
+    createdAt: cb.created_at,
   }
 }
 
 export default defineEventHandler(async (event) => {
-
   const query = getQuery(event)
   const status = query.status as string | undefined
   const limit = parseInt(query.limit as string) || 100
@@ -51,11 +50,11 @@ export default defineEventHandler(async (event) => {
     console.error('Failed to fetch callbacks:', error)
     throw createError({
       statusCode: 500,
-      message: 'Ошибка при загрузке заявок на звонок'
+      message: 'Ошибка при загрузке заявок на звонок',
     })
   }
 
   return {
-    callbacks: (callbacks as DbCallback[] || []).map(mapCallback)
+    callbacks: (callbacks as DbCallback[] || []).map(mapCallback),
   }
 })

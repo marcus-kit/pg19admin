@@ -21,7 +21,7 @@ interface Props {
 
 const props = withDefaults(defineProps<Props>(), {
   type: 'text',
-  modelValue: ''
+  modelValue: '',
 })
 
 const emit = defineEmits<{
@@ -31,7 +31,7 @@ const emit = defineEmits<{
 // Двусторонняя привязка для v-model
 const inputValue = computed({
   get: () => props.modelValue,
-  set: (value) => emit('update:modelValue', value)
+  set: value => emit('update:modelValue', value),
 })
 </script>
 
@@ -48,12 +48,12 @@ const inputValue = computed({
       :type="type"
       :placeholder="placeholder"
       :disabled="disabled"
-      class="w-full px-4 py-3 rounded-xl text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
       :class="{ 'border-red-500 focus:border-red-500 focus:ring-red-500/20': error }"
       :style="{
         background: 'var(--glass-bg)',
-        border: '1px solid var(--glass-border)'
+        border: '1px solid var(--glass-border)',
       }"
+      class="w-full px-4 py-3 rounded-xl text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
     />
 
     <!-- Сообщение об ошибке -->

@@ -2,7 +2,6 @@ import { useSupabaseAdmin } from '~~/server/utils/supabase'
 import { mapConnectionRequest, type DbConnectionRequest } from '~~/server/utils/mappers'
 
 export default defineEventHandler(async (event) => {
-
   const query = getQuery(event)
   const supabase = useSupabaseAdmin(event)
 
@@ -28,11 +27,11 @@ export default defineEventHandler(async (event) => {
     console.error('Failed to fetch connection requests:', error)
     throw createError({
       statusCode: 500,
-      message: 'Ошибка при загрузке заявок'
+      message: 'Ошибка при загрузке заявок',
     })
   }
 
   return {
-    requests: (data as DbConnectionRequest[] || []).map(mapConnectionRequest)
+    requests: (data as DbConnectionRequest[] || []).map(mapConnectionRequest),
   }
 })

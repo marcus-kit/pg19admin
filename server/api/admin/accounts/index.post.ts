@@ -1,7 +1,6 @@
 import { useSupabaseAdmin } from '~~/server/utils/supabase'
 
 export default defineEventHandler(async (event) => {
-
   const body = await readBody(event)
   const supabase = useSupabaseAdmin(event)
 
@@ -20,7 +19,7 @@ export default defineEventHandler(async (event) => {
     if (userError || !user) {
       throw createError({
         statusCode: 400,
-        message: 'Пользователь не найден'
+        message: 'Пользователь не найден',
       })
     }
     insertData.user_id = body.userId
@@ -34,7 +33,7 @@ export default defineEventHandler(async (event) => {
     if (!['draft', 'active', 'terminated', 'stopped'].includes(body.contractStatus)) {
       throw createError({
         statusCode: 400,
-        message: 'Некорректный статус договора'
+        message: 'Некорректный статус договора',
       })
     }
     insertData.contract_status = body.contractStatus
@@ -65,7 +64,7 @@ export default defineEventHandler(async (event) => {
     console.error('Failed to create account:', error)
     throw createError({
       statusCode: 500,
-      message: 'Ошибка при создании аккаунта'
+      message: 'Ошибка при создании аккаунта',
     })
   }
 
@@ -79,7 +78,7 @@ export default defineEventHandler(async (event) => {
       balance: newAccount.balance,
       addressFull: newAccount.address_full,
       userId: newAccount.user_id,
-      createdAt: newAccount.date_created
-    }
+      createdAt: newAccount.date_created,
+    },
   }
 })

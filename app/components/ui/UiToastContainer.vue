@@ -20,21 +20,21 @@ const icons: Record<Toast['type'], string> = {
   success: 'heroicons:check-circle',
   error: 'heroicons:x-circle',
   warning: 'heroicons:exclamation-triangle',
-  info: 'heroicons:information-circle'
+  info: 'heroicons:information-circle',
 }
 
 const colors: Record<Toast['type'], string> = {
   success: 'text-green-400',
   error: 'text-red-400',
   warning: 'text-yellow-400',
-  info: 'text-blue-400'
+  info: 'text-blue-400',
 }
 
 const bgColors: Record<Toast['type'], string> = {
   success: 'border-green-500/30',
   error: 'border-red-500/30',
   warning: 'border-yellow-500/30',
-  info: 'border-blue-500/30'
+  info: 'border-blue-500/30',
 }
 </script>
 
@@ -51,14 +51,14 @@ const bgColors: Record<Toast['type'], string> = {
           <div
             v-for="toast in toasts"
             :key="toast.id"
-            class="pointer-events-auto glass-card-static rounded-xl p-4 flex items-start gap-3 border"
             :class="bgColors[toast.type]"
+            class="pointer-events-auto glass-card-static rounded-xl p-4 flex items-start gap-3 border"
           >
             <!-- Icon -->
             <Icon
               :name="icons[toast.type]"
-              class="w-5 h-5 flex-shrink-0 mt-0.5"
               :class="colors[toast.type]"
+              class="w-5 h-5 flex-shrink-0 mt-0.5"
             />
 
             <!-- Message -->
@@ -68,8 +68,8 @@ const bgColors: Record<Toast['type'], string> = {
 
             <!-- Close button -->
             <button
-              @click="remove(toast.id)"
               class="flex-shrink-0 p-1 rounded-lg hover:bg-[var(--glass-bg)] transition-colors"
+              @click="remove(toast.id)"
             >
               <Icon
                 name="heroicons:x-mark"

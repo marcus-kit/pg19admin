@@ -1,6 +1,6 @@
 <script setup lang="ts">
 definePageMeta({
-  middleware: 'admin'
+  middleware: 'admin',
 })
 
 useHead({ title: 'Создать услугу — Админ-панель' })
@@ -23,7 +23,7 @@ const form = reactive({
   features: [] as string[],
   sortOrder: 0,
   isActive: true,
-  categoryId: null as number | null
+  categoryId: null as number | null,
 })
 
 const saving = ref(false)
@@ -39,7 +39,8 @@ const fetchCategories = async () => {
   try {
     const data = await $fetch<{ categories: Category[] }>('/api/admin/catalog/categories')
     categories.value = data.categories
-  } catch (err) {
+  }
+  catch (err) {
     console.error('Failed to fetch categories:', err)
     toast.error('Не удалось загрузить категории')
   }
@@ -47,7 +48,7 @@ const fetchCategories = async () => {
 
 const categoryOptions = computed(() => [
   { value: null, label: 'Без категории' },
-  ...categories.value.map(cat => ({ value: cat.id, label: cat.name }))
+  ...categories.value.map(cat => ({ value: cat.id, label: cat.name })),
 ])
 
 const addFeature = () => {
@@ -89,17 +90,19 @@ const save = async () => {
         features: form.features.length > 0 ? form.features : null,
         sortOrder: form.sortOrder,
         isActive: form.isActive,
-        categoryId: form.categoryId
-      }
+        categoryId: form.categoryId,
+      },
     })
 
     toast.success('Услуга успешно создана')
     router.push('/catalog')
-  } catch (err: any) {
+  }
+  catch (err: any) {
     console.error('Failed to create service:', err)
     toast.error('Не удалось создать услугу')
     error.value = err.data?.message || 'Ошибка при создании услуги'
-  } finally {
+  }
+  finally {
     saving.value = false
   }
 }
@@ -121,7 +124,7 @@ onMounted(() => {
       {{ error }}
     </div>
 
-    <form @submit.prevent="save" class="space-y-6 max-w-2xl">
+    <form class="space-y-6 max-w-2xl" @submit.prevent="save">
       <div>
         <label class="block text-sm font-medium text-[var(--text-primary)] mb-2">
           Название *
@@ -219,8 +222,8 @@ onMounted(() => {
             {{ feature }}
             <button
               type="button"
-              @click="removeFeature(index)"
               class="hover:text-red-400 transition-colors"
+              @click="removeFeature(index)"
             >
               <Icon name="heroicons:x-mark" class="w-4 h-4" />
             </button>
@@ -250,10 +253,10 @@ onMounted(() => {
       </div>
 
       <div class="flex gap-3">
-        <UiButton type="submit" :loading="saving" :disabled="saving">
+        <UiButton :loading="saving" :disabled="saving" type="submit">
           Сохранить
         </UiButton>
-        <UiButton variant="ghost" @click="router.push('/catalog')" :disabled="saving">
+        <UiButton :disabled="saving" variant="ghost" @click="router.push('/catalog')">
           Отмена
         </UiButton>
       </div>

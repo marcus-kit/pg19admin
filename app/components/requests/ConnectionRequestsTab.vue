@@ -5,7 +5,7 @@ import {
   CONNECTION_STATUS_OPTIONS,
   REQUEST_SOURCE,
   getStatusLabel,
-  getStatusBadgeClass
+  getStatusBadgeClass,
 } from '~/composables/useStatusConfig'
 
 interface Props {
@@ -30,12 +30,12 @@ const goToRequest = (id: string) => {
 
 const localStatusFilter = computed({
   get: () => props.statusFilter,
-  set: (value: string) => emit('update:statusFilter', value)
+  set: (value: string) => emit('update:statusFilter', value),
 })
 
 const localOnlyInCoverage = computed({
   get: () => props.onlyInCoverage,
-  set: (value: boolean) => emit('update:onlyInCoverage', value)
+  set: (value: boolean) => emit('update:onlyInCoverage', value),
 })
 </script>
 
@@ -47,9 +47,9 @@ const localOnlyInCoverage = computed({
         <UiButton
           v-for="opt in CONNECTION_STATUS_OPTIONS"
           :key="opt.value"
+          :class="{ 'bg-primary/20': localStatusFilter === opt.value }"
           variant="ghost"
           size="sm"
-          :class="{ 'bg-primary/20': localStatusFilter === opt.value }"
           @click="localStatusFilter = opt.value"
         >
           {{ opt.label }}

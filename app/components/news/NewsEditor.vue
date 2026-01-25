@@ -18,18 +18,18 @@ const editor = useEditor({
     Link.configure({
       openOnClick: false,
       HTMLAttributes: {
-        class: 'text-primary underline'
-      }
-    })
+        class: 'text-primary underline',
+      },
+    }),
   ],
   onUpdate: ({ editor }) => {
     emit('update:modelValue', editor.getHTML())
   },
   editorProps: {
     attributes: {
-      class: 'prose prose-invert max-w-none focus:outline-none min-h-[300px] p-4'
-    }
-  }
+      class: 'prose prose-invert max-w-none focus:outline-none min-h-[300px] p-4',
+    },
+  },
 })
 
 watch(() => props.modelValue, (value) => {
@@ -55,81 +55,81 @@ const removeLink = () => {
     <!-- Toolbar -->
     <div class="toolbar flex flex-wrap gap-2 p-3 border-b border-[var(--glass-border)] bg-[var(--glass-bg)]">
       <button
-        @click="editor?.chain().focus().toggleBold().run()"
         :class="{ 'bg-primary/20': editor?.isActive('bold') }"
         class="toolbar-btn"
         type="button"
         title="Полужирный"
+        @click="editor?.chain().focus().toggleBold().run()"
       >
         <Icon name="heroicons:bold" class="w-4 h-4" />
       </button>
 
       <button
-        @click="editor?.chain().focus().toggleItalic().run()"
         :class="{ 'bg-primary/20': editor?.isActive('italic') }"
         class="toolbar-btn"
         type="button"
         title="Курсив"
+        @click="editor?.chain().focus().toggleItalic().run()"
       >
         <span class="italic font-serif">I</span>
       </button>
 
       <button
-        @click="editor?.chain().focus().toggleHeading({ level: 2 }).run()"
         :class="{ 'bg-primary/20': editor?.isActive('heading', { level: 2 }) }"
         class="toolbar-btn"
         type="button"
         title="Заголовок 2"
+        @click="editor?.chain().focus().toggleHeading({ level: 2 }).run()"
       >
         H2
       </button>
 
       <button
-        @click="editor?.chain().focus().toggleHeading({ level: 3 }).run()"
         :class="{ 'bg-primary/20': editor?.isActive('heading', { level: 3 }) }"
         class="toolbar-btn"
         type="button"
         title="Заголовок 3"
+        @click="editor?.chain().focus().toggleHeading({ level: 3 }).run()"
       >
         H3
       </button>
 
       <button
-        @click="editor?.chain().focus().toggleBulletList().run()"
         :class="{ 'bg-primary/20': editor?.isActive('bulletList') }"
         class="toolbar-btn"
         type="button"
         title="Маркированный список"
+        @click="editor?.chain().focus().toggleBulletList().run()"
       >
         <Icon name="heroicons:list-bullet" class="w-4 h-4" />
       </button>
 
       <button
-        @click="editor?.chain().focus().toggleOrderedList().run()"
         :class="{ 'bg-primary/20': editor?.isActive('orderedList') }"
         class="toolbar-btn"
         type="button"
         title="Нумерованный список"
+        @click="editor?.chain().focus().toggleOrderedList().run()"
       >
         <span class="text-xs font-bold">1.</span>
       </button>
 
       <button
-        @click="addLink"
         :class="{ 'bg-primary/20': editor?.isActive('link') }"
         class="toolbar-btn"
         type="button"
         title="Добавить ссылку"
+        @click="addLink"
       >
         <Icon name="heroicons:link" class="w-4 h-4" />
       </button>
 
       <button
         v-if="editor?.isActive('link')"
-        @click="removeLink"
         class="toolbar-btn"
         type="button"
         title="Удалить ссылку"
+        @click="removeLink"
       >
         <Icon name="heroicons:link-slash" class="w-4 h-4" />
       </button>

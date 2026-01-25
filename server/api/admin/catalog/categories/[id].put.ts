@@ -10,14 +10,13 @@ interface UpdateCategoryData {
 }
 
 export default defineEventHandler(async (event) => {
-
   const id = getRouterParam(event, 'id')
   const body = await readBody<UpdateCategoryData>(event)
 
   if (!id) {
     throw createError({
       statusCode: 400,
-      message: 'ID категории обязателен'
+      message: 'ID категории обязателен',
     })
   }
 
@@ -50,7 +49,7 @@ export default defineEventHandler(async (event) => {
     if (existing) {
       throw createError({
         statusCode: 400,
-        message: 'Категория с таким URL уже существует'
+        message: 'Категория с таким URL уже существует',
       })
     }
 
@@ -60,7 +59,7 @@ export default defineEventHandler(async (event) => {
   if (Object.keys(dbData).length === 0) {
     throw createError({
       statusCode: 400,
-      message: 'Нет данных для обновления'
+      message: 'Нет данных для обновления',
     })
   }
 
@@ -75,7 +74,7 @@ export default defineEventHandler(async (event) => {
     console.error('Failed to update category:', error)
     throw createError({
       statusCode: 500,
-      message: 'Ошибка при обновлении категории'
+      message: 'Ошибка при обновлении категории',
     })
   }
 
@@ -84,7 +83,7 @@ export default defineEventHandler(async (event) => {
     category: {
       id: data.id,
       name: data.name,
-      slug: data.slug
-    }
+      slug: data.slug,
+    },
   }
 })

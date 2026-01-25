@@ -1,6 +1,6 @@
 <script setup lang="ts">
 definePageMeta({
-  middleware: 'admin'
+  middleware: 'admin',
 })
 
 useHead({ title: 'Редактировать услугу — Админ-панель' })
@@ -23,7 +23,7 @@ const form = reactive({
   features: [] as string[],
   sortOrder: 0,
   isActive: true,
-  categoryId: null as number | null
+  categoryId: null as number | null,
 })
 
 const loading = ref(true)
@@ -40,7 +40,8 @@ const fetchCategories = async () => {
   try {
     const data = await $fetch<{ categories: Category[] }>('/api/admin/catalog/categories')
     categories.value = data.categories
-  } catch (err) {
+  }
+  catch (err) {
     console.error('Failed to fetch categories:', err)
     toast.error('Не удалось загрузить категории')
   }
@@ -48,7 +49,7 @@ const fetchCategories = async () => {
 
 const categoryOptions = computed(() => [
   { value: null, label: 'Без категории' },
-  ...categories.value.map(cat => ({ value: cat.id, label: cat.name }))
+  ...categories.value.map(cat => ({ value: cat.id, label: cat.name })),
 ])
 
 const fetchService = async () => {
@@ -69,11 +70,13 @@ const fetchService = async () => {
     // Конвертируем копейки в рубли
     priceMonthlyRub.value = (svc.priceMonthly || 0) / 100
     priceConnectionRub.value = (svc.priceConnection || 0) / 100
-  } catch (err: any) {
+  }
+  catch (err: any) {
     console.error('Failed to fetch service:', err)
     toast.error('Не удалось загрузить услугу')
     error.value = err.data?.message || 'Ошибка при загрузке услуги'
-  } finally {
+  }
+  finally {
     loading.value = false
   }
 }
@@ -117,17 +120,19 @@ const save = async () => {
         features: form.features.length > 0 ? form.features : null,
         sortOrder: form.sortOrder,
         isActive: form.isActive,
-        categoryId: form.categoryId
-      }
+        categoryId: form.categoryId,
+      },
     })
 
     toast.success('Услуга успешно сохранена')
     router.push('/catalog')
-  } catch (err: any) {
+  }
+  catch (err: any) {
     console.error('Failed to update service:', err)
     toast.error('Не удалось сохранить услугу')
     error.value = err.data?.message || 'Ошибка при обновлении услуги'
-  } finally {
+  }
+  finally {
     saving.value = false
   }
 }
@@ -154,7 +159,7 @@ onMounted(async () => {
       {{ error }}
     </div>
 
-    <form v-else @submit.prevent="save" class="space-y-6 max-w-2xl">
+    <form v-else class="space-y-6 max-w-2xl" @submit.prevent="save">
       <div v-if="error" class="p-4 bg-red-500/20 border border-red-500/30 rounded-lg text-red-400">
         {{ error }}
       </div>
@@ -256,8 +261,8 @@ onMounted(async () => {
             {{ feature }}
             <button
               type="button"
-              @click="removeFeature(index)"
               class="hover:text-red-400 transition-colors"
+              @click="removeFeature(index)"
             >
               <Icon name="heroicons:x-mark" class="w-4 h-4" />
             </button>
@@ -287,10 +292,10 @@ onMounted(async () => {
       </div>
 
       <div class="flex gap-3">
-        <UiButton type="submit" :loading="saving" :disabled="saving">
+        <UiButton :loading="saving" :disabled="saving" type="submit">
           Сохранить изменения
         </UiButton>
-        <UiButton variant="ghost" @click="router.push('/catalog')" :disabled="saving">
+        <UiButton :disabled="saving" variant="ghost" @click="router.push('/catalog')">
           Отмена
         </UiButton>
       </div>

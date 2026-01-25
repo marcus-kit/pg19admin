@@ -20,7 +20,7 @@ export default defineEventHandler(async (event) => {
     console.error('Failed to fetch AI settings:', error)
     throw createError({
       statusCode: 500,
-      message: 'Ошибка при загрузке настроек AI'
+      message: 'Ошибка при загрузке настроек AI',
     })
   }
 
@@ -39,7 +39,7 @@ export default defineEventHandler(async (event) => {
       ragMatchThreshold: Number(settings.rag_match_threshold),
       ragMatchCount: settings.rag_match_count,
       createdAt: settings.created_at,
-      updatedAt: settings.updated_at
-    }
+      updatedAt: settings.updated_at,
+    },
   }
 })

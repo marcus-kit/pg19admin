@@ -5,7 +5,7 @@ interface CoverageZone {
   description: string | null
   type: 'pg19' | 'partner'
   partnerId: number | null
-  partner: { id: number; name: string; slug: string } | null
+  partner: { id: number, name: string, slug: string } | null
   geometry: object
   color: string
   fillOpacity: number
@@ -23,7 +23,7 @@ interface Props {
 const props = withDefaults(defineProps<Props>(), {
   center: () => [55.7558, 37.6173], // Moscow default [lat, lon]
   zoom: 10,
-  height: '500px'
+  height: '500px',
 })
 
 const emit = defineEmits<{
@@ -59,10 +59,9 @@ const initMap = async () => {
     { default: VectorLayer },
     { default: VectorSource },
     { default: OSM },
-    { default: GeoJSON },
     { Style, Fill, Stroke },
     { default: Overlay },
-    { fromLonLat }
+    { fromLonLat },
   ] = await Promise.all([
     import('ol/Map'),
     import('ol/View'),
@@ -70,10 +69,9 @@ const initMap = async () => {
     import('ol/layer/Vector'),
     import('ol/source/Vector'),
     import('ol/source/OSM'),
-    import('ol/format/GeoJSON'),
     import('ol/style'),
     import('ol/Overlay'),
-    import('ol/proj')
+    import('ol/proj'),
   ])
 
   // Import CSS
@@ -90,25 +88,25 @@ const initMap = async () => {
 
     return new Style({
       fill: new Fill({
-        color: hexToRgba(zone.color, fillOpacity)
+        color: hexToRgba(zone.color, fillOpacity),
       }),
       stroke: new Stroke({
         color: zone.color,
-        width: strokeWidth
-      })
+        width: strokeWidth,
+      }),
     })
   }
 
   vectorLayer = new VectorLayer({
     source: vectorSource,
-    style: (feature: any) => styleFunction(feature, feature.getId() === hoveredFeatureId)
+    style: (feature: any) => styleFunction(feature, feature.getId() === hoveredFeatureId),
   })
 
   // Create popup overlay
   popupOverlay = new Overlay({
     element: popupContainer.value!,
     autoPan: true,
-    autoPanAnimation: { duration: 250 }
+    autoPanAnimation: { duration: 250 },
   })
 
   // Create map
@@ -116,13 +114,13 @@ const initMap = async () => {
     target: mapContainer.value,
     layers: [
       new TileLayer({ source: new OSM() }),
-      vectorLayer
+      vectorLayer,
     ],
     overlays: [popupOverlay],
     view: new View({
       center: fromLonLat([props.center[1], props.center[0]]), // OL uses [lon, lat]
-      zoom: props.zoom
-    })
+      zoom: props.zoom,
+    }),
   })
 
   // Click handler
@@ -153,7 +151,8 @@ const initMap = async () => {
 
       popupOverlay.setPosition(coordinate)
       emit('zone-click', zone)
-    } else {
+    }
+    else {
       popupOverlay.setPosition(undefined)
     }
   })
@@ -180,13 +179,7 @@ const initMap = async () => {
 const updateZones = async () => {
   if (!map || !vectorLayer) return
 
-  const [
-    { default: GeoJSON },
-    { fromLonLat }
-  ] = await Promise.all([
-    import('ol/format/GeoJSON'),
-    import('ol/proj')
-  ])
+  const { default: GeoJSONFormat } = await import('ol/format/GeoJSON')
 
   const vectorSource = vectorLayer.getSource()
   vectorSource.clear()
@@ -200,13 +193,13 @@ const updateZones = async () => {
       type: 'Feature',
       id: zone.id,
       geometry: zone.geometry,
-      properties: { zone }
-    }))
+      properties: { zone },
+    })),
   }
 
   // Parse GeoJSON and add features
-  const geoJsonFormat = new GeoJSON({
-    featureProjection: 'EPSG:3857' // Web Mercator
+  const geoJsonFormat = new GeoJSONFormat({
+    featureProjection: 'EPSG:3857', // Web Mercator
   })
 
   const features = geoJsonFormat.readFeatures(featureCollection)
@@ -249,8 +242,8 @@ onUnmounted(() => {
   <div class="relative">
     <div
       ref="mapContainer"
-      class="rounded-xl overflow-hidden border border-[var(--glass-border)]"
       :style="{ height }"
+      class="rounded-xl overflow-hidden border border-[var(--glass-border)]"
     />
 
     <!-- Popup overlay -->

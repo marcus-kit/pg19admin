@@ -1,6 +1,6 @@
 <script setup lang="ts">
 definePageMeta({
-  middleware: 'admin'
+  middleware: 'admin',
 })
 
 const toast = useToast()
@@ -31,7 +31,7 @@ const request = ref<ConnectionRequest | null>(null)
 const selectedStatus = ref<string>('')
 
 useHead({
-  title: computed(() => request.value ? `Заявка #${request.value.id} — Админ-панель` : 'Заявка — Админ-панель')
+  title: computed(() => request.value ? `Заявка #${request.value.id} — Админ-панель` : 'Заявка — Админ-панель'),
 })
 
 const fetchRequest = async () => {
@@ -40,11 +40,13 @@ const fetchRequest = async () => {
     const data = await $fetch<{ request: ConnectionRequest }>(`/api/admin/requests/${requestId.value}`)
     request.value = data.request
     selectedStatus.value = data.request.status
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to fetch request:', error)
     toast.error('Не удалось загрузить заявку')
     router.push('/requests')
-  } finally {
+  }
+  finally {
     loading.value = false
   }
 }
@@ -56,15 +58,17 @@ const updateStatus = async () => {
   try {
     await $fetch(`/api/admin/requests/${requestId.value}`, {
       method: 'PUT',
-      body: { status: selectedStatus.value }
+      body: { status: selectedStatus.value },
     })
     request.value.status = selectedStatus.value as ConnectionRequest['status']
     toast.success('Статус заявки обновлён')
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to update status:', error)
     toast.error('Не удалось обновить статус заявки')
     selectedStatus.value = request.value.status
-  } finally {
+  }
+  finally {
     saving.value = false
   }
 }
@@ -77,7 +81,7 @@ const formatDate = (dateStr: string | null) => {
     month: 'long',
     year: 'numeric',
     hour: '2-digit',
-    minute: '2-digit'
+    minute: '2-digit',
   })
 }
 
@@ -125,7 +129,7 @@ const statusOptions = [
   { value: 'contacted', label: 'Связались' },
   { value: 'approved', label: 'Одобрена' },
   { value: 'rejected', label: 'Отклонена' },
-  { value: 'completed', label: 'Выполнена' }
+  { value: 'completed', label: 'Выполнена' },
 ]
 
 // URL для карты Яндекс статическая
@@ -236,10 +240,10 @@ onMounted(() => {
               label="Статус заявки"
             />
             <UiButton
-              @click="updateStatus"
               :disabled="saving || selectedStatus === request.status"
               :loading="saving"
               class="w-full"
+              @click="updateStatus"
             >
               {{ saving ? 'Сохранение...' : 'Сохранить' }}
             </UiButton>

@@ -2,7 +2,6 @@ import { useSupabaseAdmin } from '~~/server/utils/supabase'
 import { mapNews, type DbNews } from '~~/server/utils/mappers'
 
 export default defineEventHandler(async (event) => {
-
   const query = getQuery(event)
   const supabase = useSupabaseAdmin(event)
 
@@ -21,7 +20,7 @@ export default defineEventHandler(async (event) => {
     console.error('Failed to fetch news:', error)
     throw createError({
       statusCode: 500,
-      message: 'Ошибка при загрузке новостей'
+      message: 'Ошибка при загрузке новостей',
     })
   }
 
