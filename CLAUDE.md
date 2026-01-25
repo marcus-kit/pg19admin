@@ -33,6 +33,7 @@ git add -A && git commit -m "message" && git push
 7. **Glass card hover** — работает только с CSS классом, не inline styles
 8. **pathPrefix: false** — компоненты регистрируются по filename, следи за конфликтами
 9. **Supabase Auth** — используй встроенный auth, НЕ кастомный auth_sessions
+10. **Vue attributes order** — динамические `:attr` перед статическими `attr` (ESLint vue/attributes-order)
 
 ## Конвенции
 
@@ -58,10 +59,18 @@ SUPABASE_URL=https://supabase.doka.team
 SUPABASE_KEY=eyJ...
 ```
 
-## Документация
+## Паттерны
 
-- `NuxtVue.md` — гайд по Vue/Nuxt паттернам
-- `planadmv3.md` — план разработки проекта
+### List-страницы
+- Используй `useAdminList` composable для всех списков с фильтрацией
+- `transformParams` — для виртуальных фильтров (UI ≠ API параметры)
+- Компоненты: `UiLoading`, `UiFilterTabs`, `UiEmptyState`
+
+### Shared UI компоненты
+- `UiStatCard` — карточка статистики с цветами (primary, green, red, etc.)
+- `UiLoading` — спиннер загрузки (size: sm/md/lg)
+- `UiFilterTabs` — табы фильтрации с v-model
+- `useFormatters()` — явно импортируй форматтеры, не полагайся на auto-import
 
 ## Ключевые зависимости
 
