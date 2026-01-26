@@ -38,6 +38,19 @@ const getOnlineStatusClass = (status: string) => {
     default: return 'bg-gray-500'
   }
 }
+
+const columns = [
+  { key: 'user', label: 'Пользователь' },
+  { key: 'contacts', label: 'Контакты' },
+  { key: 'status', label: 'Статус' },
+  { key: 'accountsCount', label: 'Аккаунты' },
+  { key: 'lastSeenAt', label: 'Последний визит', sortable: true },
+  { key: 'createdAt', label: 'Создан', sortable: true },
+]
+
+const goToUser = (user: User) => {
+  router.push(`/users/${user.id}`)
+}
 </script>
 
 <template>
@@ -95,87 +108,76 @@ const getOnlineStatusClass = (status: string) => {
     <UiLoading v-if="loading" />
 
     <!-- Users Table -->
-    <div v-else class="overflow-x-auto">
-      <table class="w-full">
-        <thead>
-          <tr class="border-b border-[var(--glass-border)]">
-            <th class="text-left py-3 px-4 text-sm font-medium text-[var(--text-muted)]">Пользователь</th>
-            <th class="text-left py-3 px-4 text-sm font-medium text-[var(--text-muted)]">Контакты</th>
-            <th class="text-left py-3 px-4 text-sm font-medium text-[var(--text-muted)]">Статус</th>
-            <th class="text-left py-3 px-4 text-sm font-medium text-[var(--text-muted)]">Аккаунты</th>
-            <th class="text-left py-3 px-4 text-sm font-medium text-[var(--text-muted)]">Последний визит</th>
-            <th class="text-left py-3 px-4 text-sm font-medium text-[var(--text-muted)]">Создан</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr
-            v-for="user in users"
-            :key="user.id"
-            class="border-b border-[var(--glass-border)] hover:bg-[var(--glass-bg)] cursor-pointer transition-colors"
-            @click="router.push(`/users/${user.id}`)"
-          >
-            <td class="py-3 px-4">
-              <div class="flex items-center gap-3">
-                <!-- Avatar -->
-                <div class="relative">
-                  <div
-                    v-if="user.avatar"
-                    :style="{ backgroundImage: `url(${user.avatar})` }"
-                    class="w-10 h-10 rounded-full bg-cover bg-center"
-                  />
-                  <div
-                    v-else
-                    class="w-10 h-10 rounded-full bg-gradient-to-br from-primary/30 to-secondary/30 flex items-center justify-center"
-                  >
-                    <span class="text-sm font-medium text-[var(--text-primary)]">
-                      {{ user.firstName?.charAt(0) || '?' }}{{ user.lastName?.charAt(0) || '' }}
-                    </span>
-                  </div>
-                  <!-- Online indicator -->
-                  <div
-                    :class="getOnlineStatusClass(user.onlineStatus)"
-                    class="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-[var(--bg-base)]"
-                  />
-                </div>
-                <!-- Name -->
-                <div>
-                  <p class="font-medium text-[var(--text-primary)]">{{ user.fullName }}</p>
-                  <p v-if="user.telegram?.username" class="text-xs text-[var(--text-muted)]">
-                    @{{ user.telegram.username }}
-                  </p>
-                </div>
-              </div>
-            </td>
-            <td class="py-3 px-4">
-              <div class="text-sm">
-                <p v-if="user.phone" class="text-[var(--text-secondary)]">{{ user.phone }}</p>
-                <p v-if="user.email" class="text-[var(--text-muted)] text-xs">{{ user.email }}</p>
-                <p v-if="!user.phone && !user.email" class="text-[var(--text-muted)]">—</p>
-              </div>
-            </td>
-            <td class="py-3 px-4">
-              <UiBadge :class="getStatusBadgeClass(USER_STATUS, user.status)" size="sm">
-                {{ getStatusLabel(USER_STATUS, user.status) }}
-              </UiBadge>
-            </td>
-            <td class="py-3 px-4 text-sm text-[var(--text-secondary)]">
-              {{ user.accountsCount }}
-            </td>
-            <td class="py-3 px-4 text-sm text-[var(--text-muted)]">
-              <UiRelativeTime :date="user.lastSeenAt" />
-            </td>
-            <td class="py-3 px-4 text-sm text-[var(--text-muted)]">
-              <UiRelativeTime :date="user.createdAt" />
-            </td>
-          </tr>
-        </tbody>
-      </table>
+    <UiTable
+      v-else
+      :data="users"
+      :columns="columns"
+      empty-icon="heroicons:users"
+      empty-text="Пользователей не найдено"
+      @row-click="goToUser"
+    >
+      <template #user="{ row }">
+        <div class="flex items-center gap-3">
+          <!-- Avatar -->
+          <div class="relative">
+            <div
+              v-if="row.avatar"
+              :style="{ backgroundImage: `url(${row.avatar})` }"
+              class="w-10 h-10 rounded-full bg-cover bg-center"
+            />
+            <div
+              v-else
+              class="w-10 h-10 rounded-full bg-gradient-to-br from-primary/30 to-secondary/30 flex items-center justify-center"
+            >
+              <span class="text-sm font-medium text-[var(--text-primary)]">
+                {{ row.firstName?.charAt(0) || '?' }}{{ row.lastName?.charAt(0) || '' }}
+              </span>
+            </div>
+            <!-- Online indicator -->
+            <div
+              :class="getOnlineStatusClass(row.onlineStatus)"
+              class="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-[var(--bg-base)]"
+            />
+          </div>
+          <!-- Name -->
+          <div>
+            <p class="font-medium text-[var(--text-primary)]">{{ row.fullName }}</p>
+            <p v-if="row.telegram?.username" class="text-xs text-[var(--text-muted)]">
+              @{{ row.telegram.username }}
+            </p>
+          </div>
+        </div>
+      </template>
 
-      <!-- Empty State -->
-      <div v-if="users.length === 0" class="text-center py-12">
-        <Icon name="heroicons:users" class="w-16 h-16 text-[var(--text-muted)] mx-auto mb-4" />
-        <p class="text-[var(--text-muted)]">Пользователей не найдено</p>
-      </div>
-    </div>
+      <template #contacts="{ row }">
+        <div class="text-sm">
+          <p v-if="row.phone" class="text-[var(--text-secondary)]">{{ row.phone }}</p>
+          <p v-if="row.email" class="text-[var(--text-muted)] text-xs">{{ row.email }}</p>
+          <p v-if="!row.phone && !row.email" class="text-[var(--text-muted)]">—</p>
+        </div>
+      </template>
+
+      <template #status="{ row }">
+        <UiBadge :class="getStatusBadgeClass(USER_STATUS, row.status)" size="sm">
+          {{ getStatusLabel(USER_STATUS, row.status) }}
+        </UiBadge>
+      </template>
+
+      <template #accountsCount="{ row }">
+        <span class="text-sm text-[var(--text-secondary)]">{{ row.accountsCount }}</span>
+      </template>
+
+      <template #lastSeenAt="{ row }">
+        <span class="text-sm text-[var(--text-muted)]">
+          <UiRelativeTime :date="row.lastSeenAt" />
+        </span>
+      </template>
+
+      <template #createdAt="{ row }">
+        <span class="text-sm text-[var(--text-muted)]">
+          <UiRelativeTime :date="row.createdAt" />
+        </span>
+      </template>
+    </UiTable>
   </div>
 </template>
