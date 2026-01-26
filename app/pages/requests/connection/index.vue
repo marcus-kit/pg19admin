@@ -58,19 +58,16 @@ function goToRequest(request: Record<string, unknown>) {
 
     <!-- Адрес -->
     <template #addressText="{ row }">
-      <span class="block max-w-xs truncate text-sm text-[var(--text-secondary)]">
+      <span class="block max-w-xs truncate text-sm text-[var(--text-muted)]">
         {{ row.addressText || '—' }}
       </span>
     </template>
 
     <!-- Зона покрытия -->
     <template #inCoverageZone="{ row }">
-      <UiBadge
-        :class="row.inCoverageZone ? 'bg-green-500/20 text-green-400' : 'bg-gray-500/20 text-gray-400'"
-        size="sm"
-      >
+      <span :class="row.inCoverageZone ? 'text-green-400' : 'text-[var(--text-muted)]'" class="text-sm">
         {{ row.inCoverageZone ? 'Да' : 'Нет' }}
-      </UiBadge>
+      </span>
     </template>
 
     <!-- Источник -->

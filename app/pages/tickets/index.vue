@@ -64,7 +64,7 @@ function goToTicket(ticket: Ticket) {
   >
     <!-- Номер тикета -->
     <template #number="{ row }">
-      <span class="font-mono text-sm text-primary">{{ row.number }}</span>
+      <span class="font-mono text-sm text-[var(--text-secondary)]">{{ row.number }}</span>
     </template>
 
     <!-- Тема + пользователь -->
@@ -80,7 +80,7 @@ function goToTicket(ticket: Ticket) {
 
     <!-- Назначенный админ -->
     <template #assignedAdmin="{ row }">
-      <span class="text-sm text-[var(--text-secondary)]">
+      <span class="text-sm text-[var(--text-muted)]">
         {{ row.assignedAdmin?.fullName || '—' }}
       </span>
     </template>

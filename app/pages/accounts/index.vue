@@ -56,7 +56,7 @@ function goToAccount(account: Account) {
   >
     <!-- Номер договора -->
     <template #contractNumber="{ row }">
-      <span class="font-mono text-sm text-primary">{{ row.contractNumber || '—' }}</span>
+      <span class="font-mono text-sm text-[var(--text-secondary)]">{{ row.contractNumber || '—' }}</span>
     </template>
 
     <!-- Пользователь -->
@@ -65,7 +65,7 @@ function goToAccount(account: Account) {
         v-if="row.user"
         :to="`/users/${row.user.id}`"
         @click.stop
-        class="text-primary hover:underline"
+        class="font-medium text-[var(--text-primary)] hover:text-primary"
       >
         {{ row.user.fullName }}
       </NuxtLink>
@@ -74,7 +74,7 @@ function goToAccount(account: Account) {
 
     <!-- Адрес с truncate -->
     <template #addressFull="{ row }">
-      <span class="block max-w-xs truncate text-sm text-[var(--text-secondary)]">
+      <span class="block max-w-xs truncate text-sm text-[var(--text-muted)]">
         {{ row.addressFull || '—' }}
       </span>
     </template>

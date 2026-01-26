@@ -94,7 +94,7 @@ const rowActions: RowActionConfig[] = [
 
     <!-- Обработал -->
     <template #processedBy="{ row }">
-      <span class="text-sm text-[var(--text-secondary)]">
+      <span class="text-sm text-[var(--text-muted)]">
         {{ row.processedBy?.fullName || '—' }}
       </span>
     </template>

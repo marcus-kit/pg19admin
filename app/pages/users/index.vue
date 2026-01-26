@@ -62,7 +62,7 @@ function goToUser(user: User) {
 
     <!-- Количество аккаунтов -->
     <template #accountsCount="{ row }">
-      <span class="text-sm text-[var(--text-secondary)]">{{ row.accountsCount }}</span>
+      <span class="text-sm text-[var(--text-muted)]">{{ row.accountsCount }}</span>
     </template>
   </AdminListPage>
 </template>
