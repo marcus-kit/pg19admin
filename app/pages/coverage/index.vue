@@ -1,4 +1,7 @@
 <script setup lang="ts">
+// ═══════════════════════════════════════════════════════════════════════════
+// 1. ИМПОРТЫ ТИПОВ
+// ═══════════════════════════════════════════════════════════════════════════
 import type OLMap from 'ol/Map'
 import type VectorLayer from 'ol/layer/Vector'
 import type Overlay from 'ol/Overlay'
@@ -8,7 +11,6 @@ import type RenderFeature from 'ol/render/Feature'
 import type { StyleLike } from 'ol/style/Style'
 import type VectorSource from 'ol/source/Vector'
 
-// Интерфейс зоны покрытия (partner_coverage_zones)
 interface CoverageZone {
   id: number
   name: string
@@ -22,39 +24,44 @@ interface CoverageZone {
   updatedAt: string
 }
 
-// Интерфейс партнёра
 interface Partner {
   id: number
   name: string
   color: string
 }
 
-definePageMeta({
-  middleware: 'admin',
-})
-
+// ═══════════════════════════════════════════════════════════════════════════
+// 2. МАКРОСЫ ВРЕМЕНИ КОМПИЛЯЦИИ
+// ═══════════════════════════════════════════════════════════════════════════
+definePageMeta({ middleware: 'admin' })
 useHead({ title: 'Карта покрытия — Админ-панель' })
 
+// ═══════════════════════════════════════════════════════════════════════════
+// 3. COMPOSABLES
+// ═══════════════════════════════════════════════════════════════════════════
 const toast = useToast()
 
+// ═══════════════════════════════════════════════════════════════════════════
+// 4. РЕАКТИВНОЕ СОСТОЯНИЕ
+// ═══════════════════════════════════════════════════════════════════════════
+
+// Зоны покрытия
 const loading = ref(true)
 const zones = ref<CoverageZone[]>([])
 const selectedZone = ref<CoverageZone | null>(null)
 const selectedPartnerId = ref<number | null>(null)
 const showOnlyActive = ref(true)
-
-// Модалка подтверждения удаления
-const showDeleteModal = ref(false)
-const zoneToDelete = ref<CoverageZone | null>(null)
-
-// Client-side visibility toggle (сохраняется в localStorage)
 const hiddenZoneIds = ref<Set<number>>(new Set())
 
-// Загрузка списка партнёров
+// Партнёры
 const partners = ref<Partner[]>([])
 const loadingPartners = ref(false)
 
-// CoverageMap state
+// Модалка удаления
+const showDeleteModal = ref(false)
+const zoneToDelete = ref<CoverageZone | null>(null)
+
+// Карта OpenLayers (не реактивные — работаем напрямую с библиотекой)
 let map: OLMap | null = null
 let vectorLayer: VectorLayer<VectorSource<Feature<Geometry>>> | null = null
 let popupOverlay: Overlay | null = null
@@ -64,14 +71,17 @@ const mapContainer = ref<HTMLDivElement | null>(null)
 const popupContainer = ref<HTMLDivElement | null>(null)
 const popupContent = ref('')
 
-// CoverageImportExport state
+// Импорт/экспорт
 const fileInput = ref<HTMLInputElement | null>(null)
 const replaceExisting = ref(false)
 const importing = ref(false)
 const importError = ref('')
-const importOwner = ref<string>('')
-const exportPartnerId = ref<string>('all')
+const importOwner = ref('')
+const exportPartnerId = ref('all')
 
+// ═══════════════════════════════════════════════════════════════════════════
+// 5. COMPUTED
+// ═══════════════════════════════════════════════════════════════════════════
 const importOwnerOptions = computed(() =>
   partners.value.map(p => ({ value: String(p.id), label: p.name })),
 )
@@ -81,48 +91,21 @@ const exportPartnerOptions = computed(() => [
   ...partners.value.map(p => ({ value: p.id, label: p.name })),
 ])
 
-// Загрузка списка партнёров
-async function fetchPartners() {
-  loadingPartners.value = true
-  try {
-    const data = await $fetch<{ partners: Partner[] }>('/api/admin/partners')
-    partners.value = data.partners
-  }
-  catch {
-    toast.error('Не удалось загрузить список партнёров')
-  }
-  finally {
-    loadingPartners.value = false
-  }
-}
-
-// Выбор партнёра для фильтрации (toggle)
-function selectPartner(partnerId: number) {
-  if (selectedPartnerId.value === partnerId) {
-    selectedPartnerId.value = null
-  }
-  else {
-    selectedPartnerId.value = partnerId
-  }
-}
-
-const filteredZones = computed(() => {
-  return zones.value.filter((zone) => {
-    if (selectedPartnerId.value) {
-      if (zone.partnerId !== selectedPartnerId.value) return false
-    }
-    if (showOnlyActive.value && !zone.isActive) {
-      return false
-    }
+const filteredZones = computed(() =>
+  zones.value.filter((zone) => {
+    if (selectedPartnerId.value && zone.partnerId !== selectedPartnerId.value) return false
+    if (showOnlyActive.value && !zone.isActive) return false
     return true
-  })
-})
+  }),
+)
 
-const visibleZonesForMap = computed(() => {
-  return filteredZones.value.filter(zone => !hiddenZoneIds.value.has(zone.id))
-})
+const visibleZonesForMap = computed(() =>
+  filteredZones.value.filter(zone => !hiddenZoneIds.value.has(zone.id)),
+)
 
-// Загрузка списка зон покрытия
+// ═══════════════════════════════════════════════════════════════════════════
+// 6. МЕТОДЫ — Загрузка данных
+// ═══════════════════════════════════════════════════════════════════════════
 async function fetchZones() {
   loading.value = true
   try {
@@ -137,21 +120,141 @@ async function fetchZones() {
   }
 }
 
-// Обработка клика по зоне в списке
+async function fetchPartners() {
+  loadingPartners.value = true
+  try {
+    const data = await $fetch<{ partners: Partner[] }>('/api/admin/partners')
+    partners.value = data.partners
+  }
+  catch {
+    toast.error('Не удалось загрузить список партнёров')
+  }
+  finally {
+    loadingPartners.value = false
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// 6. МЕТОДЫ — Фильтрация и выбор
+// ═══════════════════════════════════════════════════════════════════════════
+function selectPartner(partnerId: number) {
+  selectedPartnerId.value = selectedPartnerId.value === partnerId ? null : partnerId
+}
+
 function handleZoneClick(zone: CoverageZone) {
   selectedZone.value = zone
 }
 
-// ==================== ХЕЛПЕРЫ КАРТЫ ====================
+function toggleZoneVisibility(zone: CoverageZone) {
+  const newHidden = new Set(hiddenZoneIds.value)
+  if (newHidden.has(zone.id)) {
+    newHidden.delete(zone.id)
+  }
+  else {
+    newHidden.add(zone.id)
+  }
+  hiddenZoneIds.value = newHidden
+  localStorage.setItem('coverage-hidden-zones', JSON.stringify([...newHidden]))
+}
 
-// Экранирование HTML для безопасного отображения в popup
+function isZoneHidden(zoneId: number) {
+  return hiddenZoneIds.value.has(zoneId)
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// 6. МЕТОДЫ — Удаление зон
+// ═══════════════════════════════════════════════════════════════════════════
+function openDeleteModal(zone: CoverageZone) {
+  zoneToDelete.value = zone
+  showDeleteModal.value = true
+}
+
+async function confirmDelete() {
+  if (!zoneToDelete.value) return
+
+  const id = zoneToDelete.value.id
+  try {
+    await $fetch(`/api/admin/coverage/zones/${id}`, { method: 'DELETE' })
+    zones.value = zones.value.filter(z => z.id !== id)
+    if (selectedZone.value?.id === id) selectedZone.value = null
+    showDeleteModal.value = false
+    zoneToDelete.value = null
+    toast.success('Зона покрытия удалена')
+  }
+  catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Не удалось удалить зону'
+    toast.error(message)
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// 6. МЕТОДЫ — Импорт/экспорт
+// ═══════════════════════════════════════════════════════════════════════════
+function triggerFileInput() {
+  fileInput.value?.click()
+}
+
+async function handleFileSelect(event: Event) {
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0]
+  if (!file) return
+
+  if (!file.name.endsWith('.geojson') && !file.name.endsWith('.json')) {
+    importError.value = 'Поддерживаются только .geojson и .json файлы'
+    return
+  }
+
+  importing.value = true
+  importError.value = ''
+
+  try {
+    const text = await file.text()
+    const geojson = JSON.parse(text)
+
+    if (!geojson.type) throw new Error('Невалидный GeoJSON: отсутствует type')
+    if (!importOwner.value) throw new Error('Выберите партнёра для импорта')
+
+    const result = await $fetch<{ success: boolean, imported: number }>('/api/admin/coverage/import', {
+      method: 'POST',
+      body: { geojson, partnerId: Number(importOwner.value), replaceExisting: replaceExisting.value },
+    })
+
+    if (result.success) {
+      toast.success(`Импортировано ${result.imported} зон`)
+      await fetchZones()
+    }
+  }
+  catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Не удалось импортировать зоны'
+    importError.value = message
+    toast.error(message)
+  }
+  finally {
+    importing.value = false
+    if (fileInput.value) fileInput.value.value = ''
+  }
+}
+
+function handleExport() {
+  const params = new URLSearchParams()
+  if (exportPartnerId.value !== 'all') params.set('partnerId', exportPartnerId.value)
+  const url = params.toString() ? `/api/admin/coverage/export?${params}` : '/api/admin/coverage/export'
+  window.open(url, '_blank')
+}
+
+function clearImportError() {
+  importError.value = ''
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// 6. МЕТОДЫ — Карта OpenLayers
+// ═══════════════════════════════════════════════════════════════════════════
 function escapeHtml(text: string): string {
   const div = document.createElement('div')
   div.textContent = text
   return div.innerHTML
 }
 
-// Конвертация HEX цвета в RGBA с прозрачностью
 function hexToRgba(hex: string, alpha: number): string {
   const r = parseInt(hex.slice(1, 3), 16)
   const g = parseInt(hex.slice(3, 5), 16)
@@ -159,7 +262,6 @@ function hexToRgba(hex: string, alpha: number): string {
   return `rgba(${r}, ${g}, ${b}, ${alpha})`
 }
 
-// Инициализация карты OpenLayers
 async function initMap() {
   if (!mapContainer.value || map) return
 
@@ -189,25 +291,19 @@ async function initMap() {
 
   const styleFunction = (feature: Feature<Geometry> | RenderFeature, isHovered = false) => {
     const zone = feature.get('zone') as CoverageZone
-    const baseStrokeWidth = 2
-    const baseFillOpacity = 0.3
-    const strokeWidth = isHovered ? baseStrokeWidth + 2 : baseStrokeWidth
-    const fillOpacity = isHovered ? Math.min(baseFillOpacity + 0.2, 0.8) : baseFillOpacity
+    const strokeWidth = isHovered ? 4 : 2
+    const fillOpacity = isHovered ? 0.5 : 0.3
 
     return new Style({
-      fill: new Fill({
-        color: hexToRgba(zone.color, fillOpacity),
-      }),
-      stroke: new Stroke({
-        color: zone.color,
-        width: strokeWidth,
-      }),
+      fill: new Fill({ color: hexToRgba(zone.color, fillOpacity) }),
+      stroke: new Stroke({ color: zone.color, width: strokeWidth }),
     })
   }
 
   vectorLayer = new VectorLayer({
     source: vectorSource,
-    style: ((feature: Feature<Geometry> | RenderFeature) => styleFunction(feature, feature.getId() === hoveredFeatureId)) as StyleLike,
+    style: ((feature: Feature<Geometry> | RenderFeature) =>
+      styleFunction(feature, feature.getId() === hoveredFeatureId)) as StyleLike,
   })
 
   popupOverlay = new Overlay({
@@ -218,15 +314,9 @@ async function initMap() {
 
   map = new Map({
     target: mapContainer.value,
-    layers: [
-      new TileLayer({ source: new OSM() }),
-      vectorLayer,
-    ],
+    layers: [new TileLayer({ source: new OSM() }), vectorLayer],
     overlays: [popupOverlay],
-    view: new View({
-      center: fromLonLat([37.6173, 55.7558]),
-      zoom: 10,
-    }),
+    view: new View({ center: fromLonLat([39.7, 47.23]), zoom: 10 }),
   })
 
   map.on('click', (evt) => {
@@ -234,28 +324,21 @@ async function initMap() {
 
     if (feature) {
       const zone = feature.get('zone') as CoverageZone
-      const coordinate = evt.coordinate
-
       const typeLabel = zone.partner?.name || 'Партнёр'
       const typeBg = 'background: rgba(233, 30, 140, 0.2); color: #E91E8C;'
       const statusBg = zone.isActive
         ? 'background: rgba(34, 197, 94, 0.2); color: #22C55E;'
         : 'background: rgba(107, 114, 128, 0.2); color: #9CA3AF;'
 
-      const safeName = escapeHtml(zone.name)
-      const safeDescription = zone.description ? escapeHtml(zone.description) : ''
-      const safeTypeLabel = escapeHtml(typeLabel)
-
       popupContent.value = `
-        <h4 style="font-weight: 600; font-size: 14px; margin: 0 0 8px 0; color: #1f2937;">${safeName}</h4>
-        ${safeDescription ? `<p style="font-size: 12px; color: #6b7280; margin: 0 0 8px 0;">${safeDescription}</p>` : ''}
+        <h4 style="font-weight: 600; font-size: 14px; margin: 0 0 8px 0; color: #1f2937;">${escapeHtml(zone.name)}</h4>
+        ${zone.description ? `<p style="font-size: 12px; color: #6b7280; margin: 0 0 8px 0;">${escapeHtml(zone.description)}</p>` : ''}
         <div style="display: flex; gap: 6px; flex-wrap: wrap;">
-          <span style="padding: 2px 8px; border-radius: 9999px; font-size: 11px; ${typeBg}">${safeTypeLabel}</span>
+          <span style="padding: 2px 8px; border-radius: 9999px; font-size: 11px; ${typeBg}">${escapeHtml(typeLabel)}</span>
           <span style="padding: 2px 8px; border-radius: 9999px; font-size: 11px; ${statusBg}">${zone.isActive ? 'Активна' : 'Неактивна'}</span>
         </div>
       `
-
-      popupOverlay!.setPosition(coordinate)
+      popupOverlay!.setPosition(evt.coordinate)
       handleZoneClick(zone)
     }
     else {
@@ -279,12 +362,10 @@ async function initMap() {
   updateZones()
 }
 
-// Обновление зон на карте (перерисовка)
 async function updateZones() {
   if (!map || !vectorLayer) return
 
   const { default: GeoJSONFormat } = await import('ol/format/GeoJSON')
-
   const vectorSource = vectorLayer.getSource()
   vectorSource!.clear()
 
@@ -300,10 +381,7 @@ async function updateZones() {
     })),
   }
 
-  const geoJsonFormat = new GeoJSONFormat({
-    featureProjection: 'EPSG:3857',
-  })
-
+  const geoJsonFormat = new GeoJSONFormat({ featureProjection: 'EPSG:3857' })
   const features = geoJsonFormat.readFeatures(featureCollection)
 
   features.forEach((feature, index) => {
@@ -319,156 +397,30 @@ async function updateZones() {
   }
 }
 
-// Закрытие popup на карте
 function closePopup() {
-  if (popupOverlay) {
-    popupOverlay.setPosition(undefined)
-  }
+  popupOverlay?.setPosition(undefined)
 }
 
-// ==================== ИМПОРТ/ЭКСПОРТ ====================
-
-// Открытие диалога выбора файла
-function triggerFileInput() {
-  fileInput.value?.click()
-}
-
-// Обработка выбора файла для импорта GeoJSON
-async function handleFileSelect(event: Event) {
-  const input = event.target as HTMLInputElement
-  const file = input.files?.[0]
-
-  if (!file) return
-
-  if (!file.name.endsWith('.geojson') && !file.name.endsWith('.json')) {
-    importError.value = 'Поддерживаются только .geojson и .json файлы'
-    return
-  }
-
-  importing.value = true
-  importError.value = ''
-
-  try {
-    const text = await file.text()
-    const geojson = JSON.parse(text)
-
-    if (!geojson.type) {
-      throw new Error('Невалидный GeoJSON: отсутствует type')
-    }
-
-    if (!importOwner.value) {
-      throw new Error('Выберите партнёра для импорта')
-    }
-
-    const result = await $fetch<{ success: boolean, imported: number }>('/api/admin/coverage/import', {
-      method: 'POST',
-      body: {
-        geojson,
-        partnerId: Number(importOwner.value),
-        replaceExisting: replaceExisting.value,
-      },
-    })
-
-    if (result.success) {
-      toast.success(`Импортировано ${result.imported} зон`)
-      await fetchZones()
-    }
-  }
-  catch (err: unknown) {
-    const message = err instanceof Error ? err.message : 'Не удалось импортировать зоны'
-    importError.value = message
-    toast.error(message)
-  }
-  finally {
-    importing.value = false
-    if (fileInput.value) {
-      fileInput.value.value = ''
-    }
-  }
-}
-
-// Экспорт зон в GeoJSON файл
-function handleExport() {
-  const params = new URLSearchParams()
-  if (exportPartnerId.value !== 'all') {
-    params.set('partnerId', exportPartnerId.value)
-  }
-  const url = params.toString() ? `/api/admin/coverage/export?${params.toString()}` : '/api/admin/coverage/export'
-  window.open(url, '_blank')
-}
-
-// Очистка ошибки импорта
-function clearImportError() {
-  importError.value = ''
-}
-
-// ==================== УПРАВЛЕНИЕ ЗОНАМИ ====================
-
-// Открытие модала подтверждения удаления
-function openDeleteModal(zone: CoverageZone) {
-  zoneToDelete.value = zone
-  showDeleteModal.value = true
-}
-
-// Подтверждение удаления зоны
-async function confirmDelete() {
-  if (!zoneToDelete.value) return
-
-  const id = zoneToDelete.value.id
-  try {
-    await $fetch(`/api/admin/coverage/zones/${id}`, { method: 'DELETE' })
-    zones.value = zones.value.filter(z => z.id !== id)
-    if (selectedZone.value?.id === id) {
-      selectedZone.value = null
-    }
-    showDeleteModal.value = false
-    zoneToDelete.value = null
-    toast.success('Зона покрытия удалена')
-  }
-  catch (error: unknown) {
-    const message = error instanceof Error ? error.message : 'Не удалось удалить зону'
-    toast.error(message)
-  }
-}
-
-// Переключение видимости зоны на карте (сохраняется в localStorage)
-function toggleZoneVisibility(zone: CoverageZone) {
-  const newHidden = new Set(hiddenZoneIds.value)
-  if (newHidden.has(zone.id)) {
-    newHidden.delete(zone.id)
-  }
-  else {
-    newHidden.add(zone.id)
-  }
-  hiddenZoneIds.value = newHidden
-  localStorage.setItem('coverage-hidden-zones', JSON.stringify([...newHidden]))
-}
-
-// Проверка, скрыта ли зона
-function isZoneHidden(zoneId: number) {
-  return hiddenZoneIds.value.has(zoneId)
-}
-
-// Watch for zone changes
+// ═══════════════════════════════════════════════════════════════════════════
+// 7. WATCH
+// ═══════════════════════════════════════════════════════════════════════════
 watch(visibleZonesForMap, updateZones, { deep: true })
 
-// Watch for mapContainer ref becoming available (after ClientOnly hydration)
-watch(mapContainer, (newVal) => {
-  if (newVal && !map) {
-    initMap()
-  }
+watch(mapContainer, (el) => {
+  if (el && !map) initMap()
 })
 
+// ═══════════════════════════════════════════════════════════════════════════
+// 8. LIFECYCLE HOOKS
+// ═══════════════════════════════════════════════════════════════════════════
 onMounted(() => {
+  // Восстановление скрытых зон из localStorage
   const saved = localStorage.getItem('coverage-hidden-zones')
   if (saved) {
     try {
-      const ids = JSON.parse(saved) as number[]
-      hiddenZoneIds.value = new Set(ids)
+      hiddenZoneIds.value = new Set(JSON.parse(saved) as number[])
     }
-    catch {
-      // Ignore invalid data
-    }
+    catch { /* игнорируем невалидные данные */ }
   }
 
   fetchZones()
@@ -535,24 +487,26 @@ onUnmounted(() => {
                 v-model="showOnlyActive"
                 type="checkbox"
                 class="w-4 h-4 rounded border-[var(--glass-border)] bg-[var(--glass-bg)] text-primary focus:ring-primary"
-              />
+              >
               Только активные
             </label>
           </div>
         </UiCard>
 
-        <!-- Map (бывший CoverageMap) -->
+        <!-- Map -->
         <ClientOnly>
           <div class="relative">
             <div
               ref="mapContainer"
-              style="height: 500px"
               class="rounded-xl overflow-hidden border border-[var(--glass-border)]"
+              style="height: 500px"
             />
 
             <!-- Popup overlay -->
             <div ref="popupContainer" class="ol-popup">
-              <button @click="closePopup" class="ol-popup-closer">&times;</button>
+              <button @click="closePopup" class="ol-popup-closer">
+                &times;
+              </button>
               <!-- eslint-disable-next-line vue/no-v-html -->
               <div class="ol-popup-content" v-html="popupContent" />
             </div>
@@ -564,7 +518,7 @@ onUnmounted(() => {
           </template>
         </ClientOnly>
 
-        <!-- Import/Export (бывший CoverageImportExport) -->
+        <!-- Import/Export -->
         <UiCard>
           <div class="space-y-4">
             <h3 class="text-lg font-semibold text-[var(--text-primary)]">
@@ -599,7 +553,7 @@ onUnmounted(() => {
                     v-model="replaceExisting"
                     type="checkbox"
                     class="w-4 h-4 rounded border-[var(--glass-border)] bg-[var(--glass-bg)] text-primary focus:ring-primary"
-                  />
+                  >
                   Заменить существующие
                 </label>
               </div>
@@ -628,7 +582,7 @@ onUnmounted(() => {
               </p>
             </div>
 
-            <hr class="border-[var(--glass-border)]" />
+            <hr class="border-[var(--glass-border)]">
 
             <div class="space-y-3">
               <label class="block text-sm font-medium text-[var(--text-secondary)]">
@@ -691,24 +645,13 @@ onUnmounted(() => {
                     </span>
                   </div>
                   <div class="flex gap-1 flex-wrap">
-                    <UiBadge
-                      variant="info"
-                      size="sm"
-                    >
+                    <UiBadge variant="info" size="sm">
                       {{ zone.partner?.name || 'Партнёр' }}
                     </UiBadge>
-                    <UiBadge
-                      v-if="!zone.isActive"
-                      size="sm"
-                      variant="neutral"
-                    >
+                    <UiBadge v-if="!zone.isActive" variant="neutral" size="sm">
                       Неактивна
                     </UiBadge>
-                    <UiBadge
-                      v-if="isZoneHidden(zone.id)"
-                      size="sm"
-                      variant="neutral"
-                    >
+                    <UiBadge v-if="isZoneHidden(zone.id)" variant="neutral" size="sm">
                       Скрыта
                     </UiBadge>
                   </div>
@@ -739,7 +682,9 @@ onUnmounted(() => {
             <div v-if="filteredZones.length === 0" class="text-center py-8 text-[var(--text-muted)]">
               <Icon name="heroicons:map" class="w-12 h-12 mx-auto mb-2 opacity-50" />
               <p>Нет зон покрытия</p>
-              <p class="text-xs mt-1">Импортируйте GeoJSON файл</p>
+              <p class="text-xs mt-1">
+                Импортируйте GeoJSON файл
+              </p>
             </div>
           </div>
         </UiCard>
@@ -788,8 +733,8 @@ onUnmounted(() => {
               <span class="text-[var(--text-muted)]">Статус:</span>
               <UiBadge
                 :variant="selectedZone.isActive ? 'success' : 'neutral'"
-                class="ml-2"
                 size="sm"
+                class="ml-2"
               >
                 {{ selectedZone.isActive ? 'Активна' : 'Неактивна' }}
               </UiBadge>
@@ -832,8 +777,8 @@ onUnmounted(() => {
   left: -90px;
 }
 
-.ol-popup:after,
-.ol-popup:before {
+.ol-popup::after,
+.ol-popup::before {
   top: 100%;
   border: solid transparent;
   content: " ";
@@ -843,14 +788,14 @@ onUnmounted(() => {
   pointer-events: none;
 }
 
-.ol-popup:after {
+.ol-popup::after {
   border-top-color: white;
   border-width: 10px;
   left: 90px;
   margin-left: -10px;
 }
 
-.ol-popup:before {
+.ol-popup::before {
   border-top-color: rgba(0, 0, 0, 0.1);
   border-width: 11px;
   left: 90px;
