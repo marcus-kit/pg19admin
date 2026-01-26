@@ -256,8 +256,8 @@ onUnmounted(() => {
           v-for="chip in activeFilterChips"
           :key="`${chip.key}-${chip.value}`"
           @click="removeFilter(chip.key, chip.value)"
-          class="chip"
           type="button"
+          class="chip"
         >
           <span class="chip-label">{{ chip.label }}</span>
           <Icon name="heroicons:x-mark" class="chip-remove" />
@@ -266,8 +266,8 @@ onUnmounted(() => {
         <button
           v-if="activeFilterChips.length > 1"
           @click="clearAllFilters"
-          class="chip chip-clear"
           type="button"
+          class="chip chip-clear"
         >
           Сбросить все
         </button>

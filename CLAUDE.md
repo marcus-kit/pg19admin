@@ -33,7 +33,7 @@ git add -A && git commit -m "message" && git push
 7. **Glass card hover** — работает только с CSS классом, не inline styles
 8. **pathPrefix: false** — компоненты регистрируются по filename, следи за конфликтами
 9. **Supabase Auth** — используй встроенный auth, НЕ кастомный auth_sessions
-10. **Vue attributes order** — порядок: `:props` → `class` → статические → `@events` (ESLint vue/attributes-order)
+10. **Vue attributes order** — порядок: `:props` → `@events` → `class` → статические (ESLint vue/attributes-order)
 11. **Tailwind CSS v4** — используй `@import "tailwindcss"` вместо `@tailwind` директив. Warning `@import must precede` — некритичен
 12. **Computed setter + объекты** — мутация свойств объекта НЕ триггерит setter. Используй watch с `deep: true` или создавай новый объект
 13. **Двусторонняя синхронизация** — при watch↔watch добавь флаг `isSyncing` чтобы избежать бесконечного цикла
