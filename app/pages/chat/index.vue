@@ -72,10 +72,12 @@ const goToChat = (id: string) => {
 
     <!-- Chat List -->
     <div v-else class="space-y-3">
-      <div
+      <UiCard
         v-for="chat in chats"
         :key="chat.id"
-        class="glass-card p-4 rounded-lg cursor-pointer hover:border-primary/50 transition-all group"
+        :hover="true"
+        padding="sm"
+        class="cursor-pointer"
         @click="goToChat(chat.id)"
       >
         <div class="flex items-start justify-between gap-4">
@@ -123,11 +125,11 @@ const goToChat = (id: string) => {
             </span>
             <Icon
               name="heroicons:chevron-right"
-              class="w-5 h-5 text-[var(--text-muted)] mt-2 group-hover:text-primary transition-colors"
+              class="w-5 h-5 text-[var(--text-muted)] mt-2"
             />
           </div>
         </div>
-      </div>
+      </UiCard>
 
       <!-- Empty State -->
       <UiEmptyState
