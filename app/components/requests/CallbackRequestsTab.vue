@@ -56,10 +56,10 @@ const handleStatusUpdate = (callback: CallbackRequest, status: string) => {
 
     <!-- Requests List -->
     <div v-else class="space-y-3">
-      <div
+      <UiCard
         v-for="callback in requests"
         :key="callback.id"
-        class="glass-card p-4 rounded-lg"
+        padding="sm"
       >
         <div class="flex items-start justify-between gap-4">
           <div class="flex-1 min-w-0">
@@ -133,14 +133,13 @@ const handleStatusUpdate = (callback: CallbackRequest, status: string) => {
             </div>
           </div>
         </div>
-      </div>
+      </UiCard>
 
-      <div v-if="requests.length === 0" class="text-center py-12">
-        <Icon name="heroicons:phone-x-mark" class="w-16 h-16 text-[var(--text-muted)] mx-auto mb-4" />
-        <p class="text-[var(--text-muted)]">
-          {{ statusFilter === 'all' ? 'Заявок на звонок пока нет' : 'Нет заявок с таким статусом' }}
-        </p>
-      </div>
+      <UiEmptyState
+        v-if="requests.length === 0"
+        icon="heroicons:phone-x-mark"
+        :title="statusFilter === 'all' ? 'Заявок на звонок пока нет' : 'Нет заявок с таким статусом'"
+      />
     </div>
   </div>
 </template>
