@@ -49,6 +49,15 @@ const {
 const goToTicket = (id: string) => {
   navigateTo(`/tickets/${id}`)
 }
+
+const columns = [
+  { key: 'number', label: 'Номер' },
+  { key: 'subject', label: 'Тема' },
+  { key: 'status', label: 'Статус' },
+  { key: 'priority', label: 'Приоритет' },
+  { key: 'assignedAdmin', label: 'Назначен' },
+  { key: 'createdAt', label: 'Создан', sortable: true },
+]
 </script>
 
 <template>
@@ -93,63 +102,49 @@ const goToTicket = (id: string) => {
     <UiLoading v-if="loading" />
 
     <!-- Tickets Table -->
-    <div v-else class="overflow-x-auto">
-      <table class="w-full">
-        <thead>
-          <tr class="border-b border-[var(--glass-border)]">
-            <th class="text-left py-3 px-4 text-sm font-medium text-[var(--text-muted)]">Номер</th>
-            <th class="text-left py-3 px-4 text-sm font-medium text-[var(--text-muted)]">Тема</th>
-            <th class="text-left py-3 px-4 text-sm font-medium text-[var(--text-muted)]">Статус</th>
-            <th class="text-left py-3 px-4 text-sm font-medium text-[var(--text-muted)]">Приоритет</th>
-            <th class="text-left py-3 px-4 text-sm font-medium text-[var(--text-muted)]">Назначен</th>
-            <th class="text-left py-3 px-4 text-sm font-medium text-[var(--text-muted)]">Создан</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr
-            v-for="ticket in tickets"
-            :key="ticket.id"
-            class="border-b border-[var(--glass-border)] hover:bg-[var(--glass-bg)] cursor-pointer transition-colors"
-            @click="goToTicket(ticket.id)"
-          >
-            <td class="py-3 px-4">
-              <span class="font-mono text-sm text-primary">{{ ticket.number }}</span>
-            </td>
-            <td class="py-3 px-4">
-              <div class="max-w-md">
-                <p class="font-medium text-[var(--text-primary)] truncate">{{ ticket.subject }}</p>
-                <p class="text-xs text-[var(--text-muted)]">
-                  {{ ticket.userName || `Пользователь #${ticket.userId}` }}
-                  <span v-if="ticket.userEmail" class="ml-1">· {{ ticket.userEmail }}</span>
-                </p>
-              </div>
-            </td>
-            <td class="py-3 px-4">
-              <UiBadge :class="getStatusBadgeClass(TICKET_STATUS, ticket.status)" size="sm">
-                {{ getStatusLabel(TICKET_STATUS, ticket.status) }}
-              </UiBadge>
-            </td>
-            <td class="py-3 px-4">
-              <UiBadge :class="getStatusBadgeClass(TICKET_PRIORITY, ticket.priority)" size="sm">
-                {{ getStatusLabel(TICKET_PRIORITY, ticket.priority) }}
-              </UiBadge>
-            </td>
-            <td class="py-3 px-4 text-sm text-[var(--text-secondary)]">
-              {{ ticket.assignedAdmin?.fullName || '—' }}
-            </td>
-            <td class="py-3 px-4 text-sm text-[var(--text-muted)]">
-              {{ formatDateTime(ticket.createdAt) }}
-            </td>
-          </tr>
-        </tbody>
-      </table>
+    <UiTable
+      v-else
+      :data="tickets"
+      :columns="columns"
+      empty-icon="heroicons:ticket"
+      empty-text="Тикетов не найдено"
+      @row-click="(row) => goToTicket(row.id)"
+    >
+      <template #number="{ row }">
+        <span class="font-mono text-sm text-primary">{{ row.number }}</span>
+      </template>
 
-      <!-- Empty State -->
-      <UiEmptyState
-        v-if="tickets.length === 0"
-        icon="heroicons:ticket"
-        title="Тикетов не найдено"
-      />
-    </div>
+      <template #subject="{ row }">
+        <div class="max-w-md">
+          <p class="font-medium text-[var(--text-primary)] truncate">{{ row.subject }}</p>
+          <p class="text-xs text-[var(--text-muted)]">
+            {{ row.userName || `Пользователь #${row.userId}` }}
+            <span v-if="row.userEmail" class="ml-1">· {{ row.userEmail }}</span>
+          </p>
+        </div>
+      </template>
+
+      <template #status="{ row }">
+        <UiBadge :class="getStatusBadgeClass(TICKET_STATUS, row.status)" size="sm">
+          {{ getStatusLabel(TICKET_STATUS, row.status) }}
+        </UiBadge>
+      </template>
+
+      <template #priority="{ row }">
+        <UiBadge :class="getStatusBadgeClass(TICKET_PRIORITY, row.priority)" size="sm">
+          {{ getStatusLabel(TICKET_PRIORITY, row.priority) }}
+        </UiBadge>
+      </template>
+
+      <template #assignedAdmin="{ row }">
+        <span class="text-sm text-[var(--text-secondary)]">
+          {{ row.assignedAdmin?.fullName || '—' }}
+        </span>
+      </template>
+
+      <template #createdAt="{ row }">
+        <span class="text-sm text-[var(--text-muted)]">{{ formatDateTime(row.createdAt) }}</span>
+      </template>
+    </UiTable>
   </div>
 </template>
