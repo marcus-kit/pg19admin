@@ -8,27 +8,23 @@ import type RenderFeature from 'ol/render/Feature'
 import type { StyleLike } from 'ol/style/Style'
 import type VectorSource from 'ol/source/Vector'
 
-// Интерфейс зоны покрытия
+// Интерфейс зоны покрытия (partner_coverage_zones)
 interface CoverageZone {
   id: number
   name: string
   description: string | null
-  type: 'pg19' | 'partner'
-  partnerId: string | null
-  partner: { id: string, name: string } | null
+  partnerId: number | null
+  partner: { id: number, name: string } | null
   geometry: object
   color: string
-  fillOpacity: number
-  strokeWidth: number
   isActive: boolean
-  sortOrder: number
   createdAt: string
   updatedAt: string
 }
 
 // Интерфейс партнёра
 interface Partner {
-  id: string
+  id: number
   name: string
   color: string
 }
@@ -44,7 +40,7 @@ const toast = useToast()
 const loading = ref(true)
 const zones = ref<CoverageZone[]>([])
 const selectedZone = ref<CoverageZone | null>(null)
-const selectedPartnerId = ref<string | null>(null)
+const selectedPartnerId = ref<number | null>(null)
 const showOnlyActive = ref(true)
 
 // Модалка подтверждения удаления
@@ -73,13 +69,12 @@ const fileInput = ref<HTMLInputElement | null>(null)
 const replaceExisting = ref(false)
 const importing = ref(false)
 const importError = ref('')
-const importOwner = ref<string>('pg19')
+const importOwner = ref<string>('')
 const exportPartnerId = ref<string>('all')
 
-const importOwnerOptions = computed(() => [
-  { value: 'pg19', label: 'ПЖ19' },
-  ...partners.value.map(p => ({ value: p.id, label: p.name })),
-])
+const importOwnerOptions = computed(() =>
+  partners.value.map(p => ({ value: String(p.id), label: p.name })),
+)
 
 const exportPartnerOptions = computed(() => [
   { value: 'all', label: 'Все зоны' },
@@ -102,7 +97,7 @@ async function fetchPartners() {
 }
 
 // Выбор партнёра для фильтрации (toggle)
-function selectPartner(partnerId: string) {
+function selectPartner(partnerId: number) {
   if (selectedPartnerId.value === partnerId) {
     selectedPartnerId.value = null
   }
@@ -196,8 +191,10 @@ async function initMap() {
 
   const styleFunction = (feature: Feature<Geometry> | RenderFeature, isHovered = false) => {
     const zone = feature.get('zone') as CoverageZone
-    const strokeWidth = isHovered ? zone.strokeWidth + 2 : zone.strokeWidth
-    const fillOpacity = isHovered ? Math.min(zone.fillOpacity + 0.2, 0.8) : zone.fillOpacity
+    const baseStrokeWidth = 2
+    const baseFillOpacity = 0.3
+    const strokeWidth = isHovered ? baseStrokeWidth + 2 : baseStrokeWidth
+    const fillOpacity = isHovered ? Math.min(baseFillOpacity + 0.2, 0.8) : baseFillOpacity
 
     return new Style({
       fill: new Fill({
@@ -241,10 +238,8 @@ async function initMap() {
       const zone = feature.get('zone') as CoverageZone
       const coordinate = evt.coordinate
 
-      const typeLabel = zone.type === 'pg19' ? 'ПЖ19' : (zone.partner?.name || 'Партнёр')
-      const typeBg = zone.type === 'pg19'
-        ? 'background: rgba(247, 148, 29, 0.2); color: #F7941D;'
-        : 'background: rgba(233, 30, 140, 0.2); color: #E91E8C;'
+      const typeLabel = zone.partner?.name || 'Партнёр'
+      const typeBg = 'background: rgba(233, 30, 140, 0.2); color: #E91E8C;'
       const statusBg = zone.isActive
         ? 'background: rgba(34, 197, 94, 0.2); color: #22C55E;'
         : 'background: rgba(107, 114, 128, 0.2); color: #9CA3AF;'
@@ -363,14 +358,15 @@ async function handleFileSelect(event: Event) {
       throw new Error('Невалидный GeoJSON: отсутствует type')
     }
 
-    const isPg19 = importOwner.value === 'pg19'
+    if (!importOwner.value) {
+      throw new Error('Выберите партнёра для импорта')
+    }
 
     const result = await $fetch<{ success: boolean, imported: number }>('/api/admin/coverage/import', {
       method: 'POST',
       body: {
         geojson,
-        type: isPg19 ? 'pg19' : 'partner',
-        partnerId: isPg19 ? undefined : importOwner.value,
+        partnerId: Number(importOwner.value),
         replaceExisting: replaceExisting.value,
       },
     })
@@ -692,10 +688,10 @@ onUnmounted(() => {
                   </div>
                   <div class="flex gap-1 flex-wrap">
                     <UiBadge
-                      :variant="zone.type === 'pg19' ? 'warning' : 'info'"
+                      variant="info"
                       size="sm"
                     >
-                      {{ zone.type === 'pg19' ? 'ПЖ19' : zone.partner?.name || 'Партнёр' }}
+                      {{ zone.partner?.name || 'Партнёр' }}
                     </UiBadge>
                     <UiBadge
                       v-if="!zone.isActive"
@@ -759,13 +755,6 @@ onUnmounted(() => {
           </div>
 
           <div class="space-y-3 text-sm">
-            <div>
-              <span class="text-[var(--text-muted)]">Тип:</span>
-              <span class="ml-2 text-[var(--text-primary)]">
-                {{ selectedZone.type === 'pg19' ? 'ПЖ19' : 'Партнёр' }}
-              </span>
-            </div>
-
             <div v-if="selectedZone.partner">
               <span class="text-[var(--text-muted)]">Партнёр:</span>
               <span class="ml-2 text-[var(--text-primary)]">
