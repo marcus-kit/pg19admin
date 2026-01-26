@@ -343,8 +343,8 @@ onUnmounted(() => {
 }
 
 .search-input-wrapper.is-focused {
-  background: linear-gradient(135deg, #F7941D, #E91E8C);
-  box-shadow: 0 0 20px rgba(247, 148, 29, 0.2);
+  background: linear-gradient(135deg, rgba(247, 148, 29, 0.5), rgba(233, 30, 140, 0.3));
+  box-shadow: 0 0 12px rgba(247, 148, 29, 0.1);
 }
 
 .search-input-inner {

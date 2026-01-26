@@ -47,8 +47,8 @@ async function handleLogout() {
           </NuxtLink>
 
           <NuxtLink to="/accounts" active-class="nav-item-active" class="nav-item">
-            <Icon name="heroicons:identification" class="w-5 h-5" />
-            <span>Аккаунты</span>
+            <Icon name="heroicons:document-text" class="w-5 h-5" />
+            <span>Договоры</span>
           </NuxtLink>
 
           <NuxtLink to="/news" active-class="nav-item-active" class="nav-item">

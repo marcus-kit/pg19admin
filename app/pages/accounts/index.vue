@@ -2,7 +2,6 @@
 import type { Account } from '~/types/admin'
 import type { ColumnConfig, FilterConfig } from '~/types/admin-list'
 import {
-  ACCOUNT_STATUS,
   ACCOUNT_STATUS_OPTIONS,
   CONTRACT_STATUS,
   CONTRACT_STATUS_OPTIONS,
@@ -12,25 +11,24 @@ definePageMeta({
   middleware: 'admin',
 })
 
-useHead({ title: 'Аккаунты — Админ-панель' })
+useHead({ title: 'Договоры — Админ-панель' })
 
 const router = useRouter()
 
 // Конфигурация колонок
 const columns: ColumnConfig[] = [
-  { key: 'contractNumber', label: 'Договор', width: 'w-32' },
-  { key: 'user', label: 'Пользователь' },
+  { key: 'contractNumber', label: '№', width: 'w-24' },
+  { key: 'user', label: 'Клиент', width: 'w-56' },
   { key: 'addressFull', label: 'Адрес' },
   { key: 'balance', label: 'Баланс', sortable: true, format: 'money' },
-  { key: 'status', label: 'Статус', badge: { config: ACCOUNT_STATUS } },
-  { key: 'contractStatus', label: 'Договор', badge: { config: CONTRACT_STATUS } },
+  { key: 'contractStatus', label: 'Статус', badge: { config: CONTRACT_STATUS } },
   { key: 'createdAt', label: 'Создан', sortable: true, format: 'date' },
 ]
 
 // Конфигурация фильтров
 const filters: FilterConfig[] = [
   { key: 'status', type: 'buttons', options: ACCOUNT_STATUS_OPTIONS, defaultValue: 'all' },
-  { key: 'contractStatus', type: 'select', options: CONTRACT_STATUS_OPTIONS, defaultValue: 'all', placeholder: 'Статус договора' },
+  { key: 'contractStatus', type: 'buttons', options: CONTRACT_STATUS_OPTIONS, defaultValue: 'all' },
 ]
 
 // Переход к странице аккаунта
@@ -44,13 +42,13 @@ function goToAccount(account: Account) {
     :columns="columns"
     :filters="filters"
     @row-click="goToAccount"
-    title="Аккаунты"
-    icon="heroicons:building-office"
+    title="Договоры"
+    icon="heroicons:document-text"
     endpoint="/api/admin/accounts"
     response-key="accounts"
-    search-placeholder="Поиск по № договора или адресу..."
-    empty-icon="heroicons:building-office"
-    empty-text="Аккаунтов не найдено"
+    search-placeholder="Поиск по № договора, ФИО или адресу..."
+    empty-icon="heroicons:document-text"
+    empty-text="Договоров не найдено"
     create-url="/accounts/create"
     show-create-button
   >
