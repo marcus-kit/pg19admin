@@ -16,7 +16,7 @@ const router = useRouter()
 // Конфигурация колонок
 const columns: ColumnConfig[] = [
   { key: 'user', label: 'Заявитель' },
-  { key: 'address', label: 'Адрес' },
+  { key: 'addressText', label: 'Адрес' },
   { key: 'status', label: 'Статус', badge: { config: CONNECTION_REQUEST_STATUS } },
   { key: 'inCoverageZone', label: 'Зона покрытия' },
   { key: 'source', label: 'Источник' },
@@ -26,12 +26,12 @@ const columns: ColumnConfig[] = [
 // Конфигурация фильтров
 const filters: FilterConfig[] = [
   { key: 'status', type: 'buttons', options: CONNECTION_STATUS_OPTIONS, defaultValue: 'all' },
-  { key: 'inCoverageZone', type: 'checkbox', label: 'В зоне покрытия', defaultValue: false },
+  { key: 'inCoverage', type: 'checkbox', label: 'В зоне покрытия', defaultValue: false },
 ]
 
 // Переход к заявке
 function goToRequest(request: Record<string, unknown>) {
-  router.push(`/requests/connection/${request.id}`)
+  router.push(`/requests/${request.id}`)
 }
 </script>
 
@@ -42,7 +42,7 @@ function goToRequest(request: Record<string, unknown>) {
     @row-click="goToRequest"
     title="Заявки на подключение"
     icon="heroicons:signal"
-    endpoint="/api/admin/requests/connection"
+    endpoint="/api/admin/requests"
     response-key="requests"
     search-placeholder="Поиск по имени или адресу..."
     empty-icon="heroicons:signal"
@@ -51,15 +51,15 @@ function goToRequest(request: Record<string, unknown>) {
     <!-- Заявитель -->
     <template #user="{ row }">
       <div>
-        <p class="font-medium text-[var(--text-primary)]">{{ row.name }}</p>
+        <p class="font-medium text-[var(--text-primary)]">{{ row.fullName }}</p>
         <p class="text-xs text-[var(--text-muted)]">{{ row.phone }}</p>
       </div>
     </template>
 
     <!-- Адрес -->
-    <template #address="{ row }">
+    <template #addressText="{ row }">
       <span class="block max-w-xs truncate text-sm text-[var(--text-secondary)]">
-        {{ row.address || '—' }}
+        {{ row.addressText || '—' }}
       </span>
     </template>
 
