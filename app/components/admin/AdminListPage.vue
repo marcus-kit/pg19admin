@@ -148,6 +148,7 @@ defineExpose({
       :filters="filters"
       :search-placeholder="searchPlaceholder"
       :show-search="!!searchPlaceholder"
+      :results-count="total"
     />
 
     <!-- Table -->

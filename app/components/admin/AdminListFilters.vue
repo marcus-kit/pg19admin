@@ -1,11 +1,12 @@
 <script setup lang="ts">
 /**
- * AdminListFilters — унифицированная панель фильтров
+ * AdminListFilters — обёртка для UiSearchCommand
  *
- * Layout: [Кнопки статуса] [Доп. фильтры (select/checkbox)] [Поиск справа]
+ * Преобразует FilterConfig[] в формат для UiSearchCommand
  */
 
 import type { FilterConfig } from '~/types/admin-list'
+import type { FilterGroup } from '~/components/ui/UiSearchCommand.vue'
 
 interface Props {
   /** Конфигурация фильтров */
@@ -14,6 +15,8 @@ interface Props {
   searchPlaceholder?: string
   /** Показать поиск */
   showSearch?: boolean
+  /** Количество результатов */
+  resultsCount?: number
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -22,9 +25,103 @@ const props = withDefaults(defineProps<Props>(), {
   showSearch: true,
 })
 
-// Модели для v-model
+// Models
 const searchQuery = defineModel<string>('search', { default: '' })
 const filterValues = defineModel<Record<string, unknown>>('values', { default: () => ({}) })
+
+// Иконки для групп фильтров
+const groupIcons: Record<string, string> = {
+  status: 'heroicons:signal',
+  priority: 'heroicons:flag',
+  contractStatus: 'heroicons:document-text',
+  assignedToMe: 'heroicons:user',
+  inCoverage: 'heroicons:map-pin',
+}
+
+// Преобразование FilterConfig[] в FilterGroup[]
+const filterGroups = computed<FilterGroup[]>(() => {
+  const groups: FilterGroup[] = []
+
+  for (const filter of props.filters) {
+    if (filter.type === 'buttons' || filter.type === 'select') {
+      // Фильтруем опцию "all" - она не нужна в UI
+      const options = filter.options
+        .filter(opt => opt.value !== 'all')
+        .map(opt => ({
+          value: opt.value,
+          label: opt.label,
+        }))
+
+      if (options.length > 0) {
+        groups.push({
+          key: filter.key,
+          label: getGroupLabel(filter),
+          icon: groupIcons[filter.key],
+          options,
+          multiple: false,
+        })
+      }
+    }
+    else if (filter.type === 'checkbox') {
+      // Checkbox как группа с одной опцией
+      groups.push({
+        key: filter.key,
+        label: filter.label,
+        icon: groupIcons[filter.key],
+        options: [{ value: 'true', label: filter.label }],
+        multiple: false,
+      })
+    }
+  }
+
+  return groups
+})
+
+// Получить label для группы
+function getGroupLabel(filter: FilterConfig): string {
+  const labels: Record<string, string> = {
+    status: 'Статус',
+    priority: 'Приоритет',
+    contractStatus: 'Договор',
+  }
+  return labels[filter.key] || filter.key
+}
+
+// Адаптер: filterValues ↔ UiSearchCommand filters
+const searchFilters = computed({
+  get() {
+    const result: Record<string, string | string[]> = {}
+
+    for (const filter of props.filters) {
+      const value = filterValues.value[filter.key]
+
+      if (filter.type === 'checkbox') {
+        // Checkbox: true → 'true', false → 'all'
+        result[filter.key] = value ? 'true' : 'all'
+      }
+      else {
+        // Buttons/Select: просто копируем
+        result[filter.key] = (value as string) || 'all'
+      }
+    }
+
+    return result
+  },
+  set(newFilters: Record<string, string | string[]>) {
+    for (const filter of props.filters) {
+      const value = newFilters[filter.key]
+
+      if (filter.type === 'checkbox') {
+        // 'true' → true, иначе false
+        filterValues.value[filter.key] = value === 'true'
+      }
+      else {
+        // Buttons/Select: 'all' или конкретное значение
+        filterValues.value[filter.key] = value || 'all'
+      }
+    }
+  },
+})
 
 // Инициализация значений по умолчанию
 onMounted(() => {
@@ -34,124 +131,15 @@ onMounted(() => {
     }
   })
 })
-
-// Группировка фильтров по типу
-const buttonFilters = computed(() => props.filters.filter(f => f.type === 'buttons'))
-const selectFilters = computed(() => props.filters.filter(f => f.type === 'select'))
-const checkboxFilters = computed(() => props.filters.filter(f => f.type === 'checkbox'))
 </script>
 
 <template>
-  <div class="admin-list-filters">
-    <!-- Левая часть: все фильтры -->
-    <div class="filters-group">
-      <!-- Кнопки статуса (первыми) -->
-      <div
-        v-for="filter in buttonFilters"
-        :key="filter.key"
-        class="filter-buttons"
-      >
-        <UiButton
-          v-for="opt in filter.options"
-          :key="opt.value"
-          :class="{ 'bg-primary/20': filterValues[filter.key] === opt.value }"
-          @click="filterValues[filter.key] = opt.value"
-          variant="ghost"
-          size="sm"
-        >
-          {{ opt.label }}
-        </UiButton>
-      </div>
-
-      <!-- Select фильтры -->
-      <UiSelect
-        v-for="filter in selectFilters"
-        :key="filter.key"
-        :model-value="filterValues[filter.key] as string"
-        :options="filter.options"
-        :placeholder="filter.placeholder"
-        @update:model-value="filterValues[filter.key] = $event"
-        size="sm"
-        class="w-40"
-      />
-
-      <!-- Checkbox фильтры -->
-      <label
-        v-for="filter in checkboxFilters"
-        :key="filter.key"
-        class="filter-checkbox"
-      >
-        <input
-          v-model="filterValues[filter.key]"
-          type="checkbox"
-          class="filter-checkbox-input"
-        >
-        <span class="filter-checkbox-label">{{ filter.label }}</span>
-      </label>
-    </div>
-
-    <!-- Правая часть: поиск (всегда справа) -->
-    <div v-if="showSearch" class="search-wrapper">
-      <UiInput
-        v-model="searchQuery"
-        :placeholder="searchPlaceholder"
-        size="sm"
-        class="w-64"
-      >
-        <template #leading>
-          <Icon name="heroicons:magnifying-glass" class="h-4 w-4 text-[var(--text-muted)]" />
-        </template>
-      </UiInput>
-    </div>
-  </div>
+  <UiSearchCommand
+    v-if="showSearch || filterGroups.length > 0"
+    v-model:search="searchQuery"
+    v-model:filters="searchFilters"
+    :placeholder="searchPlaceholder"
+    :filter-groups="filterGroups"
+    :results-count="resultsCount"
+  />
 </template>
-
-<style scoped>
-.admin-list-filters {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 1rem;
-  align-items: center;
-  margin-bottom: 1.5rem;
-}
-
-.filters-group {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.filter-buttons {
-  display: flex;
-  gap: 0.25rem;
-}
-
-.search-wrapper {
-  flex-shrink: 0;
-}
-
-.filter-checkbox {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  cursor: pointer;
-  font-size: 0.875rem;
-  color: var(--text-secondary);
-}
-
-.filter-checkbox-input {
-  width: 1rem;
-  height: 1rem;
-  accent-color: var(--primary);
-  cursor: pointer;
-}
-
-.filter-checkbox-label {
-  user-select: none;
-}
-
-.filter-checkbox:hover .filter-checkbox-label {
-  color: var(--text-primary);
-}
-</style>
