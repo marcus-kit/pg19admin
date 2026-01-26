@@ -1,14 +1,12 @@
 <script setup lang="ts">
 import type { Account } from '~/types/admin'
+import type { ColumnConfig, FilterConfig } from '~/types/admin-list'
 import {
   ACCOUNT_STATUS,
   ACCOUNT_STATUS_OPTIONS,
   CONTRACT_STATUS,
   CONTRACT_STATUS_OPTIONS,
-  getStatusLabel,
-  getStatusBadgeClass,
 } from '~/composables/useStatusConfig'
-import { useAdminList } from '~/composables/useAdminList'
 
 definePageMeta({
   middleware: 'admin',
@@ -18,152 +16,67 @@ useHead({ title: 'Аккаунты — Админ-панель' })
 
 const router = useRouter()
 
-// Используем централизованный composable для списков с двумя фильтрами
-const {
-  items: accounts,
-  loading,
-  total,
-  filters,
-  searchQuery,
-  onSearchInput,
-} = useAdminList<Account, { status: string, contractStatus: string }>({
-  endpoint: '/api/admin/accounts',
-  responseKey: 'accounts',
-  initialFilters: { status: 'all', contractStatus: 'all' },
-})
-
-const { formatBalance, formatDateShort } = useFormatters()
-
-// Колонки таблицы аккаунтов
-const columns = [
-  { key: 'contractNumber', label: 'Договор' },
+// Конфигурация колонок
+const columns: ColumnConfig[] = [
+  { key: 'contractNumber', label: 'Договор', width: 'w-32' },
   { key: 'user', label: 'Пользователь' },
   { key: 'addressFull', label: 'Адрес' },
-  { key: 'balance', label: 'Баланс', sortable: true },
-  { key: 'status', label: 'Статус' },
-  { key: 'contractStatus', label: 'Договор' },
-  { key: 'createdAt', label: 'Создан', sortable: true },
+  { key: 'balance', label: 'Баланс', sortable: true, format: 'money' },
+  { key: 'status', label: 'Статус', badge: { config: ACCOUNT_STATUS } },
+  { key: 'contractStatus', label: 'Договор', badge: { config: CONTRACT_STATUS } },
+  { key: 'createdAt', label: 'Создан', sortable: true, format: 'date' },
 ]
 
-// Переход на страницу аккаунта
+// Конфигурация фильтров
+const filters: FilterConfig[] = [
+  { key: 'status', type: 'buttons', options: ACCOUNT_STATUS_OPTIONS, defaultValue: 'all' },
+  { key: 'contractStatus', type: 'select', options: CONTRACT_STATUS_OPTIONS, defaultValue: 'all', placeholder: 'Статус договора' },
+]
+
+// Переход к странице аккаунта
 function goToAccount(account: Account) {
   router.push(`/accounts/${account.id}`)
 }
 </script>
 
 <template>
-  <div>
-    <!-- Header -->
-    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
-      <h1 class="text-3xl font-bold text-[var(--text-primary)]">
-        Аккаунты
-        <span v-if="total > 0" class="text-lg font-normal text-[var(--text-muted)]">
-          ({{ total }})
-        </span>
-      </h1>
-      <UiButton @click="router.push('/accounts/create')">
-        <Icon name="heroicons:plus" class="w-4 h-4" />
-        Создать
-      </UiButton>
-    </div>
+  <AdminListPage
+    :columns="columns"
+    :filters="filters"
+    @row-click="goToAccount"
+    title="Аккаунты"
+    icon="heroicons:building-office"
+    endpoint="/api/admin/accounts"
+    response-key="accounts"
+    search-placeholder="Поиск по № договора или адресу..."
+    empty-icon="heroicons:building-office"
+    empty-text="Аккаунтов не найдено"
+    create-url="/accounts/create"
+    show-create-button
+  >
+    <!-- Номер договора -->
+    <template #contractNumber="{ row }">
+      <span class="font-mono text-sm text-primary">{{ row.contractNumber || '—' }}</span>
+    </template>
 
-    <!-- Filters -->
-    <div class="flex flex-wrap gap-4 mb-6">
-      <!-- Status Filter -->
-      <div class="flex gap-1 flex-wrap">
-        <UiButton
-          v-for="opt in ACCOUNT_STATUS_OPTIONS"
-          :key="opt.value"
-          :class="{ 'bg-primary/20': filters.status === opt.value }"
-          @click="filters.status = opt.value"
-          variant="ghost"
-          size="sm"
-        >
-          {{ opt.label }}
-        </UiButton>
-      </div>
+    <!-- Пользователь -->
+    <template #user="{ row }">
+      <NuxtLink
+        v-if="row.user"
+        :to="`/users/${row.user.id}`"
+        @click.stop
+        class="text-primary hover:underline"
+      >
+        {{ row.user.fullName }}
+      </NuxtLink>
+      <span v-else class="text-[var(--text-muted)]">—</span>
+    </template>
 
-      <div class="flex items-center gap-4 ml-auto">
-        <!-- Contract Status Filter -->
-        <UiSelect
-          v-model="filters.contractStatus"
-          :options="CONTRACT_STATUS_OPTIONS"
-          :placeholder="undefined"
-          size="sm"
-        />
-
-        <!-- Search -->
-        <UiInput
-          v-model="searchQuery"
-          @input="onSearchInput"
-          placeholder="Поиск по № договора или адресу..."
-          size="sm"
-          class="w-64"
-        >
-          <template #leading>
-            <Icon name="heroicons:magnifying-glass" class="w-4 h-4 text-[var(--text-muted)]" />
-          </template>
-        </UiInput>
-      </div>
-    </div>
-
-    <!-- Loading -->
-    <UiLoading v-if="loading" />
-
-    <!-- Accounts Table -->
-    <UiTable
-      v-else
-      :data="accounts"
-      :columns="columns"
-      @row-click="goToAccount"
-      empty-icon="heroicons:identification"
-      empty-text="Аккаунтов не найдено"
-    >
-      <template #contractNumber="{ row }">
-        <span class="font-mono text-primary">{{ row.contractNumber || '—' }}</span>
-      </template>
-
-      <template #user="{ row }">
-        <template v-if="row.user">
-          <span
-            @click.stop="router.push(`/users/${row.user.id}`)"
-            class="text-[var(--text-primary)] hover:text-primary cursor-pointer"
-          >
-            {{ row.user.fullName }}
-          </span>
-        </template>
-        <template v-else>
-          <span class="text-[var(--text-muted)]">—</span>
-        </template>
-      </template>
-
-      <template #addressFull="{ row }">
-        <span class="text-[var(--text-secondary)] max-w-xs truncate block">
-          {{ row.addressFull || '—' }}
-        </span>
-      </template>
-
-      <template #balance="{ row }">
-        <span :class="row.balance >= 0 ? 'text-green-400' : 'text-red-400'">
-          {{ formatBalance(row.balance) }}
-        </span>
-      </template>
-
-      <template #status="{ row }">
-        <UiBadge :class="getStatusBadgeClass(ACCOUNT_STATUS, row.status)" size="sm">
-          {{ getStatusLabel(ACCOUNT_STATUS, row.status) }}
-        </UiBadge>
-      </template>
-
-      <template #contractStatus="{ row }">
-        <UiBadge :class="getStatusBadgeClass(CONTRACT_STATUS, row.contractStatus)" size="sm">
-          {{ getStatusLabel(CONTRACT_STATUS, row.contractStatus) }}
-        </UiBadge>
-      </template>
-
-      <template #createdAt="{ row }">
-        <span class="text-sm text-[var(--text-muted)]">{{ formatDateShort(row.createdAt) }}</span>
-      </template>
-    </UiTable>
-  </div>
+    <!-- Адрес с truncate -->
+    <template #addressFull="{ row }">
+      <span class="block max-w-xs truncate text-sm text-[var(--text-secondary)]">
+        {{ row.addressFull || '—' }}
+      </span>
+    </template>
+  </AdminListPage>
 </template>
