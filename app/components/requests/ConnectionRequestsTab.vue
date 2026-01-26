@@ -74,10 +74,12 @@ const localOnlyInCoverage = computed({
 
     <!-- Requests List -->
     <div v-else class="space-y-3">
-      <div
+      <UiCard
         v-for="request in requests"
         :key="request.id"
-        class="glass-card p-4 rounded-lg cursor-pointer hover:border-primary/50 transition-all group"
+        :hover="true"
+        padding="sm"
+        class="cursor-pointer"
         @click="goToRequest(request.id)"
       >
         <div class="flex items-start justify-between gap-4">
@@ -131,18 +133,17 @@ const localOnlyInCoverage = computed({
           <div class="shrink-0 flex items-center">
             <Icon
               name="heroicons:chevron-right"
-              class="w-5 h-5 text-[var(--text-muted)] group-hover:text-primary transition-colors"
+              class="w-5 h-5 text-[var(--text-muted)]"
             />
           </div>
         </div>
-      </div>
+      </UiCard>
 
-      <div v-if="requests.length === 0" class="text-center py-12">
-        <Icon name="heroicons:clipboard-document-list" class="w-16 h-16 text-[var(--text-muted)] mx-auto mb-4" />
-        <p class="text-[var(--text-muted)]">
-          {{ statusFilter === 'all' ? 'Заявок на подключение пока нет' : 'Нет заявок с таким статусом' }}
-        </p>
-      </div>
+      <UiEmptyState
+        v-if="requests.length === 0"
+        icon="heroicons:clipboard-document-list"
+        :title="statusFilter === 'all' ? 'Заявок на подключение пока нет' : 'Нет заявок с таким статусом'"
+      />
     </div>
   </div>
 </template>
