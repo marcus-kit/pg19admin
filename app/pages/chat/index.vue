@@ -1,23 +1,35 @@
 <script setup lang="ts">
+// ═══════════════════════════════════════════════════════════════════════════
+// ИМПОРТЫ ТИПОВ
+// ═══════════════════════════════════════════════════════════════════════════
 import type { Chat } from '~/types/admin'
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ИМПОРТЫ
+// ═══════════════════════════════════════════════════════════════════════════
 import {
   CHAT_STATUS,
   CHAT_STATUS_OPTIONS,
   getStatusLabel,
   getStatusBadgeClass,
 } from '~/composables/useStatusConfig'
-import { useAdminList } from '~/composables/useAdminList'
 
-// Фильтры для списка чатов
-interface ChatFilters {
+/** Фильтры для списка чатов */
+interface ChatFilters extends Record<string, unknown> {
   status: string
   assignedToMe: boolean
 }
 
+// ═══════════════════════════════════════════════════════════════════════════
+// МАКРОСЫ
+// ═══════════════════════════════════════════════════════════════════════════
 definePageMeta({
   middleware: 'admin',
 })
 
+// ═══════════════════════════════════════════════════════════════════════════
+// COMPOSABLES
+// ═══════════════════════════════════════════════════════════════════════════
 useHead({ title: 'Чаты поддержки — Админ-панель' })
 
 const {
@@ -37,7 +49,11 @@ const {
   }),
 })
 
-// Переход на страницу чата
+// ═══════════════════════════════════════════════════════════════════════════
+// МЕТОДЫ
+// ═══════════════════════════════════════════════════════════════════════════
+
+/** Переход на страницу чата */
 function goToChat(id: string) {
   navigateTo(`/chat/${id}`)
 }
@@ -58,8 +74,8 @@ function goToChat(id: string) {
 
       <div class="flex items-center gap-2 ml-auto">
         <input
-          v-model="filters.assignedToMe"
           id="showMine"
+          v-model="filters.assignedToMe"
           type="checkbox"
           class="w-4 h-4 rounded border-[var(--glass-border)] bg-[var(--glass-bg)] text-primary focus:ring-primary"
         />
@@ -88,13 +104,23 @@ function goToChat(id: string) {
               <span class="font-medium text-[var(--text-primary)]">
                 {{ chat.userName || `Чат #${chat.id}` }}
               </span>
-              <span v-if="chat.guestContact" class="text-xs text-[var(--text-muted)]">
+              <span
+                v-if="chat.guestContact"
+                class="text-xs text-[var(--text-muted)]"
+              >
                 ({{ chat.guestContact }})
               </span>
-              <UiBadge v-if="chat.guestName && !chat.userId" class="bg-purple-500/20 text-purple-400" size="sm">
+              <UiBadge
+                v-if="chat.guestName && !chat.userId"
+                size="sm"
+                class="bg-purple-500/20 text-purple-400"
+              >
                 Гость
               </UiBadge>
-              <UiBadge :class="getStatusBadgeClass(CHAT_STATUS, chat.status)" size="sm">
+              <UiBadge
+                :class="getStatusBadgeClass(CHAT_STATUS, chat.status)"
+                size="sm"
+              >
                 {{ getStatusLabel(CHAT_STATUS, chat.status) }}
               </UiBadge>
               <span
@@ -105,7 +131,10 @@ function goToChat(id: string) {
               </span>
             </div>
 
-            <p v-if="chat.subject" class="text-sm text-[var(--text-secondary)] truncate mb-1">
+            <p
+              v-if="chat.subject"
+              class="text-sm text-[var(--text-secondary)] truncate mb-1"
+            >
               {{ chat.subject }}
             </p>
 

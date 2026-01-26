@@ -484,8 +484,8 @@ onUnmounted(() => {
             <label class="text-sm font-medium text-[var(--text-secondary)]">Импорт GeoJSON</label>
             <UiSelect v-model="importOwner" :options="importOwnerOptions" size="sm" />
             <UiToggle v-model="replaceExisting" label="Заменить существующие" size="sm" />
-            <input ref="fileInput" type="file" accept=".geojson,.json" class="hidden" @change="handleFileSelect">
-            <UiButton :loading="importing" :disabled="loading || importing" variant="secondary" class="w-full" @click="fileInput?.click()">
+            <input ref="fileInput" @change="handleFileSelect" type="file" accept=".geojson,.json" class="hidden">
+            <UiButton :loading="importing" :disabled="loading || importing" @click="fileInput?.click()" variant="secondary" class="w-full">
               <Icon name="heroicons:arrow-up-tray" class="w-4 h-4" />
               Загрузить GeoJSON
             </UiButton>
@@ -497,7 +497,7 @@ onUnmounted(() => {
           <div class="space-y-3">
             <label class="text-sm font-medium text-[var(--text-secondary)]">Экспорт зон</label>
             <UiSelect v-model="exportPartnerId" :options="exportPartnerOptions" size="sm" />
-            <UiButton :disabled="loading" variant="ghost" class="w-full" @click="handleExport">
+            <UiButton :disabled="loading" @click="handleExport" variant="ghost" class="w-full">
               <Icon name="heroicons:arrow-down-tray" class="w-4 h-4" />
               Скачать GeoJSON
             </UiButton>
@@ -520,8 +520,8 @@ onUnmounted(() => {
               v-for="zone in filteredZones"
               :key="zone.id"
               :class="{ 'ring-2 ring-primary': selectedZone?.id === zone.id, 'opacity-50': hiddenZoneIds.has(zone.id) }"
-              class="p-3 rounded-lg border border-[var(--glass-border)] hover:bg-[var(--glass-bg)] transition-colors cursor-pointer flex items-start justify-between gap-2"
               @click="selectedZone = zone"
+              class="p-3 rounded-lg border border-[var(--glass-border)] hover:bg-[var(--glass-bg)] transition-colors cursor-pointer flex items-start justify-between gap-2"
             >
               <div class="flex-1 min-w-0">
                 <div class="flex items-center gap-2 mb-1">
@@ -535,10 +535,10 @@ onUnmounted(() => {
                 </div>
               </div>
               <div class="flex gap-1 flex-shrink-0">
-                <button :title="hiddenZoneIds.has(zone.id) ? 'Показать' : 'Скрыть'" class="p-1 hover:bg-[var(--glass-bg)] rounded" @click.stop="toggleZoneVisibility(zone)">
+                <button :title="hiddenZoneIds.has(zone.id) ? 'Показать' : 'Скрыть'" @click.stop="toggleZoneVisibility(zone)" class="p-1 hover:bg-[var(--glass-bg)] rounded">
                   <Icon :name="hiddenZoneIds.has(zone.id) ? 'heroicons:eye-slash' : 'heroicons:eye'" class="w-4 h-4 text-[var(--text-muted)]" />
                 </button>
-                <button title="Удалить" class="p-1 hover:bg-red-500/10 rounded" @click.stop="zoneToDelete = zone; showDeleteModal = true">
+                <button @click.stop="zoneToDelete = zone; showDeleteModal = true" title="Удалить" class="p-1 hover:bg-red-500/10 rounded">
                   <Icon name="heroicons:trash" class="w-4 h-4 text-red-400" />
                 </button>
               </div>
@@ -551,7 +551,7 @@ onUnmounted(() => {
         <UiCard v-if="selectedZone" class="text-sm">
           <div class="flex items-center justify-between mb-4">
             <h3 class="text-lg font-semibold text-[var(--text-primary)]">{{ selectedZone.name }}</h3>
-            <button class="p-1 hover:bg-[var(--glass-bg)] rounded text-[var(--text-muted)]" @click="selectedZone = null">
+            <button @click="selectedZone = null" class="p-1 hover:bg-[var(--glass-bg)] rounded text-[var(--text-muted)]">
               <Icon name="heroicons:x-mark" class="w-5 h-5" />
             </button>
           </div>

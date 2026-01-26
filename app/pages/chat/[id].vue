@@ -1,12 +1,24 @@
 <script setup lang="ts">
-import type { RealtimeChannel } from '@supabase/supabase-js'
+// ═══════════════════════════════════════════════════════════════════════════
+// ИМПОРТЫ ТИПОВ
+// ═══════════════════════════════════════════════════════════════════════════
 import type { Chat, ChatMessage } from '~/types/admin'
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ИМПОРТЫ
+// ═══════════════════════════════════════════════════════════════════════════
 import { getErrorStatusCode, formatFileSize, formatTime } from '~/composables/useFormatters'
 
+// ═══════════════════════════════════════════════════════════════════════════
+// МАКРОСЫ
+// ═══════════════════════════════════════════════════════════════════════════
 definePageMeta({
   middleware: 'admin',
 })
 
+// ═══════════════════════════════════════════════════════════════════════════
+// COMPOSABLES
+// ═══════════════════════════════════════════════════════════════════════════
 const route = useRoute()
 const router = useRouter()
 const toast = useToast()
@@ -15,29 +27,58 @@ const supabase = useSupabaseClient()
 
 useHead({ title: 'Чат — Админ-панель' })
 
+// ═══════════════════════════════════════════════════════════════════════════
+// РЕАКТИВНОЕ СОСТОЯНИЕ
+// ═══════════════════════════════════════════════════════════════════════════
+
 // Состояние страницы
-const loading = ref(true) // Загрузка данных
-const sending = ref(false) // Отправка сообщения
-const chat = ref<Chat | null>(null) // Данные чата
-const messages = ref<ChatMessage[]>([]) // Список сообщений
-const messagesContainer = ref<HTMLElement | null>(null) // Ссылка на контейнер сообщений
+const loading = ref(true)
+const sending = ref(false)
+const chat = ref<Chat | null>(null)
+const messages = ref<ChatMessage[]>([])
+const messagesContainer = ref<HTMLElement | null>(null)
 
 // Состояние для ввода сообщения
-const newMessage = ref('') // Текст нового сообщения
-const fileInput = ref<HTMLInputElement | null>(null) // Ссылка на input файла
-const pendingFile = ref<File | null>(null) // Файл для отправки
-const pendingPreview = ref<string | null>(null) // Превью изображения
+const newMessage = ref('')
+const fileInput = ref<HTMLInputElement | null>(null)
+const pendingFile = ref<File | null>(null)
+const pendingPreview = ref<string | null>(null)
 
 // Константы для работы с файлами
 const ACCEPT_FILES = 'image/jpeg,image/png,image/gif,image/webp,.pdf,.doc,.docx,.xls,.xlsx'
 const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
 
+// Supabase Realtime подписка
+let subscription: ReturnType<typeof supabase.channel> | null = null
+
+// ═══════════════════════════════════════════════════════════════════════════
+// COMPUTED
+// ═══════════════════════════════════════════════════════════════════════════
+
 const chatId = computed(() => route.params.id as string)
 
-// Supabase Realtime подписка
-let subscription: RealtimeChannel | null = null
+/** Группировка сообщений по дате для отображения разделителей */
+const groupedMessages = computed(() => {
+  const groups: { date: string, messages: ChatMessage[] }[] = []
+  let currentDate = ''
 
-// Загрузка данных чата и сообщений
+  for (const msg of messages.value) {
+    const msgDate = new Date(msg.createdAt).toDateString()
+    if (msgDate !== currentDate) {
+      currentDate = msgDate
+      groups.push({ date: msg.createdAt, messages: [] })
+    }
+    groups[groups.length - 1]!.messages.push(msg)
+  }
+
+  return groups
+})
+
+// ═══════════════════════════════════════════════════════════════════════════
+// МЕТОДЫ
+// ═══════════════════════════════════════════════════════════════════════════
+
+/** Загрузка данных чата и сообщений */
 async function fetchChat() {
   loading.value = true
   try {
@@ -64,7 +105,7 @@ async function fetchChat() {
   }
 }
 
-// Загрузка файла на сервер
+/** Загрузка файла на сервер */
 async function uploadFile(file: File) {
   const formData = new FormData()
   formData.append('file', file)
@@ -81,7 +122,7 @@ async function uploadFile(file: File) {
   })
 }
 
-// Отправка сообщения (с файлом или без)
+/** Отправка сообщения (с файлом или без) */
 async function handleSendMessage(content: string, file: File | null) {
   if (sending.value) return
 
@@ -119,7 +160,7 @@ async function handleSendMessage(content: string, file: File | null) {
   }
 }
 
-// Закрытие чата
+/** Закрытие чата */
 async function handleClose() {
   if (!confirm('Закрыть этот чат?')) return
 
@@ -134,7 +175,7 @@ async function handleClose() {
   }
 }
 
-// Назначение чата на текущего админа
+/** Назначение чата на текущего админа */
 async function handleAssignToMe() {
   if (!user.value) return
 
@@ -150,14 +191,13 @@ async function handleAssignToMe() {
   }
 }
 
-// Прокрутка к последнему сообщению
+/** Прокрутка к последнему сообщению */
 function scrollToBottom() {
-  if (messagesContainer.value) {
-    messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight
-  }
+  if (!messagesContainer.value) return
+  messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight
 }
 
-// Метка даты для группировки сообщений (Сегодня/Вчера/дата)
+/** Метка даты для группировки сообщений (Сегодня/Вчера/дата) */
 function getDateLabel(dateStr: string): string {
   const date = new Date(dateStr)
   const now = new Date()
@@ -179,36 +219,21 @@ function getDateLabel(dateStr: string): string {
   })
 }
 
-// Проверяет, является ли вложение изображением
+/** Проверяет, является ли вложение изображением */
 function isImageAttachment(message: ChatMessage): boolean {
   if (!message.attachmentUrl) return false
-  return /\.(jpg|jpeg|png|gif|webp)$/i.test(message.attachmentUrl)
-    || (message.attachmentName ? /\.(jpg|jpeg|png|gif|webp)$/i.test(message.attachmentName) : false)
+
+  const imagePattern = /\.(jpg|jpeg|png|gif|webp)$/i
+  return imagePattern.test(message.attachmentUrl)
+    || (message.attachmentName ? imagePattern.test(message.attachmentName) : false)
 }
 
-// Группировка сообщений по дате для отображения разделителей
-const groupedMessages = computed(() => {
-  const groups: { date: string, messages: ChatMessage[] }[] = []
-  let currentDate = ''
-
-  for (const msg of messages.value) {
-    const msgDate = new Date(msg.createdAt).toDateString()
-    if (msgDate !== currentDate) {
-      currentDate = msgDate
-      groups.push({ date: msg.createdAt, messages: [] })
-    }
-    groups[groups.length - 1].messages.push(msg)
-  }
-
-  return groups
-})
-
-// Открытие диалога выбора файла
+/** Открытие диалога выбора файла */
 function openFileDialog() {
   fileInput.value?.click()
 }
 
-// Обработка выбора файла
+/** Обработка выбора файла */
 function handleFileSelect(event: Event) {
   const input = event.target as HTMLInputElement
   const file = input.files?.[0]
@@ -224,15 +249,12 @@ function handleFileSelect(event: Event) {
   pendingFile.value = file
 
   // Создаём превью для изображений
-  if (file.type.startsWith('image/')) {
-    pendingPreview.value = URL.createObjectURL(file)
-  }
-  else {
-    pendingPreview.value = null
-  }
+  pendingPreview.value = file.type.startsWith('image/')
+    ? URL.createObjectURL(file)
+    : null
 }
 
-// Удаление выбранного файла
+/** Удаление выбранного файла */
 function removePendingFile() {
   pendingFile.value = null
   if (pendingPreview.value) {
@@ -241,23 +263,23 @@ function removePendingFile() {
   }
 }
 
-// Отправка формы (сообщение + файл)
+/** Отправка формы (сообщение + файл) */
 function handleSubmit() {
-  if ((!newMessage.value.trim() && !pendingFile.value)) return
+  if (!newMessage.value.trim() && !pendingFile.value) return
 
   handleSendMessage(newMessage.value.trim(), pendingFile.value)
   newMessage.value = ''
   removePendingFile()
 }
 
-// Автоматическое изменение высоты textarea
+/** Автоматическое изменение высоты textarea */
 function handleTextareaInput(e: Event) {
   const target = e.target as HTMLTextAreaElement
   target.style.height = 'auto'
   target.style.height = Math.min(target.scrollHeight, 120) + 'px'
 }
 
-// Настройка подписки на Supabase Realtime для получения новых сообщений
+/** Настройка подписки на Supabase Realtime для получения новых сообщений */
 function setupRealtime() {
   subscription = supabase
     .channel(`chat:${chatId.value}`)
@@ -284,32 +306,37 @@ function setupRealtime() {
           is_read: boolean
           created_at: string
         }
-        // Добавляем только если сообщения ещё нет
-        if (!messages.value.some(m => m.id === newMsg.id)) {
-          messages.value.push({
-            id: newMsg.id,
-            chatId: newMsg.chat_id,
-            senderType: newMsg.sender_type as ChatMessage['senderType'],
-            senderId: newMsg.sender_id,
-            senderName: newMsg.sender_name,
-            content: newMsg.content,
-            attachmentUrl: newMsg.attachment_url,
-            attachmentName: newMsg.attachment_name,
-            attachmentSize: newMsg.attachment_size,
-            isRead: newMsg.is_read,
-            createdAt: newMsg.created_at,
-          })
-          nextTick(() => scrollToBottom())
 
-          // Помечаем как прочитанное если от пользователя
-          if (newMsg.sender_type === 'user') {
-            $fetch(`/api/admin/chat/${chatId.value}/read`, { method: 'POST' })
-          }
+        // Добавляем только если сообщения ещё нет
+        if (messages.value.some(m => m.id === newMsg.id)) return
+
+        messages.value.push({
+          id: newMsg.id,
+          chatId: newMsg.chat_id,
+          senderType: newMsg.sender_type as ChatMessage['senderType'],
+          senderId: newMsg.sender_id,
+          senderName: newMsg.sender_name,
+          content: newMsg.content,
+          attachmentUrl: newMsg.attachment_url,
+          attachmentName: newMsg.attachment_name,
+          attachmentSize: newMsg.attachment_size,
+          isRead: newMsg.is_read,
+          createdAt: newMsg.created_at,
+        })
+        nextTick(() => scrollToBottom())
+
+        // Помечаем как прочитанное если от пользователя
+        if (newMsg.sender_type === 'user') {
+          $fetch(`/api/admin/chat/${chatId.value}/read`, { method: 'POST' })
         }
       },
     )
     .subscribe()
 }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// LIFECYCLE HOOKS
+// ═══════════════════════════════════════════════════════════════════════════
 
 onMounted(() => {
   fetchChat()
@@ -317,9 +344,7 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
-  if (subscription) {
-    subscription.unsubscribe()
-  }
+  subscription?.unsubscribe()
   if (pendingPreview.value) {
     URL.revokeObjectURL(pendingPreview.value)
   }
@@ -328,10 +353,17 @@ onUnmounted(() => {
 
 <template>
   <div class="flex flex-col h-[calc(100vh-120px)]">
-    <!-- Header (бывший ChatDetailHeader) -->
-    <div v-if="chat" class="flex items-center justify-between gap-4 pb-2 border-b border-[var(--glass-border)]">
+    <!-- Header -->
+    <div
+      v-if="chat"
+      class="flex items-center justify-between gap-4 pb-2 border-b border-[var(--glass-border)]"
+    >
       <div class="flex items-center gap-3">
-        <UiButton @click="router.push('/chat')" variant="ghost" size="sm">
+        <UiButton
+          @click="router.push('/chat')"
+          variant="ghost"
+          size="sm"
+        >
           <Icon name="heroicons:arrow-left" class="w-5 h-5" />
         </UiButton>
         <div>
@@ -339,7 +371,11 @@ onUnmounted(() => {
             <h1 class="text-lg font-semibold text-[var(--text-primary)]">
               {{ chat.userName || chat.guestName || `Чат #${chat.id}` }}
             </h1>
-            <UiBadge v-if="chat.guestName && !chat.userId" class="bg-purple-500/20 text-purple-400" size="sm">
+            <UiBadge
+              v-if="chat.guestName && !chat.userId"
+              size="sm"
+              class="bg-purple-500/20 text-purple-400"
+            >
               Гость
             </UiBadge>
           </div>
@@ -391,14 +427,14 @@ onUnmounted(() => {
       <template v-for="group in groupedMessages" :key="group.date">
         <!-- Date Separator -->
         <div class="flex items-center gap-2">
-          <div class="flex-1 h-px bg-[var(--glass-border)]"></div>
+          <div class="flex-1 h-px bg-[var(--glass-border)]" />
           <span class="text-xs text-[var(--text-muted)] px-2">
             {{ getDateLabel(group.date) }}
           </span>
-          <div class="flex-1 h-px bg-[var(--glass-border)]"></div>
+          <div class="flex-1 h-px bg-[var(--glass-border)]" />
         </div>
 
-        <!-- Messages for this date (бывший ChatMessageBubble) -->
+        <!-- Messages for this date -->
         <div class="space-y-1.5">
           <div
             v-for="msg in group.messages"
@@ -429,14 +465,31 @@ onUnmounted(() => {
                 <Icon name="heroicons:cpu-chip" class="w-3.5 h-3.5 text-[#8B5CF6]" />
                 <span class="text-xs font-medium text-[#8B5CF6]">{{ msg.senderName || 'AI Ассистент' }}</span>
               </div>
-              <p v-if="msg.content" class="whitespace-pre-wrap break-words text-[var(--text-primary)]">
+              <p
+                v-if="msg.content"
+                class="whitespace-pre-wrap break-words text-[var(--text-primary)]"
+              >
                 {{ msg.content }}
               </p>
               <template v-if="msg.attachmentUrl">
-                <a v-if="isImageAttachment(msg)" :href="msg.attachmentUrl" target="_blank" class="block mt-2">
-                  <img :src="msg.attachmentUrl" :alt="msg.attachmentName || 'Изображение'" class="max-w-full max-h-48 rounded-lg hover:opacity-90 transition-opacity" />
+                <a
+                  v-if="isImageAttachment(msg)"
+                  :href="msg.attachmentUrl"
+                  target="_blank"
+                  class="block mt-2"
+                >
+                  <img
+                    :src="msg.attachmentUrl"
+                    :alt="msg.attachmentName || 'Изображение'"
+                    class="max-w-full max-h-48 rounded-lg hover:opacity-90 transition-opacity"
+                  />
                 </a>
-                <a v-else :href="msg.attachmentUrl" target="_blank" class="mt-2 flex items-center gap-2 p-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors">
+                <a
+                  v-else
+                  :href="msg.attachmentUrl"
+                  target="_blank"
+                  class="mt-2 flex items-center gap-2 p-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors"
+                >
                   <Icon name="heroicons:document" class="w-5 h-5 text-[#8B5CF6]" />
                   <div class="flex-1 min-w-0">
                     <p class="text-sm truncate">{{ msg.attachmentName }}</p>
@@ -455,14 +508,31 @@ onUnmounted(() => {
               v-else-if="msg.senderType === 'admin'"
               class="max-w-[70%] rounded-2xl px-4 py-2 glass-card rounded-br-md border-l-2 border-primary/50"
             >
-              <p v-if="msg.content" class="whitespace-pre-wrap break-words text-[var(--text-primary)]">
+              <p
+                v-if="msg.content"
+                class="whitespace-pre-wrap break-words text-[var(--text-primary)]"
+              >
                 {{ msg.content }}
               </p>
               <template v-if="msg.attachmentUrl">
-                <a v-if="isImageAttachment(msg)" :href="msg.attachmentUrl" target="_blank" class="block mt-2">
-                  <img :src="msg.attachmentUrl" :alt="msg.attachmentName || 'Изображение'" class="max-w-full max-h-48 rounded-lg hover:opacity-90 transition-opacity" />
+                <a
+                  v-if="isImageAttachment(msg)"
+                  :href="msg.attachmentUrl"
+                  target="_blank"
+                  class="block mt-2"
+                >
+                  <img
+                    :src="msg.attachmentUrl"
+                    :alt="msg.attachmentName || 'Изображение'"
+                    class="max-w-full max-h-48 rounded-lg hover:opacity-90 transition-opacity"
+                  />
                 </a>
-                <a v-else :href="msg.attachmentUrl" target="_blank" class="mt-2 flex items-center gap-2 p-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors">
+                <a
+                  v-else
+                  :href="msg.attachmentUrl"
+                  target="_blank"
+                  class="mt-2 flex items-center gap-2 p-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors"
+                >
                   <Icon name="heroicons:document" class="w-5 h-5 text-primary" />
                   <div class="flex-1 min-w-0">
                     <p class="text-sm truncate">{{ msg.attachmentName }}</p>
@@ -488,10 +558,24 @@ onUnmounted(() => {
                 {{ msg.content }}
               </p>
               <template v-if="msg.attachmentUrl">
-                <a v-if="isImageAttachment(msg)" :href="msg.attachmentUrl" target="_blank" class="block mt-2">
-                  <img :src="msg.attachmentUrl" :alt="msg.attachmentName || 'Изображение'" class="max-w-full max-h-48 rounded-lg hover:opacity-90 transition-opacity" />
+                <a
+                  v-if="isImageAttachment(msg)"
+                  :href="msg.attachmentUrl"
+                  target="_blank"
+                  class="block mt-2"
+                >
+                  <img
+                    :src="msg.attachmentUrl"
+                    :alt="msg.attachmentName || 'Изображение'"
+                    class="max-w-full max-h-48 rounded-lg hover:opacity-90 transition-opacity"
+                  />
                 </a>
-                <a v-else :href="msg.attachmentUrl" target="_blank" class="mt-2 flex items-center gap-2 p-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors">
+                <a
+                  v-else
+                  :href="msg.attachmentUrl"
+                  target="_blank"
+                  class="mt-2 flex items-center gap-2 p-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors"
+                >
                   <Icon name="heroicons:document" class="w-5 h-5 text-accent" />
                   <div class="flex-1 min-w-0">
                     <p class="text-sm truncate">{{ msg.attachmentName }}</p>
@@ -509,21 +593,33 @@ onUnmounted(() => {
       </template>
 
       <!-- Empty State -->
-      <div v-if="messages.length === 0" class="flex-1 flex items-center justify-center">
+      <div
+        v-if="messages.length === 0"
+        class="flex-1 flex items-center justify-center"
+      >
         <p class="text-[var(--text-muted)]">Сообщений пока нет</p>
       </div>
     </div>
 
-    <!-- Input (бывший ChatInput) -->
-    <div v-if="chat?.status !== 'closed'" class="pt-2 border-t border-[var(--glass-border)]">
+    <!-- Input -->
+    <div
+      v-if="chat?.status !== 'closed'"
+      class="pt-2 border-t border-[var(--glass-border)]"
+    >
       <!-- Pending file preview -->
-      <div v-if="pendingFile" class="mb-2 p-2 rounded-lg bg-white/5 flex items-center gap-2">
+      <div
+        v-if="pendingFile"
+        class="mb-2 p-2 rounded-lg bg-white/5 flex items-center gap-2"
+      >
         <img
           v-if="pendingPreview"
           :src="pendingPreview"
           class="w-12 h-12 rounded object-cover flex-shrink-0"
         />
-        <div v-else class="w-12 h-12 rounded bg-primary/10 flex items-center justify-center flex-shrink-0">
+        <div
+          v-else
+          class="w-12 h-12 rounded bg-primary/10 flex items-center justify-center flex-shrink-0"
+        >
           <Icon name="heroicons:document" class="w-6 h-6 text-primary" />
         </div>
         <div class="flex-1 min-w-0">
@@ -532,6 +628,7 @@ onUnmounted(() => {
         </div>
         <button
           @click="removePendingFile"
+          type="button"
           title="Удалить"
           class="p-1.5 rounded-lg hover:bg-white/10 transition-colors flex-shrink-0"
         >

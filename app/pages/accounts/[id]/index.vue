@@ -1,7 +1,14 @@
 <script setup lang="ts">
+// ═══════════════════════════════════════════════════════════════════════════
+// ИМПОРТЫ
+// ═══════════════════════════════════════════════════════════════════════════
 import { getErrorStatusCode, getErrorMessage, formatBalance, formatDate, formatDateTime } from '~/composables/useFormatters'
 
-// Типы данных
+// ═══════════════════════════════════════════════════════════════════════════
+// ТИПЫ
+// ═══════════════════════════════════════════════════════════════════════════
+
+/** Данные пользователя */
 interface User {
   id: string
   firstName: string
@@ -13,6 +20,7 @@ interface User {
   status: string
 }
 
+/** Данные аккаунта */
 interface Account {
   id: string
   contractNumber: number | null
@@ -39,25 +47,47 @@ interface Account {
   updatedAt: string
 }
 
+// ═══════════════════════════════════════════════════════════════════════════
+// МАКРОСЫ
+// ═══════════════════════════════════════════════════════════════════════════
 definePageMeta({
   middleware: 'admin',
 })
 
-useHead({ title: 'Аккаунт — Админ-панель' })
-
+// ═══════════════════════════════════════════════════════════════════════════
+// COMPOSABLES
+// ═══════════════════════════════════════════════════════════════════════════
 const toast = useToast()
 const route = useRoute()
 const router = useRouter()
 
+useHead({ title: 'Аккаунт — Админ-панель' })
+
+// ═══════════════════════════════════════════════════════════════════════════
+// КОНСТАНТЫ
+// ═══════════════════════════════════════════════════════════════════════════
+
+/** Опции статуса договора */
+const CONTRACT_STATUS_OPTIONS = [
+  { value: 'draft', label: 'Черновик' },
+  { value: 'active', label: 'Активный' },
+  { value: 'terminated', label: 'Расторгнут' },
+  { value: 'stopped', label: 'Приостановлен' },
+]
+
+// ═══════════════════════════════════════════════════════════════════════════
+// РЕАКТИВНОЕ СОСТОЯНИЕ
+// ═══════════════════════════════════════════════════════════════════════════
+
 // Состояние страницы
-const loading = ref(true) // Загрузка данных
-const saving = ref(false) // Сохранение изменений
-const account = ref<Account | null>(null) // Данные аккаунта
-const showEditModal = ref(false) // Открыто ли модальное окно
+const loading = ref(true)
+const saving = ref(false)
+const account = ref<Account | null>(null)
+const showEditModal = ref(false)
 
 // Форма редактирования
 const editForm = ref({
-  contractNumber: null as number | null,
+  contractNumber: '' as string | number,
   contractStatus: '' as string,
   startDate: '',
   endDate: '',
@@ -74,17 +104,48 @@ const editForm = ref({
   },
 })
 
+// ═══════════════════════════════════════════════════════════════════════════
+// COMPUTED
+// ═══════════════════════════════════════════════════════════════════════════
+
 const accountId = computed(() => route.params.id as string)
 
-// Опции статуса договора
-const contractStatusOptions = [
-  { value: 'draft', label: 'Черновик' },
-  { value: 'active', label: 'Активный' },
-  { value: 'terminated', label: 'Расторгнут' },
-  { value: 'stopped', label: 'Приостановлен' },
-]
+// ═══════════════════════════════════════════════════════════════════════════
+// МЕТОДЫ
+// ═══════════════════════════════════════════════════════════════════════════
 
-// Загрузка данных аккаунта
+/** Возвращает класс бейджа статуса */
+function getStatusBadgeClass(status: string) {
+  switch (status) {
+    case 'active': return 'bg-green-500/20 text-green-400'
+    case 'blocked': return 'bg-red-500/20 text-red-400'
+    case 'closed': return 'bg-gray-500/20 text-gray-400'
+    default: return 'bg-gray-500/20 text-gray-400'
+  }
+}
+
+/** Возвращает текст статуса */
+function getStatusLabel(status: string) {
+  switch (status) {
+    case 'active': return 'Активен'
+    case 'blocked': return 'Заблокирован'
+    case 'closed': return 'Закрыт'
+    default: return status
+  }
+}
+
+/** Возвращает текст статуса договора */
+function getContractStatusLabel(status: string) {
+  switch (status) {
+    case 'draft': return 'Черновик'
+    case 'active': return 'Активный'
+    case 'terminated': return 'Расторгнут'
+    case 'stopped': return 'Приостановлен'
+    default: return status
+  }
+}
+
+/** Загрузка данных аккаунта */
 async function fetchAccount() {
   loading.value = true
   try {
@@ -102,11 +163,12 @@ async function fetchAccount() {
   }
 }
 
-// Открытие модального окна редактирования
+/** Открытие модального окна редактирования */
 function openEditModal() {
   if (!account.value) return
+
   editForm.value = {
-    contractNumber: account.value.contractNumber,
+    contractNumber: account.value.contractNumber ?? '',
     contractStatus: account.value.contractStatus,
     startDate: account.value.startDate?.split('T')[0] || '',
     endDate: account.value.endDate?.split('T')[0] || '',
@@ -125,7 +187,7 @@ function openEditModal() {
   showEditModal.value = true
 }
 
-// Сохранение изменений аккаунта
+/** Сохранение изменений аккаунта */
 async function saveAccount() {
   if (!account.value || saving.value) return
 
@@ -148,10 +210,9 @@ async function saveAccount() {
   }
 }
 
-// Обновление статуса аккаунта
+/** Обновление статуса аккаунта */
 async function updateStatus(newStatus: string) {
   if (!account.value || saving.value) return
-
   if (!confirm(`Изменить статус аккаунта на "${getStatusLabel(newStatus)}"?`)) return
 
   saving.value = true
@@ -172,36 +233,9 @@ async function updateStatus(newStatus: string) {
   }
 }
 
-// Возвращает класс бейджа статуса
-function getStatusBadgeClass(status: string) {
-  switch (status) {
-    case 'active': return 'bg-green-500/20 text-green-400'
-    case 'blocked': return 'bg-red-500/20 text-red-400'
-    case 'closed': return 'bg-gray-500/20 text-gray-400'
-    default: return 'bg-gray-500/20 text-gray-400'
-  }
-}
-
-// Возвращает текст статуса
-function getStatusLabel(status: string) {
-  switch (status) {
-    case 'active': return 'Активен'
-    case 'blocked': return 'Заблокирован'
-    case 'closed': return 'Закрыт'
-    default: return status
-  }
-}
-
-// Возвращает текст статуса договора
-function getContractStatusLabel(status: string) {
-  switch (status) {
-    case 'draft': return 'Черновик'
-    case 'active': return 'Активный'
-    case 'terminated': return 'Расторгнут'
-    case 'stopped': return 'Приостановлен'
-    default: return status
-  }
-}
+// ═══════════════════════════════════════════════════════════════════════════
+// LIFECYCLE HOOKS
+// ═══════════════════════════════════════════════════════════════════════════
 
 onMounted(() => {
   fetchAccount()
@@ -218,7 +252,11 @@ onMounted(() => {
       <div class="flex items-start justify-between gap-4 mb-6">
         <div>
           <div class="flex items-center gap-3 mb-2">
-            <UiButton @click="router.push('/accounts')" variant="ghost" size="sm">
+            <UiButton
+              @click="router.push('/accounts')"
+              variant="ghost"
+              size="sm"
+            >
               <Icon name="heroicons:arrow-left" class="w-5 h-5" />
             </UiButton>
             <UiBadge :class="getStatusBadgeClass(account.status)">
@@ -415,7 +453,10 @@ onMounted(() => {
               </UiButton>
             </div>
 
-            <div v-if="account.blockedAt" class="mt-4 pt-4 border-t border-[var(--glass-border)]">
+            <div
+              v-if="account.blockedAt"
+              class="mt-4 pt-4 border-t border-[var(--glass-border)]"
+            >
               <p class="text-xs text-[var(--text-muted)]">Заблокирован:</p>
               <p class="text-sm text-red-400">{{ formatDateTime(account.blockedAt) }}</p>
             </div>
@@ -461,18 +502,26 @@ onMounted(() => {
                 <div class="grid grid-cols-2 gap-4">
                   <UiInput
                     v-model.number="editForm.contractNumber"
-                    label="Номер договора"
                     type="number"
+                    label="Номер договора"
                     placeholder="12345"
                   />
                   <UiSelect
                     v-model="editForm.contractStatus"
-                    :options="contractStatusOptions"
+                    :options="CONTRACT_STATUS_OPTIONS"
                     :placeholder="undefined"
                     label="Статус договора"
                   />
-                  <UiInput v-model="editForm.startDate" label="Дата начала" type="date" />
-                  <UiInput v-model="editForm.endDate" label="Дата окончания" type="date" />
+                  <UiInput
+                    v-model="editForm.startDate"
+                    type="date"
+                    label="Дата начала"
+                  />
+                  <UiInput
+                    v-model="editForm.endDate"
+                    type="date"
+                    label="Дата окончания"
+                  />
                 </div>
               </div>
 
@@ -480,14 +529,46 @@ onMounted(() => {
               <div>
                 <h4 class="text-sm font-medium text-[var(--text-muted)] mb-3">Адрес</h4>
                 <div class="grid grid-cols-2 gap-4">
-                  <UiInput v-model="editForm.address.city" label="Город" placeholder="Ростов-на-Дону" />
-                  <UiInput v-model="editForm.address.district" label="Район" placeholder="Советский" />
-                  <UiInput v-model="editForm.address.street" label="Улица" placeholder="ул. Пушкинская" />
-                  <UiInput v-model="editForm.address.building" label="Дом" placeholder="1" />
-                  <UiInput v-model="editForm.address.apartment" label="Квартира" placeholder="1" />
-                  <UiInput v-model="editForm.address.entrance" label="Подъезд" placeholder="1" />
-                  <UiInput v-model="editForm.address.floor" label="Этаж" placeholder="1" />
-                  <UiInput v-model="editForm.address.intercom" label="Домофон" placeholder="1" />
+                  <UiInput
+                    v-model="editForm.address.city"
+                    label="Город"
+                    placeholder="Ростов-на-Дону"
+                  />
+                  <UiInput
+                    v-model="editForm.address.district"
+                    label="Район"
+                    placeholder="Советский"
+                  />
+                  <UiInput
+                    v-model="editForm.address.street"
+                    label="Улица"
+                    placeholder="ул. Пушкинская"
+                  />
+                  <UiInput
+                    v-model="editForm.address.building"
+                    label="Дом"
+                    placeholder="1"
+                  />
+                  <UiInput
+                    v-model="editForm.address.apartment"
+                    label="Квартира"
+                    placeholder="1"
+                  />
+                  <UiInput
+                    v-model="editForm.address.entrance"
+                    label="Подъезд"
+                    placeholder="1"
+                  />
+                  <UiInput
+                    v-model="editForm.address.floor"
+                    label="Этаж"
+                    placeholder="1"
+                  />
+                  <UiInput
+                    v-model="editForm.address.intercom"
+                    label="Домофон"
+                    placeholder="1"
+                  />
                 </div>
               </div>
 
@@ -503,10 +584,18 @@ onMounted(() => {
               </div>
 
               <div class="flex justify-end gap-3 pt-4">
-                <UiButton :disabled="saving" @click="showEditModal = false" variant="ghost">
+                <UiButton
+                  :disabled="saving"
+                  @click="showEditModal = false"
+                  variant="ghost"
+                >
                   Отмена
                 </UiButton>
-                <UiButton :loading="saving" :disabled="saving" type="submit">
+                <UiButton
+                  :loading="saving"
+                  :disabled="saving"
+                  type="submit"
+                >
                   Сохранить
                 </UiButton>
               </div>

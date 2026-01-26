@@ -1,16 +1,32 @@
 <script setup lang="ts">
+// ═══════════════════════════════════════════════════════════════════════════
+// ИМПОРТЫ
+// ═══════════════════════════════════════════════════════════════════════════
 import { useEditor, EditorContent } from '@tiptap/vue-3'
 import StarterKit from '@tiptap/starter-kit'
 import Link from '@tiptap/extension-link'
 
-const props = defineProps<{
+// ═══════════════════════════════════════════════════════════════════════════
+// PROPS
+// ═══════════════════════════════════════════════════════════════════════════
+interface Props {
+  /** HTML контент редактора */
   modelValue: string
-}>()
+}
 
+const props = defineProps<Props>()
+
+// ═══════════════════════════════════════════════════════════════════════════
+// EMITS
+// ═══════════════════════════════════════════════════════════════════════════
 const emit = defineEmits<{
+  /** Обновление контента */
   'update:modelValue': [value: string]
 }>()
 
+// ═══════════════════════════════════════════════════════════════════════════
+// COMPOSABLES
+// ═══════════════════════════════════════════════════════════════════════════
 const editor = useEditor({
   content: props.modelValue,
   extensions: [
@@ -32,24 +48,33 @@ const editor = useEditor({
   },
 })
 
-watch(() => props.modelValue, (value) => {
-  if (editor.value && editor.value.getHTML() !== value) {
-    editor.value.commands.setContent(value)
-  }
-})
+// ═══════════════════════════════════════════════════════════════════════════
+// МЕТОДЫ
+// ═══════════════════════════════════════════════════════════════════════════
 
-// Добавить ссылку (через prompt)
+/** Добавить ссылку через prompt */
 function addLink() {
   const url = window.prompt('URL ссылки:')
-  if (url && editor.value) {
-    editor.value.chain().focus().setLink({ href: url }).run()
-  }
+  if (!url || !editor.value) return
+
+  editor.value.chain().focus().setLink({ href: url }).run()
 }
 
-// Удалить ссылку с выделенного текста
+/** Удалить ссылку с выделенного текста */
 function removeLink() {
   editor.value?.chain().focus().unsetLink().run()
 }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// WATCH
+// ═══════════════════════════════════════════════════════════════════════════
+
+// Синхронизация контента при внешнем изменении modelValue
+watch(() => props.modelValue, (value) => {
+  if (!editor.value || editor.value.getHTML() === value) return
+
+  editor.value.commands.setContent(value)
+})
 </script>
 
 <template>
@@ -59,9 +84,9 @@ function removeLink() {
       <button
         :class="{ 'bg-primary/20': editor?.isActive('bold') }"
         @click="editor?.chain().focus().toggleBold().run()"
-        class="toolbar-btn"
         type="button"
         title="Полужирный"
+        class="toolbar-btn"
       >
         <Icon name="heroicons:bold" class="w-4 h-4" />
       </button>
@@ -69,9 +94,9 @@ function removeLink() {
       <button
         :class="{ 'bg-primary/20': editor?.isActive('italic') }"
         @click="editor?.chain().focus().toggleItalic().run()"
-        class="toolbar-btn"
         type="button"
         title="Курсив"
+        class="toolbar-btn"
       >
         <span class="italic font-serif">I</span>
       </button>
@@ -79,9 +104,9 @@ function removeLink() {
       <button
         :class="{ 'bg-primary/20': editor?.isActive('heading', { level: 2 }) }"
         @click="editor?.chain().focus().toggleHeading({ level: 2 }).run()"
-        class="toolbar-btn"
         type="button"
         title="Заголовок 2"
+        class="toolbar-btn"
       >
         H2
       </button>
@@ -89,9 +114,9 @@ function removeLink() {
       <button
         :class="{ 'bg-primary/20': editor?.isActive('heading', { level: 3 }) }"
         @click="editor?.chain().focus().toggleHeading({ level: 3 }).run()"
-        class="toolbar-btn"
         type="button"
         title="Заголовок 3"
+        class="toolbar-btn"
       >
         H3
       </button>
@@ -99,9 +124,9 @@ function removeLink() {
       <button
         :class="{ 'bg-primary/20': editor?.isActive('bulletList') }"
         @click="editor?.chain().focus().toggleBulletList().run()"
-        class="toolbar-btn"
         type="button"
         title="Маркированный список"
+        class="toolbar-btn"
       >
         <Icon name="heroicons:list-bullet" class="w-4 h-4" />
       </button>
@@ -109,9 +134,9 @@ function removeLink() {
       <button
         :class="{ 'bg-primary/20': editor?.isActive('orderedList') }"
         @click="editor?.chain().focus().toggleOrderedList().run()"
-        class="toolbar-btn"
         type="button"
         title="Нумерованный список"
+        class="toolbar-btn"
       >
         <span class="text-xs font-bold">1.</span>
       </button>
@@ -119,9 +144,9 @@ function removeLink() {
       <button
         :class="{ 'bg-primary/20': editor?.isActive('link') }"
         @click="addLink"
-        class="toolbar-btn"
         type="button"
         title="Добавить ссылку"
+        class="toolbar-btn"
       >
         <Icon name="heroicons:link" class="w-4 h-4" />
       </button>
@@ -129,9 +154,9 @@ function removeLink() {
       <button
         v-if="editor?.isActive('link')"
         @click="removeLink"
-        class="toolbar-btn"
         type="button"
         title="Удалить ссылку"
+        class="toolbar-btn"
       >
         <Icon name="heroicons:link-slash" class="w-4 h-4" />
       </button>
