@@ -6,7 +6,7 @@
 
 ```
 app/
-  components/   # Vue компоненты (ui/, chat/, tickets/, news/, coverage/)
+  components/   # Vue компоненты (ui/, news/)
   pages/        # Роуты (file-based routing)
   composables/  # useX() функции
   types/        # TypeScript типы
@@ -47,6 +47,7 @@ git add -A && git commit -m "message" && git push
 8. **pathPrefix: false** — компоненты регистрируются по filename, следи за конфликтами
 9. **Supabase Auth** — используй встроенный auth, НЕ кастомный auth_sessions
 10. **Vue attributes order** — динамические `:attr` перед статическими `attr` (ESLint vue/attributes-order)
+11. **Tailwind CSS v4** — используй `@import "tailwindcss"` вместо `@tailwind` директив. Warning `@import must precede` — некритичен
 
 ## Environment Variables
 
@@ -75,6 +76,10 @@ SUPABASE_KEY=eyJ...
 - `UiFilterTabs` — табы фильтрации с v-model
 - `useFormatters()` — явно импортируй форматтеры, не полагайся на auto-import
 
+### Компоненты
+- **Single-use** — инлайнь в страницу, не создавай отдельный файл
+- **Multi-use** — выноси в `components/` (например, NewsEditor используется в create + edit)
+
 ## Ключевые зависимости
 
 | Модуль | Библиотека |
@@ -97,10 +102,7 @@ SUPABASE_KEY=eyJ...
 | Папка | Префикс | Примеры |
 |-------|---------|---------|
 | ui/ | Ui | UiButton, UiCard, UiTable |
-| chat/ | Chat | ChatInput, ChatMessageBubble |
-| tickets/ | Ticket | TicketSidebar, TicketComments |
-| news/ | News | NewsEditor, NewsAttachments |
-| coverage/ | Coverage | CoverageMap, CoverageImportExport |
+| news/ | News | NewsEditor |
 
 ### Порядок секций в script setup
 ```
