@@ -23,6 +23,7 @@ const form = reactive({
   categoryId: null as number | null,
 })
 
+// Состояние сохранения
 const saving = ref(false)
 const error = ref('')
 const categories = ref<CategoryOption[]>([])
@@ -32,7 +33,14 @@ const newFeature = ref('')
 const priceMonthlyRub = ref(0)
 const priceConnectionRub = ref(0)
 
-const fetchCategories = async () => {
+// Опции категорий для select
+const categoryOptions = computed(() => [
+  { value: null, label: 'Без категории' },
+  ...categories.value.map(cat => ({ value: cat.id, label: cat.name })),
+])
+
+// Загрузка списка категорий
+async function fetchCategories() {
   try {
     const data = await $fetch<{ categories: CategoryOption[] }>('/api/admin/catalog/categories')
     categories.value = data.categories
@@ -42,12 +50,8 @@ const fetchCategories = async () => {
   }
 }
 
-const categoryOptions = computed(() => [
-  { value: null, label: 'Без категории' },
-  ...categories.value.map(cat => ({ value: cat.id, label: cat.name })),
-])
-
-const addFeature = () => {
+// Добавление характеристики в список
+function addFeature() {
   const feature = newFeature.value.trim()
   if (feature && !form.features.includes(feature)) {
     form.features.push(feature)
@@ -55,11 +59,13 @@ const addFeature = () => {
   }
 }
 
-const removeFeature = (index: number) => {
+// Удаление характеристики из списка
+function removeFeature(index: number) {
   form.features.splice(index, 1)
 }
 
-const save = async () => {
+// Сохранение услуги
+async function save() {
   if (!form.name.trim()) {
     error.value = 'Введите название услуги'
     return

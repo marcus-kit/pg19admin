@@ -1,17 +1,7 @@
 <script setup lang="ts">
 import { getErrorStatusCode, getErrorMessage, formatBalance, formatDate, formatDateTime } from '~/composables/useFormatters'
 
-definePageMeta({
-  middleware: 'admin',
-})
-
-const toast = useToast()
-const route = useRoute()
-const router = useRouter()
-const accountId = computed(() => route.params.id as string)
-
-useHead({ title: 'Аккаунт — Админ-панель' })
-
+// Типы данных
 interface User {
   id: string
   firstName: string
@@ -49,11 +39,23 @@ interface Account {
   updatedAt: string
 }
 
-const loading = ref(true)
-const saving = ref(false)
-const account = ref<Account | null>(null)
+definePageMeta({
+  middleware: 'admin',
+})
 
-const showEditModal = ref(false)
+useHead({ title: 'Аккаунт — Админ-панель' })
+
+const toast = useToast()
+const route = useRoute()
+const router = useRouter()
+
+// Состояние страницы
+const loading = ref(true) // Загрузка данных
+const saving = ref(false) // Сохранение изменений
+const account = ref<Account | null>(null) // Данные аккаунта
+const showEditModal = ref(false) // Открыто ли модальное окно
+
+// Форма редактирования
 const editForm = ref({
   contractNumber: null as number | null,
   contractStatus: '' as string,
@@ -72,7 +74,18 @@ const editForm = ref({
   },
 })
 
-const fetchAccount = async () => {
+const accountId = computed(() => route.params.id as string)
+
+// Опции статуса договора
+const contractStatusOptions = [
+  { value: 'draft', label: 'Черновик' },
+  { value: 'active', label: 'Активный' },
+  { value: 'terminated', label: 'Расторгнут' },
+  { value: 'stopped', label: 'Приостановлен' },
+]
+
+// Загрузка данных аккаунта
+async function fetchAccount() {
   loading.value = true
   try {
     const data = await $fetch<{ account: Account }>(`/api/admin/accounts/${accountId.value}`)
@@ -89,7 +102,8 @@ const fetchAccount = async () => {
   }
 }
 
-const openEditModal = () => {
+// Открытие модального окна редактирования
+function openEditModal() {
   if (!account.value) return
   editForm.value = {
     contractNumber: account.value.contractNumber,
@@ -111,7 +125,8 @@ const openEditModal = () => {
   showEditModal.value = true
 }
 
-const saveAccount = async () => {
+// Сохранение изменений аккаунта
+async function saveAccount() {
   if (!account.value || saving.value) return
 
   saving.value = true
@@ -133,7 +148,8 @@ const saveAccount = async () => {
   }
 }
 
-const updateStatus = async (newStatus: string) => {
+// Обновление статуса аккаунта
+async function updateStatus(newStatus: string) {
   if (!account.value || saving.value) return
 
   if (!confirm(`Изменить статус аккаунта на "${getStatusLabel(newStatus)}"?`)) return
@@ -156,7 +172,8 @@ const updateStatus = async (newStatus: string) => {
   }
 }
 
-const getStatusBadgeClass = (status: string) => {
+// Возвращает класс бейджа статуса
+function getStatusBadgeClass(status: string) {
   switch (status) {
     case 'active': return 'bg-green-500/20 text-green-400'
     case 'blocked': return 'bg-red-500/20 text-red-400'
@@ -165,7 +182,8 @@ const getStatusBadgeClass = (status: string) => {
   }
 }
 
-const getStatusLabel = (status: string) => {
+// Возвращает текст статуса
+function getStatusLabel(status: string) {
   switch (status) {
     case 'active': return 'Активен'
     case 'blocked': return 'Заблокирован'
@@ -174,7 +192,8 @@ const getStatusLabel = (status: string) => {
   }
 }
 
-const getContractStatusLabel = (status: string) => {
+// Возвращает текст статуса договора
+function getContractStatusLabel(status: string) {
   switch (status) {
     case 'draft': return 'Черновик'
     case 'active': return 'Активный'
@@ -183,13 +202,6 @@ const getContractStatusLabel = (status: string) => {
     default: return status
   }
 }
-
-const contractStatusOptions = [
-  { value: 'draft', label: 'Черновик' },
-  { value: 'active', label: 'Активный' },
-  { value: 'terminated', label: 'Расторгнут' },
-  { value: 'stopped', label: 'Приостановлен' },
-]
 
 onMounted(() => {
   fetchAccount()
@@ -221,7 +233,6 @@ onMounted(() => {
 
         <div class="flex gap-2">
           <UiButton
-
             variant="secondary"
             size="sm"
             @click="openEditModal"
@@ -432,75 +443,77 @@ onMounted(() => {
     </template>
 
     <!-- Edit Modal -->
-    <Teleport to="body">
-      <div
-        v-if="showEditModal"
-        class="fixed inset-0 z-50 flex items-center justify-center p-4"
-        @click.self="showEditModal = false"
-      >
-        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" />
-        <div class="relative w-full max-w-2xl glass-card rounded-xl p-6 max-h-[90vh] overflow-y-auto">
-          <h3 class="text-xl font-bold text-[var(--text-primary)] mb-6">Редактировать аккаунт</h3>
+    <ClientOnly>
+      <Teleport to="body">
+        <div
+          v-if="showEditModal"
+          class="fixed inset-0 z-50 flex items-center justify-center p-4"
+          @click.self="showEditModal = false"
+        >
+          <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+          <div class="relative w-full max-w-2xl glass-card rounded-xl p-6 max-h-[90vh] overflow-y-auto">
+            <h3 class="text-xl font-bold text-[var(--text-primary)] mb-6">Редактировать аккаунт</h3>
 
-          <form class="space-y-6" @submit.prevent="saveAccount">
-            <!-- Contract Info -->
-            <div>
-              <h4 class="text-sm font-medium text-[var(--text-muted)] mb-3">Договор</h4>
-              <div class="grid grid-cols-2 gap-4">
-                <UiInput
-                  v-model.number="editForm.contractNumber"
-                  label="Номер договора"
-                  type="number"
-                  placeholder="12345"
-                />
-                <UiSelect
-                  v-model="editForm.contractStatus"
-                  :options="contractStatusOptions"
-                  :placeholder="undefined"
-                  label="Статус договора"
-                />
-                <UiInput v-model="editForm.startDate" label="Дата начала" type="date" />
-                <UiInput v-model="editForm.endDate" label="Дата окончания" type="date" />
+            <form class="space-y-6" @submit.prevent="saveAccount">
+              <!-- Contract Info -->
+              <div>
+                <h4 class="text-sm font-medium text-[var(--text-muted)] mb-3">Договор</h4>
+                <div class="grid grid-cols-2 gap-4">
+                  <UiInput
+                    v-model.number="editForm.contractNumber"
+                    label="Номер договора"
+                    type="number"
+                    placeholder="12345"
+                  />
+                  <UiSelect
+                    v-model="editForm.contractStatus"
+                    :options="contractStatusOptions"
+                    :placeholder="undefined"
+                    label="Статус договора"
+                  />
+                  <UiInput v-model="editForm.startDate" label="Дата начала" type="date" />
+                  <UiInput v-model="editForm.endDate" label="Дата окончания" type="date" />
+                </div>
               </div>
-            </div>
 
-            <!-- Address -->
-            <div>
-              <h4 class="text-sm font-medium text-[var(--text-muted)] mb-3">Адрес</h4>
-              <div class="grid grid-cols-2 gap-4">
-                <UiInput v-model="editForm.address.city" label="Город" placeholder="Ростов-на-Дону" />
-                <UiInput v-model="editForm.address.district" label="Район" placeholder="Советский" />
-                <UiInput v-model="editForm.address.street" label="Улица" placeholder="ул. Пушкинская" />
-                <UiInput v-model="editForm.address.building" label="Дом" placeholder="1" />
-                <UiInput v-model="editForm.address.apartment" label="Квартира" placeholder="1" />
-                <UiInput v-model="editForm.address.entrance" label="Подъезд" placeholder="1" />
-                <UiInput v-model="editForm.address.floor" label="Этаж" placeholder="1" />
-                <UiInput v-model="editForm.address.intercom" label="Домофон" placeholder="1" />
+              <!-- Address -->
+              <div>
+                <h4 class="text-sm font-medium text-[var(--text-muted)] mb-3">Адрес</h4>
+                <div class="grid grid-cols-2 gap-4">
+                  <UiInput v-model="editForm.address.city" label="Город" placeholder="Ростов-на-Дону" />
+                  <UiInput v-model="editForm.address.district" label="Район" placeholder="Советский" />
+                  <UiInput v-model="editForm.address.street" label="Улица" placeholder="ул. Пушкинская" />
+                  <UiInput v-model="editForm.address.building" label="Дом" placeholder="1" />
+                  <UiInput v-model="editForm.address.apartment" label="Квартира" placeholder="1" />
+                  <UiInput v-model="editForm.address.entrance" label="Подъезд" placeholder="1" />
+                  <UiInput v-model="editForm.address.floor" label="Этаж" placeholder="1" />
+                  <UiInput v-model="editForm.address.intercom" label="Домофон" placeholder="1" />
+                </div>
               </div>
-            </div>
 
-            <!-- Notes -->
-            <div>
-              <label class="block text-sm font-medium text-[var(--text-muted)] mb-2">Заметки</label>
-              <textarea
-                v-model="editForm.notes"
-                rows="3"
-                class="w-full px-4 py-3 glass-card rounded-lg text-[var(--text-primary)] border border-[var(--glass-border)] focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all bg-[var(--glass-bg)] resize-none"
-                placeholder="Заметки..."
-              />
-            </div>
+              <!-- Notes -->
+              <div>
+                <label class="block text-sm font-medium text-[var(--text-muted)] mb-2">Заметки</label>
+                <textarea
+                  v-model="editForm.notes"
+                  rows="3"
+                  class="w-full px-4 py-3 glass-card rounded-lg text-[var(--text-primary)] border border-[var(--glass-border)] focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all bg-[var(--glass-bg)] resize-none"
+                  placeholder="Заметки..."
+                />
+              </div>
 
-            <div class="flex justify-end gap-3 pt-4">
-              <UiButton :disabled="saving" variant="ghost" @click="showEditModal = false">
-                Отмена
-              </UiButton>
-              <UiButton :loading="saving" :disabled="saving" type="submit">
-                Сохранить
-              </UiButton>
-            </div>
-          </form>
+              <div class="flex justify-end gap-3 pt-4">
+                <UiButton :disabled="saving" variant="ghost" @click="showEditModal = false">
+                  Отмена
+                </UiButton>
+                <UiButton :loading="saving" :disabled="saving" type="submit">
+                  Сохранить
+                </UiButton>
+              </div>
+            </form>
+          </div>
         </div>
-      </div>
-    </Teleport>
+      </Teleport>
+    </ClientOnly>
   </div>
 </template>

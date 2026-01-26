@@ -9,38 +9,43 @@ definePageMeta({
 
 const route = useRoute()
 const router = useRouter()
-const chatId = computed(() => route.params.id as string)
 const toast = useToast()
 const user = useSupabaseUser()
+const supabase = useSupabaseClient()
 
 useHead({ title: 'Чат — Админ-панель' })
 
-const loading = ref(true)
-const sending = ref(false)
-const chat = ref<Chat | null>(null)
-const messages = ref<ChatMessage[]>([])
-const messagesContainer = ref<HTMLElement | null>(null)
+// Состояние страницы
+const loading = ref(true) // Загрузка данных
+const sending = ref(false) // Отправка сообщения
+const chat = ref<Chat | null>(null) // Данные чата
+const messages = ref<ChatMessage[]>([]) // Список сообщений
+const messagesContainer = ref<HTMLElement | null>(null) // Ссылка на контейнер сообщений
 
-// ChatInput state
-const newMessage = ref('')
-const fileInput = ref<HTMLInputElement | null>(null)
-const pendingFile = ref<File | null>(null)
-const pendingPreview = ref<string | null>(null)
+// Состояние для ввода сообщения
+const newMessage = ref('') // Текст нового сообщения
+const fileInput = ref<HTMLInputElement | null>(null) // Ссылка на input файла
+const pendingFile = ref<File | null>(null) // Файл для отправки
+const pendingPreview = ref<string | null>(null) // Превью изображения
 
+// Константы для работы с файлами
 const ACCEPT_FILES = 'image/jpeg,image/png,image/gif,image/webp,.pdf,.doc,.docx,.xls,.xlsx'
 const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
 
-// Supabase Realtime
-const supabase = useSupabaseClient()
+const chatId = computed(() => route.params.id as string)
+
+// Supabase Realtime подписка
 let subscription: RealtimeChannel | null = null
 
-const fetchChat = async () => {
+// Загрузка данных чата и сообщений
+async function fetchChat() {
   loading.value = true
   try {
     const data = await $fetch<{ chat: Chat, messages: ChatMessage[] }>(`/api/admin/chat/${chatId.value}`)
     chat.value = data.chat
     messages.value = data.messages
 
+    // Помечаем сообщения как прочитанные
     if (data.chat.unreadAdminCount > 0) {
       await $fetch(`/api/admin/chat/${chatId.value}/read`, { method: 'POST' })
     }
@@ -59,7 +64,8 @@ const fetchChat = async () => {
   }
 }
 
-const uploadFile = async (file: File) => {
+// Загрузка файла на сервер
+async function uploadFile(file: File) {
   const formData = new FormData()
   formData.append('file', file)
 
@@ -75,7 +81,8 @@ const uploadFile = async (file: File) => {
   })
 }
 
-const handleSendMessage = async (content: string, file: File | null) => {
+// Отправка сообщения (с файлом или без)
+async function handleSendMessage(content: string, file: File | null) {
   if (sending.value) return
 
   sending.value = true
@@ -96,6 +103,7 @@ const handleSendMessage = async (content: string, file: File | null) => {
       },
     })
 
+    // Добавляем сообщение если его ещё нет (может прийти через realtime)
     if (!messages.value.some(m => m.id === response.message.id)) {
       messages.value.push(response.message)
     }
@@ -111,7 +119,8 @@ const handleSendMessage = async (content: string, file: File | null) => {
   }
 }
 
-const handleClose = async () => {
+// Закрытие чата
+async function handleClose() {
   if (!confirm('Закрыть этот чат?')) return
 
   try {
@@ -125,7 +134,8 @@ const handleClose = async () => {
   }
 }
 
-const handleAssignToMe = async () => {
+// Назначение чата на текущего админа
+async function handleAssignToMe() {
   if (!user.value) return
 
   try {
@@ -140,7 +150,8 @@ const handleAssignToMe = async () => {
   }
 }
 
-const scrollToBottom = () => {
+// Прокрутка к последнему сообщению
+function scrollToBottom() {
   if (messagesContainer.value) {
     messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight
   }
@@ -168,13 +179,14 @@ function getDateLabel(dateStr: string): string {
   })
 }
 
-const isImageAttachment = (message: ChatMessage): boolean => {
+// Проверяет, является ли вложение изображением
+function isImageAttachment(message: ChatMessage): boolean {
   if (!message.attachmentUrl) return false
   return /\.(jpg|jpeg|png|gif|webp)$/i.test(message.attachmentUrl)
     || (message.attachmentName ? /\.(jpg|jpeg|png|gif|webp)$/i.test(message.attachmentName) : false)
 }
 
-// Группируем сообщения по дате
+// Группировка сообщений по дате для отображения разделителей
 const groupedMessages = computed(() => {
   const groups: { date: string, messages: ChatMessage[] }[] = []
   let currentDate = ''
@@ -191,12 +203,13 @@ const groupedMessages = computed(() => {
   return groups
 })
 
-// ChatInput methods
-const openFileDialog = () => {
+// Открытие диалога выбора файла
+function openFileDialog() {
   fileInput.value?.click()
 }
 
-const handleFileSelect = (event: Event) => {
+// Обработка выбора файла
+function handleFileSelect(event: Event) {
   const input = event.target as HTMLInputElement
   const file = input.files?.[0]
   if (!file) return
@@ -210,6 +223,7 @@ const handleFileSelect = (event: Event) => {
 
   pendingFile.value = file
 
+  // Создаём превью для изображений
   if (file.type.startsWith('image/')) {
     pendingPreview.value = URL.createObjectURL(file)
   }
@@ -218,7 +232,8 @@ const handleFileSelect = (event: Event) => {
   }
 }
 
-const removePendingFile = () => {
+// Удаление выбранного файла
+function removePendingFile() {
   pendingFile.value = null
   if (pendingPreview.value) {
     URL.revokeObjectURL(pendingPreview.value)
@@ -226,7 +241,8 @@ const removePendingFile = () => {
   }
 }
 
-const handleSubmit = () => {
+// Отправка формы (сообщение + файл)
+function handleSubmit() {
   if ((!newMessage.value.trim() && !pendingFile.value)) return
 
   handleSendMessage(newMessage.value.trim(), pendingFile.value)
@@ -234,14 +250,15 @@ const handleSubmit = () => {
   removePendingFile()
 }
 
-const handleTextareaInput = (e: Event) => {
+// Автоматическое изменение высоты textarea
+function handleTextareaInput(e: Event) {
   const target = e.target as HTMLTextAreaElement
   target.style.height = 'auto'
   target.style.height = Math.min(target.scrollHeight, 120) + 'px'
 }
 
-// Подписка на Realtime
-const setupRealtime = () => {
+// Настройка подписки на Supabase Realtime для получения новых сообщений
+function setupRealtime() {
   subscription = supabase
     .channel(`chat:${chatId.value}`)
     .on(
@@ -267,6 +284,7 @@ const setupRealtime = () => {
           is_read: boolean
           created_at: string
         }
+        // Добавляем только если сообщения ещё нет
         if (!messages.value.some(m => m.id === newMsg.id)) {
           messages.value.push({
             id: newMsg.id,
@@ -283,6 +301,7 @@ const setupRealtime = () => {
           })
           nextTick(() => scrollToBottom())
 
+          // Помечаем как прочитанное если от пользователя
           if (newMsg.sender_type === 'user') {
             $fetch(`/api/admin/chat/${chatId.value}/read`, { method: 'POST' })
           }

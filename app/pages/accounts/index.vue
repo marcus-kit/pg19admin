@@ -18,7 +18,7 @@ useHead({ title: 'Аккаунты — Админ-панель' })
 
 const router = useRouter()
 
-// Use centralized list composable with two filters
+// Используем централизованный composable для списков с двумя фильтрами
 const {
   items: accounts,
   loading,
@@ -34,6 +34,7 @@ const {
 
 const { formatBalance, formatDateShort } = useFormatters()
 
+// Колонки таблицы аккаунтов
 const columns = [
   { key: 'contractNumber', label: 'Договор' },
   { key: 'user', label: 'Пользователь' },
@@ -44,7 +45,8 @@ const columns = [
   { key: 'createdAt', label: 'Создан', sortable: true },
 ]
 
-const goToAccount = (account: Account) => {
+// Переход на страницу аккаунта
+function goToAccount(account: Account) {
   router.push(`/accounts/${account.id}`)
 }
 </script>
@@ -59,10 +61,7 @@ const goToAccount = (account: Account) => {
           ({{ total }})
         </span>
       </h1>
-      <UiButton
-
-        @click="router.push('/accounts/create')"
-      >
+      <UiButton @click="router.push('/accounts/create')">
         <Icon name="heroicons:plus" class="w-4 h-4" />
         Создать
       </UiButton>

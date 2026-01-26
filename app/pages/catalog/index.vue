@@ -2,26 +2,29 @@
 import type { ServiceCategory, Service } from '~/types/admin'
 import { ACTIVE_STATUS, getStatusBadgeClass, getStatusLabel } from '~/composables/useStatusConfig'
 
-const toast = useToast()
-
 definePageMeta({
   middleware: 'admin',
 })
 
 useHead({ title: 'Каталог услуг — Админ-панель' })
 
+const toast = useToast()
 const router = useRouter()
 
+// Состояние страницы
 const activeTab = ref<'categories' | 'services'>('services')
 const loading = ref(false)
 const categories = ref<ServiceCategory[]>([])
 const services = ref<Service[]>([])
 const selectedCategoryId = ref<string | null>(null)
 
-// Helper to convert boolean isActive to status key
-const getActiveStatus = (isActive: boolean) => isActive ? 'active' : 'inactive'
+// Конвертирует boolean isActive в ключ статуса для badge
+function getActiveStatus(isActive: boolean) {
+  return isActive ? 'active' : 'inactive'
+}
 
-const fetchCategories = async () => {
+// Загрузка списка категорий
+async function fetchCategories() {
   try {
     const data = await $fetch<{ categories: ServiceCategory[] }>('/api/admin/catalog/categories')
     categories.value = data.categories
@@ -31,7 +34,8 @@ const fetchCategories = async () => {
   }
 }
 
-const fetchServices = async () => {
+// Загрузка списка услуг с фильтром по категории
+async function fetchServices() {
   loading.value = true
   try {
     const query = new URLSearchParams()
@@ -49,7 +53,8 @@ const fetchServices = async () => {
   }
 }
 
-const deleteCategory = async (id: string) => {
+// Удаление категории с подтверждением
+async function deleteCategory(id: string) {
   if (!confirm('Удалить эту категорию?')) return
 
   try {
@@ -62,7 +67,8 @@ const deleteCategory = async (id: string) => {
   }
 }
 
-const deleteService = async (id: string) => {
+// Удаление услуги с подтверждением
+async function deleteService(id: string) {
   if (!confirm('Удалить эту услугу?')) return
 
   try {

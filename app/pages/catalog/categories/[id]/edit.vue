@@ -19,7 +19,6 @@ useHead({ title: 'Редактировать категорию — Админ-�
 const toast = useToast()
 const router = useRouter()
 const route = useRoute()
-const categoryId = computed(() => route.params.id as string)
 
 const form = reactive({
   name: '',
@@ -34,6 +33,9 @@ const loading = ref(true)
 const saving = ref(false)
 const error = ref('')
 
+const categoryId = computed(() => route.params.id as string)
+
+// Доступные иконки для категорий
 const iconOptions = [
   { label: 'Папка', value: 'heroicons:folder' },
   { label: 'Wi-Fi', value: 'heroicons:wifi' },
@@ -45,7 +47,8 @@ const iconOptions = [
   { label: 'Телефон', value: 'heroicons:phone' },
 ]
 
-const fetchCategory = async () => {
+// Загрузка данных категории
+async function fetchCategory() {
   loading.value = true
   try {
     const data = await $fetch<{ category: CategoryResponse }>(`/api/admin/catalog/categories/${categoryId.value}`)
@@ -66,7 +69,8 @@ const fetchCategory = async () => {
   }
 }
 
-const save = async () => {
+// Сохранение изменений категории
+async function save() {
   if (!form.name.trim()) {
     error.value = 'Введите название категории'
     return

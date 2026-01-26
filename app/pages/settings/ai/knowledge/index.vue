@@ -7,6 +7,7 @@ useHead({ title: 'База знаний AI — Админ-панель' })
 
 const toast = useToast()
 
+// Интерфейс записи базы знаний
 interface KnowledgeItem {
   id: string
   category: string | null
@@ -20,6 +21,7 @@ interface KnowledgeItem {
   updatedAt: string
 }
 
+// Состояние страницы
 const loading = ref(false)
 const saving = ref(false)
 const items = ref<KnowledgeItem[]>([])
@@ -39,6 +41,7 @@ const formData = ref({
   isActive: true,
 })
 
+// Доступные категории для записей базы знаний
 const categories = [
   { value: '', label: 'Без категории' },
   { value: 'internet', label: 'Интернет' },
@@ -48,6 +51,7 @@ const categories = [
   { value: 'general', label: 'Общие вопросы' },
 ]
 
+// Загрузка списка записей с фильтрами
 async function fetchItems() {
   loading.value = true
   try {
@@ -65,8 +69,7 @@ async function fetchItems() {
     const data = await $fetch<{ items: KnowledgeItem[] }>(`/api/admin/ai/knowledge?${params}`)
     items.value = data.items
   }
-  catch (error) {
-    console.error('Failed to fetch knowledge base:', error)
+  catch {
     toast.error('Не удалось загрузить базу знаний')
   }
   finally {
@@ -74,6 +77,7 @@ async function fetchItems() {
   }
 }
 
+// Открытие модала создания новой записи
 function openCreateModal() {
   editingItem.value = null
   formData.value = {
@@ -87,6 +91,7 @@ function openCreateModal() {
   showModal.value = true
 }
 
+// Открытие модала редактирования существующей записи
 function openEditModal(item: KnowledgeItem) {
   editingItem.value = item
   formData.value = {
@@ -100,6 +105,7 @@ function openEditModal(item: KnowledgeItem) {
   showModal.value = true
 }
 
+// Сохранение записи (создание или обновление)
 async function saveItem() {
   if (!formData.value.question.trim() || !formData.value.answer.trim()) {
     toast.error('Заполните вопрос и ответ')
@@ -137,8 +143,7 @@ async function saveItem() {
     await fetchItems()
     toast.success(editingItem.value ? 'Запись обновлена' : 'Запись создана')
   }
-  catch (error) {
-    console.error('Failed to save item:', error)
+  catch {
     toast.error('Не удалось сохранить запись')
   }
   finally {
@@ -146,6 +151,7 @@ async function saveItem() {
   }
 }
 
+// Удаление записи с подтверждением
 async function deleteItem(item: KnowledgeItem) {
   if (!confirm(`Удалить запись "${item.question.slice(0, 50)}..."?`)) return
 
@@ -156,12 +162,12 @@ async function deleteItem(item: KnowledgeItem) {
     await fetchItems()
     toast.success('Запись удалена')
   }
-  catch (error) {
-    console.error('Failed to delete item:', error)
+  catch {
     toast.error('Не удалось удалить запись')
   }
 }
 
+// Переключение активности записи
 async function toggleActive(item: KnowledgeItem) {
   try {
     await $fetch(`/api/admin/ai/knowledge/${item.id}`, {
@@ -171,18 +177,19 @@ async function toggleActive(item: KnowledgeItem) {
     await fetchItems()
     toast.success('Статус записи изменён')
   }
-  catch (error) {
-    console.error('Failed to toggle item:', error)
+  catch {
     toast.error('Не удалось изменить статус записи')
   }
 }
 
-const getCategoryLabel = (category: string | null) => {
+// Получение метки категории по значению
+function getCategoryLabel(category: string | null) {
   const found = categories.find(c => c.value === category)
   return found?.label || category || 'Без категории'
 }
 
-const getCategoryColor = (category: string | null) => {
+// Получение CSS-классов цвета для badge категории
+function getCategoryColor(category: string | null) {
   const colors: Record<string, string> = {
     internet: 'bg-blue-500/20 text-blue-400',
     tv: 'bg-purple-500/20 text-purple-400',
@@ -367,116 +374,118 @@ watch([categoryFilter, statusFilter], () => {
     </div>
 
     <!-- Create/Edit Modal -->
-    <Teleport to="body">
-      <div
-        v-if="showModal"
-        class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
-        @click.self="showModal = false"
-      >
-        <div class="w-full max-w-2xl glass-card rounded-2xl p-6 max-h-[90vh] overflow-y-auto">
-          <div class="flex items-center justify-between mb-6">
-            <h2 class="text-xl font-bold text-[var(--text-primary)]">
-              {{ editingItem ? 'Редактировать запись' : 'Новая запись' }}
-            </h2>
-            <button
-              class="p-2 rounded-lg hover:bg-white/10 transition-colors"
-              @click="showModal = false"
-            >
-              <Icon name="heroicons:x-mark" class="w-5 h-5 text-[var(--text-muted)]" />
-            </button>
-          </div>
-
-          <div class="space-y-4">
-            <!-- Category -->
-            <div>
-              <label class="block text-sm text-[var(--text-muted)] mb-2">Категория</label>
-              <select
-                v-model="formData.category"
-                class="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-[var(--text-primary)]"
+    <ClientOnly>
+      <Teleport to="body">
+        <div
+          v-if="showModal"
+          class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+          @click.self="showModal = false"
+        >
+          <div class="w-full max-w-2xl glass-card rounded-2xl p-6 max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between mb-6">
+              <h2 class="text-xl font-bold text-[var(--text-primary)]">
+                {{ editingItem ? 'Редактировать запись' : 'Новая запись' }}
+              </h2>
+              <button
+                class="p-2 rounded-lg hover:bg-white/10 transition-colors"
+                @click="showModal = false"
               >
-                <option v-for="cat in categories" :key="cat.value" :value="cat.value">
-                  {{ cat.label }}
-                </option>
-              </select>
+                <Icon name="heroicons:x-mark" class="w-5 h-5 text-[var(--text-muted)]" />
+              </button>
             </div>
 
-            <!-- Question -->
-            <div>
-              <label class="block text-sm text-[var(--text-muted)] mb-2">
-                Вопрос <span class="text-red-400">*</span>
-              </label>
-              <textarea
-                v-model="formData.question"
-                rows="2"
-                class="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-primary/50 resize-none"
-                placeholder="Какой вопрос задаёт пользователь?"
-              ></textarea>
-            </div>
+            <div class="space-y-4">
+              <!-- Category -->
+              <div>
+                <label class="block text-sm text-[var(--text-muted)] mb-2">Категория</label>
+                <select
+                  v-model="formData.category"
+                  class="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-[var(--text-primary)]"
+                >
+                  <option v-for="cat in categories" :key="cat.value" :value="cat.value">
+                    {{ cat.label }}
+                  </option>
+                </select>
+              </div>
 
-            <!-- Answer -->
-            <div>
-              <label class="block text-sm text-[var(--text-muted)] mb-2">
-                Ответ <span class="text-red-400">*</span>
-              </label>
-              <textarea
-                v-model="formData.answer"
-                rows="5"
-                class="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-primary/50 resize-none"
-                placeholder="Как AI должен ответить?"
-              ></textarea>
-            </div>
-
-            <!-- Keywords -->
-            <div>
-              <label class="block text-sm text-[var(--text-muted)] mb-2">
-                Ключевые слова (через запятую)
-              </label>
-              <input
-                v-model="formData.keywords"
-                type="text"
-                class="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-primary/50"
-                placeholder="интернет, скорость, тариф"
-              />
-            </div>
-
-            <!-- Priority & Active -->
-            <div class="flex gap-4">
-              <div class="flex-1">
+              <!-- Question -->
+              <div>
                 <label class="block text-sm text-[var(--text-muted)] mb-2">
-                  Приоритет (0-10)
+                  Вопрос <span class="text-red-400">*</span>
+                </label>
+                <textarea
+                  v-model="formData.question"
+                  rows="2"
+                  class="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-primary/50 resize-none"
+                  placeholder="Какой вопрос задаёт пользователь?"
+                ></textarea>
+              </div>
+
+              <!-- Answer -->
+              <div>
+                <label class="block text-sm text-[var(--text-muted)] mb-2">
+                  Ответ <span class="text-red-400">*</span>
+                </label>
+                <textarea
+                  v-model="formData.answer"
+                  rows="5"
+                  class="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-primary/50 resize-none"
+                  placeholder="Как AI должен ответить?"
+                ></textarea>
+              </div>
+
+              <!-- Keywords -->
+              <div>
+                <label class="block text-sm text-[var(--text-muted)] mb-2">
+                  Ключевые слова (через запятую)
                 </label>
                 <input
-                  v-model.number="formData.priority"
-                  type="number"
-                  min="0"
-                  max="10"
-                  class="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-[var(--text-primary)] focus:outline-none focus:border-primary/50"
+                  v-model="formData.keywords"
+                  type="text"
+                  class="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-primary/50"
+                  placeholder="интернет, скорость, тариф"
                 />
               </div>
-              <div class="flex-1 flex items-end">
-                <label class="flex items-center gap-2 cursor-pointer">
+
+              <!-- Priority & Active -->
+              <div class="flex gap-4">
+                <div class="flex-1">
+                  <label class="block text-sm text-[var(--text-muted)] mb-2">
+                    Приоритет (0-10)
+                  </label>
                   <input
-                    v-model="formData.isActive"
-                    type="checkbox"
-                    class="w-5 h-5 rounded"
+                    v-model.number="formData.priority"
+                    type="number"
+                    min="0"
+                    max="10"
+                    class="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-[var(--text-primary)] focus:outline-none focus:border-primary/50"
                   />
-                  <span class="text-[var(--text-primary)]">Активно</span>
-                </label>
+                </div>
+                <div class="flex-1 flex items-end">
+                  <label class="flex items-center gap-2 cursor-pointer">
+                    <input
+                      v-model="formData.isActive"
+                      type="checkbox"
+                      class="w-5 h-5 rounded"
+                    />
+                    <span class="text-[var(--text-primary)]">Активно</span>
+                  </label>
+                </div>
               </div>
             </div>
-          </div>
 
-          <div class="flex justify-end gap-3 mt-6">
-            <UiButton variant="ghost" @click="showModal = false">
-              Отмена
-            </UiButton>
-            <UiButton :disabled="saving" @click="saveItem">
-              <Icon v-if="saving" name="heroicons:arrow-path" class="w-4 h-4 animate-spin" />
-              {{ editingItem ? 'Сохранить' : 'Создать' }}
-            </UiButton>
+            <div class="flex justify-end gap-3 mt-6">
+              <UiButton variant="ghost" @click="showModal = false">
+                Отмена
+              </UiButton>
+              <UiButton :disabled="saving" @click="saveItem">
+                <Icon v-if="saving" name="heroicons:arrow-path" class="w-4 h-4 animate-spin" />
+                {{ editingItem ? 'Сохранить' : 'Создать' }}
+              </UiButton>
+            </div>
           </div>
         </div>
-      </div>
-    </Teleport>
+      </Teleport>
+    </ClientOnly>
   </div>
 </template>

@@ -8,6 +8,7 @@ useHead({ title: 'Создать категорию — Админ-панель'
 const toast = useToast()
 const router = useRouter()
 
+// Данные формы
 const form = reactive({
   name: '',
   slug: '',
@@ -17,9 +18,11 @@ const form = reactive({
   isActive: true,
 })
 
+// Состояние сохранения
 const saving = ref(false)
 const error = ref('')
 
+// Доступные иконки для категорий
 const iconOptions = [
   { label: 'Папка', value: 'heroicons:folder' },
   { label: 'Wi-Fi', value: 'heroicons:wifi' },
@@ -31,7 +34,8 @@ const iconOptions = [
   { label: 'Телефон', value: 'heroicons:phone' },
 ]
 
-const generateSlug = () => {
+// Генерирует slug из названия (транслитерация кириллицы)
+function generateSlug() {
   if (!form.slug && form.name) {
     form.slug = form.name
       .toLowerCase()
@@ -50,7 +54,8 @@ const generateSlug = () => {
   }
 }
 
-const save = async () => {
+// Сохранение категории
+async function save() {
   if (!form.name.trim()) {
     error.value = 'Введите название категории'
     return

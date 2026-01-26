@@ -12,25 +12,28 @@ definePageMeta({
 
 const route = useRoute()
 const router = useRouter()
-const ticketId = computed(() => route.params.id as string)
 const toast = useToast()
 const user = useSupabaseUser()
 
 useHead({ title: 'Тикет — Админ-панель' })
 
-const loading = ref(true)
-const saving = ref(false)
-const ticket = ref<Ticket | null>(null)
-const comments = ref<TicketComment[]>([])
-const history = ref<TicketHistoryItem[]>([])
+// Состояние страницы
+const loading = ref(true) // Загрузка данных
+const saving = ref(false) // Сохранение изменений
+const ticket = ref<Ticket | null>(null) // Данные тикета
+const comments = ref<TicketComment[]>([]) // Комментарии
+const history = ref<TicketHistoryItem[]>([]) // История изменений
 
-// Comments state
-const newComment = ref('')
-const isInternal = ref(false)
+// Состояние для комментариев
+const newComment = ref('') // Текст нового комментария
+const isInternal = ref(false) // Внутренний комментарий (скрыт от пользователя)
 
-// Sidebar state
-const showHistory = ref(false)
+// Состояние сайдбара
+const showHistory = ref(false) // Показать/скрыть историю
 
+const ticketId = computed(() => route.params.id as string)
+
+// Опции статуса
 const statusOptions = [
   { value: 'new', label: 'Новый' },
   { value: 'open', label: 'В работе' },
@@ -39,6 +42,7 @@ const statusOptions = [
   { value: 'closed', label: 'Закрыт' },
 ]
 
+// Опции приоритета
 const priorityOptions = [
   { value: 'low', label: 'Низкий' },
   { value: 'normal', label: 'Обычный' },
@@ -46,17 +50,20 @@ const priorityOptions = [
   { value: 'urgent', label: 'Срочный' },
 ]
 
+// Двусторонняя привязка статуса через computed setter
 const ticketStatus = computed({
   get: () => ticket.value?.status || 'new',
   set: (value: string) => handleUpdateStatus(value),
 })
 
+// Двусторонняя привязка приоритета через computed setter
 const ticketPriority = computed({
   get: () => ticket.value?.priority || 'normal',
   set: (value: string) => handleUpdatePriority(value),
 })
 
-const fetchTicket = async () => {
+// Загрузка данных тикета
+async function fetchTicket() {
   loading.value = true
   try {
     const data = await $fetch<{ ticket: Ticket, comments: TicketComment[], history: TicketHistoryItem[] }>(
@@ -77,7 +84,8 @@ const fetchTicket = async () => {
   }
 }
 
-const handleAddComment = async () => {
+// Добавление комментария
+async function handleAddComment() {
   if (!newComment.value.trim() || saving.value) return
 
   saving.value = true
@@ -91,6 +99,7 @@ const handleAddComment = async () => {
     newComment.value = ''
     isInternal.value = false
 
+    // Автоматически меняем статус при первом комментарии
     if (ticket.value?.status === 'new') {
       ticket.value.status = 'open'
     }
@@ -103,7 +112,8 @@ const handleAddComment = async () => {
   }
 }
 
-const handleUpdateStatus = async (newStatus: string) => {
+// Обновление статуса тикета
+async function handleUpdateStatus(newStatus: string) {
   if (!ticket.value || saving.value) return
 
   saving.value = true
@@ -124,7 +134,8 @@ const handleUpdateStatus = async (newStatus: string) => {
   }
 }
 
-const handleUpdatePriority = async (newPriority: string) => {
+// Обновление приоритета тикета
+async function handleUpdatePriority(newPriority: string) {
   if (!ticket.value || saving.value) return
 
   saving.value = true
@@ -144,7 +155,8 @@ const handleUpdatePriority = async (newPriority: string) => {
   }
 }
 
-const handleAssignToMe = async () => {
+// Назначение тикета на текущего админа
+async function handleAssignToMe() {
   if (!user.value || saving.value) return
 
   saving.value = true
@@ -164,7 +176,8 @@ const handleAssignToMe = async () => {
   }
 }
 
-const getActionLabel = (action: string) => {
+// Возвращает текст действия для истории
+function getActionLabel(action: string) {
   const labels: Record<string, string> = {
     status_change: 'Изменён статус',
     priority_change: 'Изменён приоритет',

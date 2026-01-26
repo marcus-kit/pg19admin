@@ -7,6 +7,7 @@ useHead({ title: 'Админ-панель — ПЖ19' })
 
 const toast = useToast()
 
+// Интерфейс статистики дашборда
 interface DashboardStats {
   news: {
     total: number
@@ -120,7 +121,8 @@ const sections = computed(() => [
   },
 ])
 
-const fetchDashboardData = async () => {
+// Загрузка статистики дашборда
+async function fetchDashboardData() {
   loading.value = true
   try {
     const data = await $fetch<DashboardStats>('/api/admin/dashboard/stats')

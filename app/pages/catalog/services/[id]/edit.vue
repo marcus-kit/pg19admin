@@ -25,7 +25,6 @@ useHead({ title: 'Редактировать услугу — Админ-пан�
 const toast = useToast()
 const router = useRouter()
 const route = useRoute()
-const serviceId = computed(() => route.params.id as string)
 
 const form = reactive({
   name: '',
@@ -44,11 +43,20 @@ const error = ref('')
 const categories = ref<CategoryOption[]>([])
 const newFeature = ref('')
 
-// Цены в рублях для отображения
+const serviceId = computed(() => route.params.id as string)
+
+// Цены в рублях для отображения (в БД хранятся в копейках)
 const priceMonthlyRub = ref(0)
 const priceConnectionRub = ref(0)
 
-const fetchCategories = async () => {
+// Опции категорий для select
+const categoryOptions = computed(() => [
+  { value: null, label: 'Без категории' },
+  ...categories.value.map(cat => ({ value: cat.id, label: cat.name })),
+])
+
+// Загрузка списка категорий
+async function fetchCategories() {
   try {
     const data = await $fetch<{ categories: CategoryOption[] }>('/api/admin/catalog/categories')
     categories.value = data.categories
@@ -58,12 +66,8 @@ const fetchCategories = async () => {
   }
 }
 
-const categoryOptions = computed(() => [
-  { value: null, label: 'Без категории' },
-  ...categories.value.map(cat => ({ value: cat.id, label: cat.name })),
-])
-
-const fetchService = async () => {
+// Загрузка данных услуги
+async function fetchService() {
   loading.value = true
   try {
     const data = await $fetch<{ service: ServiceResponse }>(`/api/admin/catalog/services/${serviceId.value}`)
@@ -91,7 +95,8 @@ const fetchService = async () => {
   }
 }
 
-const addFeature = () => {
+// Добавление характеристики в список
+function addFeature() {
   const feature = newFeature.value.trim()
   if (feature && !form.features.includes(feature)) {
     form.features.push(feature)
@@ -99,11 +104,13 @@ const addFeature = () => {
   }
 }
 
-const removeFeature = (index: number) => {
+// Удаление характеристики из списка
+function removeFeature(index: number) {
   form.features.splice(index, 1)
 }
 
-const save = async () => {
+// Сохранение изменений услуги
+async function save() {
   if (!form.name.trim()) {
     error.value = 'Введите название услуги'
     return

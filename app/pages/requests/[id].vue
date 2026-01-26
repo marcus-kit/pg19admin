@@ -7,15 +7,7 @@ import {
   getStatusBadgeClass,
 } from '~/composables/useStatusConfig'
 
-definePageMeta({
-  middleware: 'admin',
-})
-
-const toast = useToast()
-const route = useRoute()
-const router = useRouter()
-const requestId = computed(() => route.params.id as string)
-
+// Интерфейс заявки на подключение
 interface ConnectionRequest {
   id: number
   fullName: string
@@ -33,16 +25,45 @@ interface ConnectionRequest {
   updatedAt: string
 }
 
-const loading = ref(true)
-const saving = ref(false)
-const request = ref<ConnectionRequest | null>(null)
-const selectedStatus = ref<string>('')
+definePageMeta({
+  middleware: 'admin',
+})
+
+const toast = useToast()
+const route = useRoute()
+const router = useRouter()
 
 useHead({
   title: computed(() => request.value ? `Заявка #${request.value.id} — Админ-панель` : 'Заявка — Админ-панель'),
 })
 
-const fetchRequest = async () => {
+// Состояние страницы
+const loading = ref(true) // Загрузка данных
+const saving = ref(false) // Сохранение изменений
+const request = ref<ConnectionRequest | null>(null) // Данные заявки
+const selectedStatus = ref<string>('') // Выбранный статус
+
+const requestId = computed(() => route.params.id as string)
+
+// Опции статуса заявки
+const statusOptions = [
+  { value: 'new', label: 'Новая' },
+  { value: 'contacted', label: 'Связались' },
+  { value: 'approved', label: 'Одобрена' },
+  { value: 'rejected', label: 'Отклонена' },
+  { value: 'completed', label: 'Выполнена' },
+]
+
+// URL для статической карты Яндекс
+const mapUrl = computed(() => {
+  if (!request.value?.latitude || !request.value?.longitude) return null
+  const lat = request.value.latitude
+  const lon = request.value.longitude
+  return `https://static-maps.yandex.ru/1.x/?ll=${lon},${lat}&z=16&size=600,300&l=map&pt=${lon},${lat},pm2rdm`
+})
+
+// Загрузка данных заявки
+async function fetchRequest() {
   loading.value = true
   try {
     const data = await $fetch<{ request: ConnectionRequest }>(`/api/admin/requests/${requestId.value}`)
@@ -58,7 +79,8 @@ const fetchRequest = async () => {
   }
 }
 
-const updateStatus = async () => {
+// Обновление статуса заявки
+async function updateStatus() {
   if (!request.value || selectedStatus.value === request.value.status) return
 
   saving.value = true
@@ -78,22 +100,6 @@ const updateStatus = async () => {
     saving.value = false
   }
 }
-
-const statusOptions = [
-  { value: 'new', label: 'Новая' },
-  { value: 'contacted', label: 'Связались' },
-  { value: 'approved', label: 'Одобрена' },
-  { value: 'rejected', label: 'Отклонена' },
-  { value: 'completed', label: 'Выполнена' },
-]
-
-// URL для карты Яндекс статическая
-const mapUrl = computed(() => {
-  if (!request.value?.latitude || !request.value?.longitude) return null
-  const lat = request.value.latitude
-  const lon = request.value.longitude
-  return `https://static-maps.yandex.ru/1.x/?ll=${lon},${lat}&z=16&size=600,300&l=map&pt=${lon},${lat},pm2rdm`
-})
 
 onMounted(() => {
   fetchRequest()

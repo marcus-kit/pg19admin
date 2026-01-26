@@ -8,6 +8,7 @@ useHead({ title: 'Создать новость — Админ-панель' })
 const router = useRouter()
 const toast = useToast()
 
+// Данные формы
 const form = reactive({
   title: '',
   summary: '',
@@ -17,22 +18,25 @@ const form = reactive({
   isPinned: false,
 })
 
-const saving = ref(false)
-const error = ref('')
+const saving = ref(false) // Идёт ли сохранение
+const error = ref('') // Текст ошибки
 
+// Опции выбора категории
 const categoryOptions = [
   { label: 'Объявление', value: 'announcement' },
   { label: 'Протокол', value: 'protocol' },
   { label: 'Уведомление', value: 'notification' },
 ]
 
+// Опции выбора статуса
 const statusOptions = [
   { label: 'Черновик', value: 'draft' },
   { label: 'Опубликовать', value: 'published' },
   { label: 'Архив', value: 'archived' },
 ]
 
-const saveNews = async () => {
+// Сохранение новости
+async function saveNews() {
   // Валидация
   if (!form.title.trim()) {
     error.value = 'Введите заголовок'
@@ -74,7 +78,8 @@ const saveNews = async () => {
   }
 }
 
-const cancel = () => {
+// Отмена и возврат к списку
+function cancel() {
   router.push('/news')
 }
 </script>
@@ -139,8 +144,8 @@ const cancel = () => {
       <div class="flex items-center gap-3">
         <input
           v-model="form.isPinned"
-          type="checkbox"
           id="isPinned"
+          type="checkbox"
           class="w-5 h-5 rounded border-[var(--glass-border)] bg-[var(--glass-bg)] text-primary focus:ring-primary"
         />
         <label for="isPinned" class="text-sm text-[var(--text-secondary)] cursor-pointer">

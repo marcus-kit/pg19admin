@@ -2,18 +2,6 @@
 import type { NewsAttachment, NewsCategory, NewsStatus } from '~/types/admin'
 import { getErrorMessage } from '~/composables/useFormatters'
 
-definePageMeta({
-  middleware: 'admin',
-})
-
-useHead({ title: 'Редактировать новость — Админ-панель' })
-
-const router = useRouter()
-const route = useRoute()
-const toast = useToast()
-
-const newsId = computed(() => route.params.id as string)
-
 // Интерфейс для ответа API
 interface NewsDetailResponse {
   id: string
@@ -26,6 +14,17 @@ interface NewsDetailResponse {
   attachments: NewsAttachment[]
 }
 
+definePageMeta({
+  middleware: 'admin',
+})
+
+useHead({ title: 'Редактировать новость — Админ-панель' })
+
+const router = useRouter()
+const route = useRoute()
+const toast = useToast()
+
+// Данные формы
 const form = reactive({
   title: '',
   summary: '',
@@ -35,30 +34,36 @@ const form = reactive({
   isPinned: false,
 })
 
-const loading = ref(true)
-const saving = ref(false)
-const error = ref('')
-const attachments = ref<NewsAttachment[]>([])
+// Состояние загрузки и ошибок
+const loading = ref(true) // Загрузка данных
+const saving = ref(false) // Сохранение формы
+const error = ref('') // Текст ошибки
+const attachments = ref<NewsAttachment[]>([]) // Список вложений
 
-// Attachments state
-const uploading = ref(false)
-const deleting = ref<string | null>(null)
-const dragOver = ref(false)
-const fileInput = ref<HTMLInputElement | null>(null)
+// Состояние для работы с вложениями
+const uploading = ref(false) // Загрузка файла
+const deleting = ref<string | null>(null) // ID удаляемого файла
+const dragOver = ref(false) // Drag-n-drop активен
+const fileInput = ref<HTMLInputElement | null>(null) // Ссылка на input файла
 
+const newsId = computed(() => route.params.id as string)
+
+// Опции выбора категории
 const categoryOptions = [
   { label: 'Объявление', value: 'announcement' },
   { label: 'Протокол', value: 'protocol' },
   { label: 'Уведомление', value: 'notification' },
 ]
 
+// Опции выбора статуса
 const statusOptions = [
   { label: 'Черновик', value: 'draft' },
   { label: 'Опубликовать', value: 'published' },
   { label: 'Архив', value: 'archived' },
 ]
 
-const getFileIcon = (mimeType?: string) => {
+// Возвращает иконку в зависимости от типа файла
+function getFileIcon(mimeType?: string) {
   if (!mimeType) return 'heroicons:document'
   if (mimeType.startsWith('image/')) return 'heroicons:photo'
   if (mimeType.includes('pdf')) return 'heroicons:document-text'
@@ -67,8 +72,8 @@ const getFileIcon = (mimeType?: string) => {
   return 'heroicons:document'
 }
 
-// Загрузка данных новости
-const fetchNews = async () => {
+// Загрузка данных новости с сервера
+async function fetchNews() {
   loading.value = true
   error.value = ''
 
@@ -96,7 +101,8 @@ const fetchNews = async () => {
   }
 }
 
-const saveNews = async () => {
+// Сохранение изменений новости
+async function saveNews() {
   // Валидация
   if (!form.title.trim()) {
     error.value = 'Введите заголовок'
@@ -137,12 +143,13 @@ const saveNews = async () => {
   }
 }
 
-const cancel = () => {
+// Отмена и возврат к списку
+function cancel() {
   router.push('/news')
 }
 
-// Attachments methods
-const handleDrop = async (e: DragEvent) => {
+// Обработка drop события для загрузки файлов
+async function handleDrop(e: DragEvent) {
   dragOver.value = false
   const files = e.dataTransfer?.files
   if (files?.length) {
@@ -150,7 +157,8 @@ const handleDrop = async (e: DragEvent) => {
   }
 }
 
-const handleFileSelect = async (e: Event) => {
+// Обработка выбора файлов через input
+async function handleFileSelect(e: Event) {
   const target = e.target as HTMLInputElement
   if (target.files?.length) {
     await uploadFiles(Array.from(target.files))
@@ -158,10 +166,12 @@ const handleFileSelect = async (e: Event) => {
   }
 }
 
-const uploadFiles = async (files: File[]) => {
+// Загрузка файлов на сервер
+async function uploadFiles(files: File[]) {
   uploading.value = true
 
   for (const file of files) {
+    // Проверка размера файла (макс 10 МБ)
     if (file.size > 10 * 1024 * 1024) {
       toast.error(`Файл "${file.name}" превышает 10 МБ`)
       continue
@@ -192,7 +202,8 @@ const uploadFiles = async (files: File[]) => {
   uploading.value = false
 }
 
-const deleteAttachment = async (attachment: NewsAttachment) => {
+// Удаление вложения
+async function deleteAttachment(attachment: NewsAttachment) {
   if (!confirm(`Удалить файл "${attachment.fileName}"?`)) return
 
   deleting.value = attachment.id

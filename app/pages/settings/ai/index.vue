@@ -7,6 +7,7 @@ useHead({ title: 'Настройки AI-бота — Админ-панель' })
 
 const toast = useToast()
 
+// Интерфейс настроек AI-бота
 interface AISettings {
   id: string
   isEnabled: boolean
@@ -22,6 +23,7 @@ interface AISettings {
   updatedAt: string
 }
 
+// Интерфейс статистики AI
 interface AIStats {
   period: string
   messages: { total: number, avgPerDay: number }
@@ -34,6 +36,7 @@ interface AIStats {
   models: Record<string, number>
 }
 
+// Состояние страницы
 const loading = ref(false)
 const saving = ref(false)
 const settings = ref<AISettings | null>(null)
@@ -45,12 +48,14 @@ const editedPrompt = ref('')
 const editedKeywords = ref('')
 const editedOperatorName = ref('')
 
+// Доступные модели OpenAI
 const models = [
   { value: 'gpt-5-nano', label: 'GPT-5 Nano (быстрый, дешёвый)' },
   { value: 'gpt-5-mini', label: 'GPT-5 Mini (баланс цена/качество)' },
   { value: 'gpt-5', label: 'GPT-5 (максимальное качество)' },
 ]
 
+// Опции периода для статистики
 const statsPeriodOptions = [
   { value: 'today', label: 'Сегодня' },
   { value: 'week', label: 'Неделя' },
@@ -58,6 +63,7 @@ const statsPeriodOptions = [
   { value: 'all', label: 'Всё время' },
 ]
 
+// Загрузка настроек AI
 async function fetchSettings() {
   loading.value = true
   try {
@@ -67,8 +73,7 @@ async function fetchSettings() {
     editedKeywords.value = data.settings.escalationKeywords.join('\n')
     editedOperatorName.value = data.settings.operatorName || ''
   }
-  catch (error) {
-    console.error('Failed to fetch AI settings:', error)
+  catch {
     toast.error('Не удалось загрузить настройки AI')
   }
   finally {
@@ -76,17 +81,18 @@ async function fetchSettings() {
   }
 }
 
+// Загрузка статистики AI за выбранный период
 async function fetchStats() {
   try {
     const data = await $fetch<{ stats: AIStats }>(`/api/admin/ai/stats?period=${statsPeriod.value}`)
     stats.value = data.stats
   }
-  catch (error) {
-    console.error('Failed to fetch AI stats:', error)
+  catch {
     toast.error('Не удалось загрузить статистику AI')
   }
 }
 
+// Обновление настроек AI (частичное)
 async function updateSettings(updates: Partial<AISettings>) {
   saving.value = true
   try {
@@ -99,8 +105,7 @@ async function updateSettings(updates: Partial<AISettings>) {
     editedKeywords.value = data.settings.escalationKeywords.join('\n')
     toast.success('Настройки сохранены')
   }
-  catch (error) {
-    console.error('Failed to update settings:', error)
+  catch {
     toast.error('Не удалось сохранить настройки')
   }
   finally {
@@ -154,7 +159,10 @@ async function saveRagCount(count: number) {
   await updateSettings({ ragMatchCount: count })
 }
 
-const formatNumber = (n: number) => n.toLocaleString('ru-RU')
+// Форматирование числа с разделителями тысяч
+function formatNumber(n: number) {
+  return n.toLocaleString('ru-RU')
+}
 
 onMounted(() => {
   fetchSettings()

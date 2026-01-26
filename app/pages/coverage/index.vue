@@ -16,6 +16,7 @@ useHead({ title: 'Карта покрытия — Админ-панель' })
 
 const toast = useToast()
 
+// Интерфейс зоны покрытия
 interface CoverageZone {
   id: number
   name: string
@@ -33,6 +34,7 @@ interface CoverageZone {
   updatedAt: string
 }
 
+// Интерфейс партнёра
 interface Partner {
   id: string
   name: string
@@ -84,7 +86,8 @@ const exportPartnerOptions = computed(() => [
   ...partners.value.map(p => ({ value: p.id, label: p.name })),
 ])
 
-const fetchPartners = async () => {
+// Загрузка списка партнёров
+async function fetchPartners() {
   loadingPartners.value = true
   try {
     const data = await $fetch<{ partners: Partner[] }>('/api/admin/partners')
@@ -98,7 +101,8 @@ const fetchPartners = async () => {
   }
 }
 
-const selectPartner = (partnerId: string) => {
+// Выбор партнёра для фильтрации (toggle)
+function selectPartner(partnerId: string) {
   if (selectedPartnerId.value === partnerId) {
     selectedPartnerId.value = null
   }
@@ -123,7 +127,8 @@ const visibleZonesForMap = computed(() => {
   return filteredZones.value.filter(zone => !hiddenZoneIds.value.has(zone.id))
 })
 
-const fetchZones = async () => {
+// Загрузка списка зон покрытия
+async function fetchZones() {
   loading.value = true
   try {
     const data = await $fetch<{ zones: CoverageZone[] }>('/api/admin/coverage/zones')
@@ -137,25 +142,30 @@ const fetchZones = async () => {
   }
 }
 
-const handleZoneClick = (zone: CoverageZone) => {
+// Обработка клика по зоне в списке
+function handleZoneClick(zone: CoverageZone) {
   selectedZone.value = zone
 }
 
-// CoverageMap helpers
-const escapeHtml = (text: string): string => {
+// ==================== ХЕЛПЕРЫ КАРТЫ ====================
+
+// Экранирование HTML для безопасного отображения в popup
+function escapeHtml(text: string): string {
   const div = document.createElement('div')
   div.textContent = text
   return div.innerHTML
 }
 
-const hexToRgba = (hex: string, alpha: number): string => {
+// Конвертация HEX цвета в RGBA с прозрачностью
+function hexToRgba(hex: string, alpha: number): string {
   const r = parseInt(hex.slice(1, 3), 16)
   const g = parseInt(hex.slice(3, 5), 16)
   const b = parseInt(hex.slice(5, 7), 16)
   return `rgba(${r}, ${g}, ${b}, ${alpha})`
 }
 
-const initMap = async () => {
+// Инициализация карты OpenLayers
+async function initMap() {
   if (!mapContainer.value || map) return
 
   const [
@@ -276,7 +286,8 @@ const initMap = async () => {
   updateZones()
 }
 
-const updateZones = async () => {
+// Обновление зон на карте (перерисовка)
+async function updateZones() {
   if (!map || !vectorLayer) return
 
   const { default: GeoJSONFormat } = await import('ol/format/GeoJSON')
@@ -315,18 +326,22 @@ const updateZones = async () => {
   }
 }
 
-const closePopup = () => {
+// Закрытие popup на карте
+function closePopup() {
   if (popupOverlay) {
     popupOverlay.setPosition(undefined)
   }
 }
 
-// Import/Export handlers
-const triggerFileInput = () => {
+// ==================== ИМПОРТ/ЭКСПОРТ ====================
+
+// Открытие диалога выбора файла
+function triggerFileInput() {
   fileInput.value?.click()
 }
 
-const handleFileSelect = async (event: Event) => {
+// Обработка выбора файла для импорта GeoJSON
+async function handleFileSelect(event: Event) {
   const input = event.target as HTMLInputElement
   const file = input.files?.[0]
 
@@ -378,7 +393,8 @@ const handleFileSelect = async (event: Event) => {
   }
 }
 
-const handleExport = () => {
+// Экспорт зон в GeoJSON файл
+function handleExport() {
   const params = new URLSearchParams()
   if (exportPartnerId.value !== 'all') {
     params.set('partnerId', exportPartnerId.value)
@@ -387,17 +403,21 @@ const handleExport = () => {
   window.open(url, '_blank')
 }
 
-const clearImportError = () => {
+// Очистка ошибки импорта
+function clearImportError() {
   importError.value = ''
 }
 
-// Zone management
-const openDeleteModal = (zone: CoverageZone) => {
+// ==================== УПРАВЛЕНИЕ ЗОНАМИ ====================
+
+// Открытие модала подтверждения удаления
+function openDeleteModal(zone: CoverageZone) {
   zoneToDelete.value = zone
   showDeleteModal.value = true
 }
 
-const confirmDelete = async () => {
+// Подтверждение удаления зоны
+async function confirmDelete() {
   if (!zoneToDelete.value) return
 
   const id = zoneToDelete.value.id
@@ -417,7 +437,8 @@ const confirmDelete = async () => {
   }
 }
 
-const toggleZoneVisibility = (zone: CoverageZone) => {
+// Переключение видимости зоны на карте (сохраняется в localStorage)
+function toggleZoneVisibility(zone: CoverageZone) {
   const newHidden = new Set(hiddenZoneIds.value)
   if (newHidden.has(zone.id)) {
     newHidden.delete(zone.id)
@@ -429,7 +450,10 @@ const toggleZoneVisibility = (zone: CoverageZone) => {
   localStorage.setItem('coverage-hidden-zones', JSON.stringify([...newHidden]))
 }
 
-const isZoneHidden = (zoneId: number) => hiddenZoneIds.value.has(zoneId)
+// Проверка, скрыта ли зона
+function isZoneHidden(zoneId: number) {
+  return hiddenZoneIds.value.has(zoneId)
+}
 
 // Watch for zone changes
 watch(visibleZonesForMap, updateZones, { deep: true })

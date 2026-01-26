@@ -1,6 +1,5 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
-
   // Модули
   modules: [
     '@nuxtjs/tailwindcss',
@@ -14,6 +13,10 @@ export default defineNuxtConfig({
   components: [
     { path: '~/components', pathPrefix: false },
   ],
+
+  devtools: {
+    enabled: true,
+  },
 
   // SEO и мета
   app: {
@@ -62,6 +65,7 @@ export default defineNuxtConfig({
   experimental: {
     appManifest: false, // Отключаем manifest.json (не PWA)
   },
+
   compatibilityDate: '2026-01-22',
 
   // ESLint — по CODE-STYLE-GUIDE

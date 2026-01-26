@@ -14,6 +14,7 @@ definePageMeta({
 
 useHead({ title: 'Чаты поддержки — Админ-панель' })
 
+// Фильтры для списка чатов
 interface ChatFilters {
   status: string
   assignedToMe: boolean
@@ -36,7 +37,8 @@ const {
   }),
 })
 
-const goToChat = (id: string) => {
+// Переход на страницу чата
+function goToChat(id: string) {
   navigateTo(`/chat/${id}`)
 }
 </script>

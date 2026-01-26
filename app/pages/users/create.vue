@@ -8,9 +8,7 @@ useHead({ title: 'Создать пользователя — Админ-пан�
 const toast = useToast()
 const router = useRouter()
 
-const saving = ref(false)
-const error = ref('')
-
+// Данные формы
 const form = ref({
   firstName: '',
   lastName: '',
@@ -28,7 +26,11 @@ const form = ref({
   regApartment: '',
 })
 
-const createUser = async () => {
+const saving = ref(false) // Идёт ли сохранение
+const error = ref('') // Текст ошибки
+
+// Создание нового пользователя
+async function createUser() {
   if (saving.value) return
 
   error.value = ''
@@ -65,7 +67,8 @@ const createUser = async () => {
   }
 }
 
-const cancel = () => {
+// Отмена и возврат к списку
+function cancel() {
   router.push('/users')
 }
 </script>

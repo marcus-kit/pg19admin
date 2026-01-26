@@ -19,16 +19,17 @@ useHead({ title: 'Заявки — Админ-панель' })
 const toast = useToast()
 const { formatPhone, formatDateTime } = useFormatters()
 
-// Tab state
+// Активная вкладка
 const activeTab = ref<'connection' | 'callback'>('connection')
 
-// ==================== CONNECTION REQUESTS ====================
-const connectionLoading = ref(true)
-const connectionRequests = ref<ConnectionRequest[]>([])
-const connectionStatusFilter = ref<string>('new')
-const onlyInCoverage = ref(false)
+// ==================== ЗАЯВКИ НА ПОДКЛЮЧЕНИЕ ====================
+const connectionLoading = ref(true) // Загрузка списка
+const connectionRequests = ref<ConnectionRequest[]>([]) // Список заявок
+const connectionStatusFilter = ref<string>('new') // Фильтр по статусу
+const onlyInCoverage = ref(false) // Фильтр "только в зоне покрытия"
 
-const fetchConnectionRequests = async () => {
+// Загрузка заявок на подключение
+async function fetchConnectionRequests() {
   connectionLoading.value = true
   try {
     const params = new URLSearchParams()
@@ -50,16 +51,18 @@ const fetchConnectionRequests = async () => {
   }
 }
 
-const goToRequest = (id: string) => {
+// Переход на страницу заявки
+function goToRequest(id: string) {
   navigateTo(`/requests/${id}`)
 }
 
-// ==================== CALLBACK REQUESTS ====================
-const callbackLoading = ref(true)
-const callbackRequests = ref<CallbackRequest[]>([])
-const callbackStatusFilter = ref<string>('new')
+// ==================== ЗАЯВКИ НА ОБРАТНЫЙ ЗВОНОК ====================
+const callbackLoading = ref(true) // Загрузка списка
+const callbackRequests = ref<CallbackRequest[]>([]) // Список заявок
+const callbackStatusFilter = ref<string>('new') // Фильтр по статусу
 
-const fetchCallbackRequests = async () => {
+// Загрузка заявок на обратный звонок
+async function fetchCallbackRequests() {
   callbackLoading.value = true
   try {
     const params = new URLSearchParams()
@@ -78,7 +81,8 @@ const fetchCallbackRequests = async () => {
   }
 }
 
-const updateCallbackStatus = async (callback: CallbackRequest, newStatus: string) => {
+// Обновление статуса заявки на звонок
+async function updateCallbackStatus(callback: CallbackRequest, newStatus: string) {
   try {
     await $fetch(`/api/admin/callbacks/${callback.id}`, {
       method: 'PUT',
@@ -92,7 +96,7 @@ const updateCallbackStatus = async (callback: CallbackRequest, newStatus: string
   }
 }
 
-// Counters for new requests
+// Счётчики новых заявок для отображения в табах
 const newConnectionCount = computed(() =>
   connectionRequests.value.filter(r => r.status === 'new').length,
 )

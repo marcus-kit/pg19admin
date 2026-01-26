@@ -1,17 +1,7 @@
 <script setup lang="ts">
 import { getErrorStatusCode, getErrorMessage, formatBalance, formatDate, formatDateTime } from '~/composables/useFormatters'
 
-definePageMeta({
-  middleware: 'admin',
-})
-
-const toast = useToast()
-const route = useRoute()
-const router = useRouter()
-const userId = computed(() => route.params.id as string)
-
-useHead({ title: 'Пользователь — Админ-панель' })
-
+// Типы данных
 interface Account {
   id: string
   contractNumber: number | null
@@ -47,11 +37,23 @@ interface User {
   accounts: Account[]
 }
 
-const loading = ref(true)
-const saving = ref(false)
-const user = ref<User | null>(null)
+definePageMeta({
+  middleware: 'admin',
+})
 
-const showEditModal = ref(false)
+useHead({ title: 'Пользователь — Админ-панель' })
+
+const toast = useToast()
+const route = useRoute()
+const router = useRouter()
+
+// Состояние страницы
+const loading = ref(true) // Загрузка данных
+const saving = ref(false) // Сохранение изменений
+const user = ref<User | null>(null) // Данные пользователя
+const showEditModal = ref(false) // Открыто ли модальное окно
+
+// Форма редактирования
 const editForm = ref({
   firstName: '',
   lastName: '',
@@ -61,17 +63,18 @@ const editForm = ref({
   birthDate: '',
   telegramUsername: '',
   vkId: '',
-  // Паспортные данные
   passportSeries: '',
   passportNumber: '',
-  // Адрес регистрации
   regCity: '',
   regStreet: '',
   regBuilding: '',
   regApartment: '',
 })
 
-const fetchUser = async () => {
+const userId = computed(() => route.params.id as string)
+
+// Загрузка данных пользователя
+async function fetchUser() {
   loading.value = true
   try {
     const data = await $fetch<{ user: User }>(`/api/admin/users/${userId.value}`)
@@ -88,7 +91,8 @@ const fetchUser = async () => {
   }
 }
 
-const openEditModal = () => {
+// Открытие модального окна редактирования
+function openEditModal() {
   if (!user.value) return
   editForm.value = {
     firstName: user.value.firstName || '',
@@ -99,10 +103,8 @@ const openEditModal = () => {
     birthDate: user.value.birthDate || '',
     telegramUsername: user.value.telegram?.username || '',
     vkId: user.value.vkId || '',
-    // Паспортные данные
     passportSeries: user.value.passport?.series || '',
     passportNumber: user.value.passport?.number || '',
-    // Адрес регистрации
     regCity: user.value.registrationAddress?.city || '',
     regStreet: user.value.registrationAddress?.street || '',
     regBuilding: user.value.registrationAddress?.building || '',
@@ -111,7 +113,8 @@ const openEditModal = () => {
   showEditModal.value = true
 }
 
-const saveUser = async () => {
+// Сохранение изменений пользователя
+async function saveUser() {
   if (!user.value || saving.value) return
 
   saving.value = true
@@ -133,7 +136,8 @@ const saveUser = async () => {
   }
 }
 
-const updateStatus = async (newStatus: string) => {
+// Обновление статуса пользователя
+async function updateStatus(newStatus: string) {
   if (!user.value || saving.value) return
 
   if (!confirm(`Изменить статус пользователя на "${getStatusLabel(newStatus)}"?`)) return
@@ -156,7 +160,8 @@ const updateStatus = async (newStatus: string) => {
   }
 }
 
-const getStatusBadgeClass = (status: string) => {
+// Возвращает класс бейджа статуса пользователя
+function getStatusBadgeClass(status: string) {
   switch (status) {
     case 'active': return 'bg-green-500/20 text-green-400'
     case 'suspended': return 'bg-yellow-500/20 text-yellow-400'
@@ -165,7 +170,8 @@ const getStatusBadgeClass = (status: string) => {
   }
 }
 
-const getStatusLabel = (status: string) => {
+// Возвращает текст статуса пользователя
+function getStatusLabel(status: string) {
   switch (status) {
     case 'active': return 'Активен'
     case 'suspended': return 'Приостановлен'
@@ -174,7 +180,8 @@ const getStatusLabel = (status: string) => {
   }
 }
 
-const getAccountStatusBadgeClass = (status: string) => {
+// Возвращает класс бейджа статуса аккаунта
+function getAccountStatusBadgeClass(status: string) {
   switch (status) {
     case 'active': return 'bg-green-500/20 text-green-400'
     case 'blocked': return 'bg-red-500/20 text-red-400'
@@ -183,7 +190,8 @@ const getAccountStatusBadgeClass = (status: string) => {
   }
 }
 
-const getAccountStatusLabel = (status: string) => {
+// Возвращает текст статуса аккаунта
+function getAccountStatusLabel(status: string) {
   switch (status) {
     case 'active': return 'Активен'
     case 'blocked': return 'Заблокирован'
@@ -240,7 +248,6 @@ onMounted(() => {
 
         <div class="flex gap-2">
           <UiButton
-
             variant="secondary"
             size="sm"
             @click="openEditModal"
@@ -421,73 +428,75 @@ onMounted(() => {
     </template>
 
     <!-- Edit Modal -->
-    <Teleport to="body">
-      <div
-        v-if="showEditModal"
-        class="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto"
-        @click.self="showEditModal = false"
-      >
-        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" />
-        <div class="relative w-full max-w-2xl glass-card rounded-xl p-6 my-8">
-          <h3 class="text-xl font-bold text-[var(--text-primary)] mb-6">Редактировать пользователя</h3>
+    <ClientOnly>
+      <Teleport to="body">
+        <div
+          v-if="showEditModal"
+          class="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto"
+          @click.self="showEditModal = false"
+        >
+          <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+          <div class="relative w-full max-w-2xl glass-card rounded-xl p-6 my-8">
+            <h3 class="text-xl font-bold text-[var(--text-primary)] mb-6">Редактировать пользователя</h3>
 
-          <form class="space-y-6" @submit.prevent="saveUser">
-            <!-- Основные данные -->
-            <div>
-              <h4 class="text-sm font-medium text-[var(--text-muted)] mb-3">Основные данные</h4>
-              <div class="space-y-4">
-                <div class="grid grid-cols-2 gap-4">
-                  <UiInput v-model="editForm.lastName" label="Фамилия" placeholder="Иванов" />
-                  <UiInput v-model="editForm.firstName" label="Имя" placeholder="Иван" />
-                </div>
-                <div class="grid grid-cols-2 gap-4">
-                  <UiInput v-model="editForm.middleName" label="Отчество" placeholder="Иванович" />
-                  <UiInput v-model="editForm.birthDate" label="Дата рождения" type="date" />
-                </div>
-                <div class="grid grid-cols-2 gap-4">
-                  <UiInput v-model="editForm.phone" label="Телефон" placeholder="+7 900 000-00-00" />
-                  <UiInput v-model="editForm.email" label="Email" type="email" placeholder="user@example.com" />
-                </div>
-                <div class="grid grid-cols-2 gap-4">
-                  <UiInput v-model="editForm.telegramUsername" label="Telegram" placeholder="username" />
-                  <UiInput v-model="editForm.vkId" label="VK ID" placeholder="123456789" />
+            <form class="space-y-6" @submit.prevent="saveUser">
+              <!-- Основные данные -->
+              <div>
+                <h4 class="text-sm font-medium text-[var(--text-muted)] mb-3">Основные данные</h4>
+                <div class="space-y-4">
+                  <div class="grid grid-cols-2 gap-4">
+                    <UiInput v-model="editForm.lastName" label="Фамилия" placeholder="Иванов" />
+                    <UiInput v-model="editForm.firstName" label="Имя" placeholder="Иван" />
+                  </div>
+                  <div class="grid grid-cols-2 gap-4">
+                    <UiInput v-model="editForm.middleName" label="Отчество" placeholder="Иванович" />
+                    <UiInput v-model="editForm.birthDate" label="Дата рождения" type="date" />
+                  </div>
+                  <div class="grid grid-cols-2 gap-4">
+                    <UiInput v-model="editForm.phone" label="Телефон" placeholder="+7 900 000-00-00" />
+                    <UiInput v-model="editForm.email" label="Email" type="email" placeholder="user@example.com" />
+                  </div>
+                  <div class="grid grid-cols-2 gap-4">
+                    <UiInput v-model="editForm.telegramUsername" label="Telegram" placeholder="username" />
+                    <UiInput v-model="editForm.vkId" label="VK ID" placeholder="123456789" />
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <!-- Паспортные данные -->
-            <div>
-              <h4 class="text-sm font-medium text-[var(--text-muted)] mb-3">Паспортные данные</h4>
-              <div class="grid grid-cols-2 gap-4">
-                <UiInput v-model="editForm.passportSeries" label="Серия" placeholder="6020" maxlength="4" />
-                <UiInput v-model="editForm.passportNumber" label="Номер" placeholder="123456" maxlength="6" />
-              </div>
-            </div>
-
-            <!-- Адрес регистрации -->
-            <div>
-              <h4 class="text-sm font-medium text-[var(--text-muted)] mb-3">Адрес регистрации</h4>
-              <div class="space-y-4">
-                <UiInput v-model="editForm.regCity" label="Город" placeholder="Ростов-на-Дону" />
-                <UiInput v-model="editForm.regStreet" label="Улица" placeholder="ул. Пушкинская" />
+              <!-- Паспортные данные -->
+              <div>
+                <h4 class="text-sm font-medium text-[var(--text-muted)] mb-3">Паспортные данные</h4>
                 <div class="grid grid-cols-2 gap-4">
-                  <UiInput v-model="editForm.regBuilding" label="Дом" placeholder="1" />
-                  <UiInput v-model="editForm.regApartment" label="Квартира" placeholder="1" />
+                  <UiInput v-model="editForm.passportSeries" label="Серия" placeholder="6020" maxlength="4" />
+                  <UiInput v-model="editForm.passportNumber" label="Номер" placeholder="123456" maxlength="6" />
                 </div>
               </div>
-            </div>
 
-            <div class="flex justify-end gap-3 pt-4 border-t border-[var(--glass-border)]">
-              <UiButton :disabled="saving" variant="ghost" @click="showEditModal = false">
-                Отмена
-              </UiButton>
-              <UiButton :loading="saving" :disabled="saving" type="submit">
-                Сохранить
-              </UiButton>
-            </div>
-          </form>
+              <!-- Адрес регистрации -->
+              <div>
+                <h4 class="text-sm font-medium text-[var(--text-muted)] mb-3">Адрес регистрации</h4>
+                <div class="space-y-4">
+                  <UiInput v-model="editForm.regCity" label="Город" placeholder="Ростов-на-Дону" />
+                  <UiInput v-model="editForm.regStreet" label="Улица" placeholder="ул. Пушкинская" />
+                  <div class="grid grid-cols-2 gap-4">
+                    <UiInput v-model="editForm.regBuilding" label="Дом" placeholder="1" />
+                    <UiInput v-model="editForm.regApartment" label="Квартира" placeholder="1" />
+                  </div>
+                </div>
+              </div>
+
+              <div class="flex justify-end gap-3 pt-4 border-t border-[var(--glass-border)]">
+                <UiButton :disabled="saving" variant="ghost" @click="showEditModal = false">
+                  Отмена
+                </UiButton>
+                <UiButton :loading="saving" :disabled="saving" type="submit">
+                  Сохранить
+                </UiButton>
+              </div>
+            </form>
+          </div>
         </div>
-      </div>
-    </Teleport>
+      </Teleport>
+    </ClientOnly>
   </div>
 </template>

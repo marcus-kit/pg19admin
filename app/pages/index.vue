@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// Redirect to dashboard
+// Редирект на дашборд
 definePageMeta({
   middleware: 'admin',
 })

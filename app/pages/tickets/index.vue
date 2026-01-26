@@ -18,6 +18,7 @@ useHead({ title: 'Тикеты — Админ-панель' })
 
 const { formatDateTime } = useFormatters()
 
+// Фильтры для списка тикетов
 interface TicketFilters {
   status: string
   priority: string
@@ -46,10 +47,7 @@ const {
   }),
 })
 
-const goToTicket = (id: string) => {
-  navigateTo(`/tickets/${id}`)
-}
-
+// Колонки таблицы тикетов
 const columns = [
   { key: 'number', label: 'Номер' },
   { key: 'subject', label: 'Тема' },
@@ -58,6 +56,11 @@ const columns = [
   { key: 'assignedAdmin', label: 'Назначен' },
   { key: 'createdAt', label: 'Создан', sortable: true },
 ]
+
+// Переход на страницу тикета
+function goToTicket(id: string) {
+  navigateTo(`/tickets/${id}`)
+}
 </script>
 
 <template>

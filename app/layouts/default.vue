@@ -1,21 +1,19 @@
 <script setup lang="ts">
-// Composables
 const supabase = useSupabaseClient()
-const router = useRouter()
 
-// Handlers
 async function handleLogout() {
   await supabase.auth.signOut()
-  router.push('/admin/login')
+  // Полный reload для сброса состояния сессии (Gotcha #4)
+  window.location.href = '/admin/login'
 }
 </script>
 
 <template>
   <div class="layout-root min-h-screen flex">
-    <!-- Sidebar -->
+    <!-- Боковая панель -->
     <aside class="hidden md:flex w-64 flex-col glass-card border-r border-[var(--glass-border)]">
       <div class="p-6">
-        <!-- Header with logo and logout -->
+        <!-- Шапка с кнопкой выхода -->
         <div class="flex items-center justify-between mb-8">
           <h2 class="text-xl font-bold text-[var(--text-primary)]">
             Админ-панель
@@ -29,7 +27,7 @@ async function handleLogout() {
           </button>
         </div>
 
-        <!-- Navigation -->
+        <!-- Навигация -->
         <nav class="space-y-2">
           <NuxtLink to="/dashboard" class="nav-item" active-class="nav-item-active">
             <Icon name="heroicons:home" class="w-5 h-5" />
@@ -84,14 +82,14 @@ async function handleLogout() {
       </div>
     </aside>
 
-    <!-- Main content -->
+    <!-- Основной контент -->
     <main class="flex-1 overflow-y-auto">
       <div class="container mx-auto px-4 md:px-6 py-6 md:py-8">
         <slot />
       </div>
     </main>
 
-    <!-- Mobile nav -->
+    <!-- Мобильная навигация -->
     <div class="md:hidden fixed bottom-0 left-0 right-0 glass-card border-t border-[var(--glass-border)] p-4 pb-safe">
       <div class="flex items-center justify-around">
         <NuxtLink to="/dashboard" class="mobile-nav-item">
@@ -116,7 +114,7 @@ async function handleLogout() {
       </div>
     </div>
 
-    <!-- Toast notifications -->
+    <!-- Уведомления -->
     <UiToastContainer />
   </div>
 </template>
@@ -127,15 +125,23 @@ async function handleLogout() {
 }
 
 .nav-item {
-  @apply flex items-center gap-3 px-4 py-3 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--glass-bg)] hover:text-[var(--text-primary)] transition-colors cursor-pointer;
+  @apply flex items-center gap-3 px-4 py-3 rounded-lg transition-colors cursor-pointer;
+  color: var(--text-secondary);
+}
+
+.nav-item:hover {
+  background-color: var(--glass-bg);
+  color: var(--text-primary);
 }
 
 .nav-item-active {
-  @apply bg-gradient-to-r from-primary/20 to-secondary/10 text-[var(--text-primary)] font-semibold;
+  @apply bg-gradient-to-r from-primary/20 to-secondary/10 font-semibold;
+  color: var(--text-primary);
 }
 
 .mobile-nav-item {
-  @apply flex flex-col items-center gap-1 text-[var(--text-secondary)];
+  @apply flex flex-col items-center gap-1;
+  color: var(--text-secondary);
 }
 
 .mobile-nav-item.router-link-active {

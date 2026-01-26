@@ -10,17 +10,7 @@ useHead({ title: 'Создать аккаунт — Админ-панель' })
 const toast = useToast()
 const router = useRouter()
 
-const saving = ref(false)
-const error = ref('')
-
-// User search
-const userSearch = ref('')
-const userSearchResults = ref<UserSearchResult[]>([])
-const userSearchLoading = ref(false)
-const userSearchDebounce = ref<ReturnType<typeof setTimeout> | null>(null)
-const showUserDropdown = ref(false)
-const selectedUser = ref<UserSearchResult | null>(null)
-
+// Данные формы
 const form = ref({
   userId: null as string | null,
   contractNumber: null as number | null,
@@ -40,6 +30,19 @@ const form = ref({
   },
 })
 
+// Состояние формы
+const saving = ref(false) // Идёт ли сохранение
+const error = ref('') // Текст ошибки
+
+// Состояние поиска пользователя
+const userSearch = ref('') // Текст поиска
+const userSearchResults = ref<UserSearchResult[]>([]) // Результаты поиска
+const userSearchLoading = ref(false) // Загрузка поиска
+const userSearchDebounce = ref<ReturnType<typeof setTimeout> | null>(null) // Таймер debounce
+const showUserDropdown = ref(false) // Открыт ли dropdown
+const selectedUser = ref<UserSearchResult | null>(null) // Выбранный пользователь
+
+// Опции статуса договора
 const contractStatusOptions = [
   { value: 'draft', label: 'Черновик' },
   { value: 'active', label: 'Активный' },
@@ -47,7 +50,8 @@ const contractStatusOptions = [
   { value: 'stopped', label: 'Приостановлен' },
 ]
 
-const searchUsers = async (query: string) => {
+// Поиск пользователей по запросу
+async function searchUsers(query: string) {
   if (!query.trim() || query.length < 2) {
     userSearchResults.value = []
     return
@@ -67,7 +71,8 @@ const searchUsers = async (query: string) => {
   }
 }
 
-const onUserSearchInput = () => {
+// Обработка ввода в поле поиска с debounce
+function onUserSearchInput() {
   if (userSearchDebounce.value) {
     clearTimeout(userSearchDebounce.value)
   }
@@ -77,6 +82,7 @@ const onUserSearchInput = () => {
   }, 300)
 }
 
+// Выбор пользователя из списка
 function selectUser(user: UserSearchResult) {
   selectedUser.value = user
   form.value.userId = user.id
@@ -85,13 +91,15 @@ function selectUser(user: UserSearchResult) {
   userSearchResults.value = []
 }
 
-const clearUser = () => {
+// Очистка выбранного пользователя
+function clearUser() {
   selectedUser.value = null
   form.value.userId = null
   userSearch.value = ''
 }
 
-const createAccount = async () => {
+// Создание нового аккаунта
+async function createAccount() {
   if (saving.value) return
 
   error.value = ''
@@ -118,12 +126,13 @@ const createAccount = async () => {
   }
 }
 
-const cancel = () => {
+// Отмена и возврат к списку
+function cancel() {
   router.push('/accounts')
 }
 
-// Close dropdown when clicking outside
-const handleClickOutside = (e: MouseEvent) => {
+// Закрытие dropdown при клике вне его
+function handleClickOutside(e: MouseEvent) {
   const target = e.target as HTMLElement
   if (!target.closest('.user-search-container')) {
     showUserDropdown.value = false

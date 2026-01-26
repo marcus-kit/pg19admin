@@ -8,20 +8,23 @@ useHead({ title: 'Вход в админ-панель — ПЖ19' })
 
 const supabase = useSupabaseClient()
 
+// Данные формы
 const form = reactive({
   email: '',
   password: '',
 })
 
+// Ошибки валидации
 const errors = reactive({
   email: '',
   password: '',
   general: '',
 })
 
-const isLoading = ref(false)
+const isLoading = ref(false) // Идёт ли запрос
 
-const validate = (): boolean => {
+// Валидация формы перед отправкой
+function validate(): boolean {
   errors.email = ''
   errors.password = ''
   errors.general = ''
@@ -45,7 +48,8 @@ const validate = (): boolean => {
   return true
 }
 
-const handleLogin = async () => {
+// Обработка входа в систему
+async function handleLogin() {
   if (!validate()) return
 
   isLoading.value = true
@@ -62,7 +66,7 @@ const handleLogin = async () => {
       return
     }
 
-    // Полная перезагрузка страницы чтобы сессия подхватилась
+    // ВАЖНО: Полная перезагрузка для подхвата сессии Supabase
     window.location.href = '/dashboard'
   }
   catch {
@@ -100,10 +104,10 @@ const handleLogin = async () => {
               Email
             </label>
             <input
-              id="email"
               v-model="form.email"
               :disabled="isLoading"
               :class="errors.email ? 'border-red-500' : 'border-[var(--glass-border)]'"
+              id="email"
               type="email"
               placeholder="admin@doka.team"
               class="w-full px-4 py-3 bg-[var(--glass-bg)] border rounded-lg text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-primary/50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
@@ -117,10 +121,10 @@ const handleLogin = async () => {
               Пароль
             </label>
             <input
-              id="password"
               v-model="form.password"
               :disabled="isLoading"
               :class="errors.password ? 'border-red-500' : 'border-[var(--glass-border)]'"
+              id="password"
               type="password"
               placeholder="••••••••"
               class="w-full px-4 py-3 bg-[var(--glass-bg)] border rounded-lg text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-primary/50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"

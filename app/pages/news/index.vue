@@ -28,7 +28,10 @@ const {
   initialFilters: { status: 'all' },
 })
 
-const deleteNews = (id: string) => deleteItem(id, 'Удалить эту новость?')
+// Удаление новости с подтверждением
+function deleteNews(id: string) {
+  deleteItem(id, 'Удалить эту новость?')
+}
 </script>
 
 <template>

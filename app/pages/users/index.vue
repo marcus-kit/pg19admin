@@ -16,7 +16,7 @@ useHead({ title: 'Пользователи — Админ-панель' })
 
 const router = useRouter()
 
-// Use centralized list composable
+// Используем централизованный composable для списков
 const {
   items: users,
   loading,
@@ -30,15 +30,7 @@ const {
   initialFilters: { status: 'all' },
 })
 
-// Online status uses simple class mapping (not badgeClass)
-const getOnlineStatusClass = (status: string) => {
-  switch (status) {
-    case 'online': return 'bg-green-500'
-    case 'away': return 'bg-yellow-500'
-    default: return 'bg-gray-500'
-  }
-}
-
+// Колонки таблицы пользователей
 const columns = [
   { key: 'user', label: 'Пользователь' },
   { key: 'contacts', label: 'Контакты' },
@@ -48,7 +40,17 @@ const columns = [
   { key: 'createdAt', label: 'Создан', sortable: true },
 ]
 
-const goToUser = (user: User) => {
+// Возвращает класс индикатора онлайн-статуса
+function getOnlineStatusClass(status: string) {
+  switch (status) {
+    case 'online': return 'bg-green-500'
+    case 'away': return 'bg-yellow-500'
+    default: return 'bg-gray-500'
+  }
+}
+
+// Переход к странице пользователя
+function goToUser(user: User) {
   router.push(`/users/${user.id}`)
 }
 </script>
@@ -63,10 +65,7 @@ const goToUser = (user: User) => {
           ({{ total }})
         </span>
       </h1>
-      <UiButton
-
-        @click="router.push('/users/create')"
-      >
+      <UiButton @click="router.push('/users/create')">
         <Icon name="heroicons:plus" class="w-4 h-4" />
         Создать
       </UiButton>
