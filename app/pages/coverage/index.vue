@@ -100,8 +100,11 @@ const visibleZonesForMap = computed(() =>
 )
 
 // ═══════════════════════════════════════════════════════════════════════════
-// 6. МЕТОДЫ — Загрузка данных
+// 6. МЕТОДЫ
 // ═══════════════════════════════════════════════════════════════════════════
+
+// --- Загрузка данных ---
+
 async function fetchZones() {
   loading.value = true
   try {
@@ -126,15 +129,10 @@ async function fetchPartners() {
   }
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
-// 6. МЕТОДЫ — Фильтрация и выбор
-// ═══════════════════════════════════════════════════════════════════════════
+// --- Фильтрация и выбор ---
+
 function selectPartner(partnerId: number) {
   selectedPartnerId.value = selectedPartnerId.value === partnerId ? null : partnerId
-}
-
-function handleZoneClick(zone: CoverageZone) {
-  selectedZone.value = zone
 }
 
 function toggleZoneVisibility(zone: CoverageZone) {
@@ -149,9 +147,7 @@ function toggleZoneVisibility(zone: CoverageZone) {
   localStorage.setItem('coverage-hidden-zones', JSON.stringify([...newHidden]))
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
-// 6. МЕТОДЫ — Удаление зон
-// ═══════════════════════════════════════════════════════════════════════════
+// --- Удаление зон ---
 
 async function confirmDelete() {
   if (!zoneToDelete.value) return
@@ -171,9 +167,7 @@ async function confirmDelete() {
   }
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
-// 6. МЕТОДЫ — Импорт/экспорт
-// ═══════════════════════════════════════════════════════════════════════════
+// --- Импорт/экспорт ---
 
 async function handleFileSelect(event: Event) {
   const input = event.target as HTMLInputElement
@@ -221,9 +215,8 @@ function handleExport() {
   window.open(`/api/admin/coverage/export${query}`, '_blank')
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
-// 6. МЕТОДЫ — Карта OpenLayers
-// ═══════════════════════════════════════════════════════════════════════════
+// --- Карта OpenLayers ---
+
 function escapeHtml(text: string): string {
   const div = document.createElement('div')
   div.textContent = text
@@ -299,21 +292,18 @@ async function initMap() {
     if (feature) {
       const zone = feature.get('zone') as CoverageZone
       const typeLabel = zone.partner?.name || 'Партнёр'
-      const typeBg = 'background: rgba(233, 30, 140, 0.2); color: #E91E8C;'
-      const statusBg = zone.isActive
-        ? 'background: rgba(34, 197, 94, 0.2); color: #22C55E;'
-        : 'background: rgba(107, 114, 128, 0.2); color: #9CA3AF;'
+      const statusClass = zone.isActive ? 'ol-popup-badge--success' : 'ol-popup-badge--neutral'
 
       popupContent.value = `
-        <h4 style="font-weight: 600; font-size: 14px; margin: 0 0 8px 0; color: #1f2937;">${escapeHtml(zone.name)}</h4>
-        ${zone.description ? `<p style="font-size: 12px; color: #6b7280; margin: 0 0 8px 0;">${escapeHtml(zone.description)}</p>` : ''}
-        <div style="display: flex; gap: 6px; flex-wrap: wrap;">
-          <span style="padding: 2px 8px; border-radius: 9999px; font-size: 11px; ${typeBg}">${escapeHtml(typeLabel)}</span>
-          <span style="padding: 2px 8px; border-radius: 9999px; font-size: 11px; ${statusBg}">${zone.isActive ? 'Активна' : 'Неактивна'}</span>
+        <h4 class="ol-popup-title">${escapeHtml(zone.name)}</h4>
+        ${zone.description ? `<p class="ol-popup-desc">${escapeHtml(zone.description)}</p>` : ''}
+        <div class="ol-popup-badges">
+          <span class="ol-popup-badge ol-popup-badge--primary">${escapeHtml(typeLabel)}</span>
+          <span class="ol-popup-badge ${statusClass}">${zone.isActive ? 'Активна' : 'Неактивна'}</span>
         </div>
       `
       popupOverlay!.setPosition(evt.coordinate)
-      handleZoneClick(zone)
+      selectedZone.value = zone
     }
     else {
       popupOverlay!.setPosition(undefined)
@@ -609,9 +599,10 @@ onUnmounted(() => {
 <style>
 @import 'ol/ol.css';
 
+/* Popup контейнер (белый фон для читаемости на карте) */
 .ol-popup {
   position: absolute;
-  background-color: white;
+  background-color: #fff;
   box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2);
   padding: 12px 16px;
   border-radius: 12px;
@@ -632,7 +623,7 @@ onUnmounted(() => {
 }
 
 .ol-popup::after {
-  border-top-color: white;
+  border-top-color: #fff;
   border-width: 10px;
   left: 90px;
   margin-left: -10px;
@@ -651,7 +642,7 @@ onUnmounted(() => {
   right: 8px;
   font-size: 18px;
   font-weight: bold;
-  color: #9ca3af;
+  color: var(--text-muted);
   background: none;
   border: none;
   cursor: pointer;
@@ -660,13 +651,55 @@ onUnmounted(() => {
 }
 
 .ol-popup-closer:hover {
-  color: #6b7280;
+  color: var(--text-secondary);
 }
 
 .ol-popup-content {
   padding-right: 16px;
 }
 
+/* Popup контент */
+.ol-popup-title {
+  font-weight: 600;
+  font-size: 14px;
+  margin: 0 0 8px 0;
+  color: #1f2937;
+}
+
+.ol-popup-desc {
+  font-size: 12px;
+  color: #6b7280;
+  margin: 0 0 8px 0;
+}
+
+.ol-popup-badges {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.ol-popup-badge {
+  padding: 2px 8px;
+  border-radius: 9999px;
+  font-size: 11px;
+}
+
+.ol-popup-badge--primary {
+  background: rgba(233, 30, 140, 0.2);
+  color: #e91e8c;
+}
+
+.ol-popup-badge--success {
+  background: rgba(34, 197, 94, 0.2);
+  color: #22c55e;
+}
+
+.ol-popup-badge--neutral {
+  background: rgba(107, 114, 128, 0.2);
+  color: #9ca3af;
+}
+
+/* OpenLayers контролы */
 .ol-control button {
   background-color: rgba(255, 255, 255, 0.9);
 }
