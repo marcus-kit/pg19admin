@@ -8,14 +8,6 @@ import type RenderFeature from 'ol/render/Feature'
 import type { StyleLike } from 'ol/style/Style'
 import type VectorSource from 'ol/source/Vector'
 
-definePageMeta({
-  middleware: 'admin',
-})
-
-useHead({ title: 'Карта покрытия — Админ-панель' })
-
-const toast = useToast()
-
 // Интерфейс зоны покрытия
 interface CoverageZone {
   id: number
@@ -40,6 +32,14 @@ interface Partner {
   name: string
   color: string
 }
+
+definePageMeta({
+  middleware: 'admin',
+})
+
+useHead({ title: 'Карта покрытия — Админ-панель' })
+
+const toast = useToast()
 
 const loading = ref(true)
 const zones = ref<CoverageZone[]>([])
@@ -507,9 +507,9 @@ onUnmounted(() => {
 
             <UiButton
               :class="{ 'bg-white/10': !selectedPartnerId }"
+              @click="selectedPartnerId = null"
               variant="ghost"
               size="sm"
-              @click="selectedPartnerId = null"
             >
               Все
             </UiButton>
@@ -519,9 +519,9 @@ onUnmounted(() => {
               :key="partner.id"
               :class="{ 'ring-2 ring-offset-1 ring-offset-transparent': selectedPartnerId === partner.id }"
               :style="selectedPartnerId === partner.id ? { ringColor: partner.color } : {}"
+              @click="selectPartner(partner.id)"
               variant="ghost"
               size="sm"
-              @click="selectPartner(partner.id)"
             >
               <span
                 :style="{ backgroundColor: partner.color }"
@@ -552,7 +552,7 @@ onUnmounted(() => {
 
             <!-- Popup overlay -->
             <div ref="popupContainer" class="ol-popup">
-              <button class="ol-popup-closer" @click="closePopup">&times;</button>
+              <button @click="closePopup" class="ol-popup-closer">&times;</button>
               <!-- eslint-disable-next-line vue/no-v-html -->
               <div class="ol-popup-content" v-html="popupContent" />
             </div>
@@ -576,7 +576,7 @@ onUnmounted(() => {
               class="p-3 bg-red-500/20 border border-red-500/30 rounded-lg text-red-400 text-sm flex items-center justify-between"
             >
               <span>{{ importError }}</span>
-              <button class="ml-2 hover:text-red-300" @click="clearImportError">
+              <button @click="clearImportError" class="ml-2 hover:text-red-300">
                 <Icon name="heroicons:x-mark" class="w-4 h-4" />
               </button>
             </div>
@@ -606,18 +606,18 @@ onUnmounted(() => {
 
               <input
                 ref="fileInput"
+                @change="handleFileSelect"
                 type="file"
                 accept=".geojson,.json"
                 class="hidden"
-                @change="handleFileSelect"
               />
 
               <UiButton
                 :loading="importing"
                 :disabled="loading || importing"
+                @click="triggerFileInput"
                 variant="secondary"
                 class="w-full"
-                @click="triggerFileInput"
               >
                 <Icon name="heroicons:arrow-up-tray" class="w-4 h-4" />
                 Загрузить GeoJSON
@@ -644,9 +644,9 @@ onUnmounted(() => {
 
               <UiButton
                 :disabled="loading"
+                @click="handleExport"
                 variant="ghost"
                 class="w-full"
-                @click="handleExport"
               >
                 <Icon name="heroicons:arrow-down-tray" class="w-4 h-4" />
                 Скачать GeoJSON
@@ -676,8 +676,8 @@ onUnmounted(() => {
                 'ring-2 ring-primary': selectedZone?.id === zone.id,
                 'opacity-50': isZoneHidden(zone.id),
               }"
-              class="p-3 rounded-lg border border-[var(--glass-border)] hover:bg-[var(--glass-bg)] transition-colors cursor-pointer"
               @click="handleZoneClick(zone)"
+              class="p-3 rounded-lg border border-[var(--glass-border)] hover:bg-[var(--glass-bg)] transition-colors cursor-pointer"
             >
               <div class="flex items-start justify-between gap-2">
                 <div class="flex-1 min-w-0">
@@ -717,8 +717,8 @@ onUnmounted(() => {
                 <div class="flex gap-1 flex-shrink-0">
                   <button
                     :title="isZoneHidden(zone.id) ? 'Показать на карте' : 'Скрыть на карте'"
-                    class="p-1 hover:bg-[var(--glass-bg)] rounded"
                     @click.stop="toggleZoneVisibility(zone)"
+                    class="p-1 hover:bg-[var(--glass-bg)] rounded"
                   >
                     <Icon
                       :name="isZoneHidden(zone.id) ? 'heroicons:eye-slash' : 'heroicons:eye'"
@@ -726,9 +726,9 @@ onUnmounted(() => {
                     />
                   </button>
                   <button
-                    class="p-1 hover:bg-red-500/10 rounded"
-                    title="Удалить"
                     @click.stop="openDeleteModal(zone)"
+                    title="Удалить"
+                    class="p-1 hover:bg-red-500/10 rounded"
                   >
                     <Icon name="heroicons:trash" class="w-4 h-4 text-red-400" />
                   </button>
@@ -751,8 +751,8 @@ onUnmounted(() => {
               {{ selectedZone.name }}
             </h3>
             <button
-              class="p-1 hover:bg-[var(--glass-bg)] rounded text-[var(--text-muted)]"
               @click="selectedZone = null"
+              class="p-1 hover:bg-[var(--glass-bg)] rounded text-[var(--text-muted)]"
             >
               <Icon name="heroicons:x-mark" class="w-5 h-5" />
             </button>
@@ -817,10 +817,10 @@ onUnmounted(() => {
     <UiDeleteConfirmModal
       :show="showDeleteModal"
       :item-name="zoneToDelete?.name || ''"
-      title="Удаление зоны покрытия"
-      message="Зона будет деактивирована и скрыта. Для подтверждения введите название зоны:"
       @close="showDeleteModal = false; zoneToDelete = null"
       @confirm="confirmDelete"
+      title="Удаление зоны покрытия"
+      message="Зона будет деактивирована и скрыта. Для подтверждения введите название зоны:"
     />
   </div>
 </template>

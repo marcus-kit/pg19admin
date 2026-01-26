@@ -97,7 +97,7 @@ async function handleLogin() {
         </div>
 
         <!-- Login Form -->
-        <form class="space-y-4" @submit.prevent="handleLogin">
+        <form @submit.prevent="handleLogin" class="space-y-4">
           <!-- Email -->
           <div>
             <label for="email" class="block text-sm font-medium text-[var(--text-secondary)] mb-2">
@@ -106,8 +106,8 @@ async function handleLogin() {
             <input
               v-model="form.email"
               :disabled="isLoading"
-              :class="errors.email ? 'border-red-500' : 'border-[var(--glass-border)]'"
               id="email"
+              :class="errors.email ? 'border-red-500' : 'border-[var(--glass-border)]'"
               type="email"
               placeholder="admin@doka.team"
               class="w-full px-4 py-3 bg-[var(--glass-bg)] border rounded-lg text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-primary/50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
@@ -123,8 +123,8 @@ async function handleLogin() {
             <input
               v-model="form.password"
               :disabled="isLoading"
-              :class="errors.password ? 'border-red-500' : 'border-[var(--glass-border)]'"
               id="password"
+              :class="errors.password ? 'border-red-500' : 'border-[var(--glass-border)]'"
               type="password"
               placeholder="••••••••"
               class="w-full px-4 py-3 bg-[var(--glass-bg)] border rounded-lg text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-primary/50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"

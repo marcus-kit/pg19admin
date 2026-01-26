@@ -77,7 +77,7 @@ function cancel() {
   <div>
     <!-- Header -->
     <div class="flex items-center gap-3 mb-6">
-      <UiButton variant="ghost" size="sm" @click="cancel">
+      <UiButton @click="cancel" variant="ghost" size="sm">
         <Icon name="heroicons:arrow-left" class="w-5 h-5" />
       </UiButton>
       <h1 class="text-2xl font-bold text-[var(--text-primary)]">Создать пользователя</h1>
@@ -90,7 +90,7 @@ function cancel() {
 
     <!-- Form -->
     <div class="max-w-2xl">
-      <form class="space-y-6" @submit.prevent="createUser">
+      <form @submit.prevent="createUser" class="space-y-6">
         <!-- Основные данные -->
         <UiCard>
           <template #header>
@@ -212,7 +212,7 @@ function cancel() {
             <Icon name="heroicons:plus" class="w-4 h-4" />
             Создать
           </UiButton>
-          <UiButton :disabled="saving" variant="ghost" @click="cancel">
+          <UiButton :disabled="saving" @click="cancel" variant="ghost">
             Отмена
           </UiButton>
         </div>

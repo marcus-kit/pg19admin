@@ -1,4 +1,11 @@
 <script setup lang="ts">
+/**
+ * UiDeleteConfirmModal — модалка подтверждения удаления
+ *
+ * Для безопасности требует ввести "DELETE {itemName}" перед удалением.
+ * Используется для деструктивных операций (удаление пользователей, новостей и т.д.)
+ */
+
 interface Props {
   show: boolean
   title?: string
@@ -25,20 +32,22 @@ const isValid = computed(() => {
   return confirmInput.value.trim() === expectedValue.value
 })
 
-const handleConfirm = () => {
+// Подтвердить удаление (если введено правильное значение)
+function handleConfirm() {
   if (isValid.value) {
     emit('confirm')
     confirmInput.value = ''
   }
 }
 
-const handleClose = () => {
+// Закрыть модалку и сбросить поле ввода
+function handleClose() {
   confirmInput.value = ''
   emit('close')
 }
 
 // Закрытие по ESC
-const handleEscape = (e: KeyboardEvent) => {
+function handleEscape(e: KeyboardEvent) {
   if (e.key === 'Escape') handleClose()
 }
 
@@ -71,9 +80,9 @@ onUnmounted(() => {
       >
         <div
           v-if="show"
+          @click.self="handleClose"
           class="fixed inset-0 z-50 flex items-center justify-center p-4"
           style="background-color: rgba(0, 0, 0, 0.85);"
-          @click.self="handleClose"
         >
           <div
             class="w-full max-w-md rounded-2xl p-6"
@@ -103,28 +112,28 @@ onUnmounted(() => {
             <div class="mb-6">
               <input
                 v-model="confirmInput"
+                @keyup.enter="handleConfirm"
                 type="text"
                 class="w-full px-4 py-3 rounded-xl text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-red-500/50"
                 style="background: var(--glass-bg); border: 1px solid var(--glass-border);"
                 placeholder="Введите DELETE и название"
-                @keyup.enter="handleConfirm"
               />
             </div>
 
             <!-- Actions -->
             <div class="flex gap-3">
               <UiButton
+                @click="handleClose"
                 variant="secondary"
                 class="flex-1"
-                @click="handleClose"
               >
                 Отмена
               </UiButton>
               <UiButton
                 :disabled="!isValid"
+                @click="handleConfirm"
                 variant="danger"
                 class="flex-1"
-                @click="handleConfirm"
               >
                 <Icon name="heroicons:trash" class="w-4 h-4 mr-2" />
                 Удалить

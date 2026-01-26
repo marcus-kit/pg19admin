@@ -97,18 +97,18 @@ function deleteNews(id: string) {
 
           <div class="flex gap-2">
             <UiButton
+              @click="$router.push(`/news/${item.id}/edit`)"
               variant="ghost"
               size="sm"
               title="Редактировать"
-              @click="$router.push(`/news/${item.id}/edit`)"
             >
               <Icon name="heroicons:pencil" class="w-4 h-4" />
             </UiButton>
             <UiButton
+              @click="deleteNews(item.id)"
               variant="ghost"
               size="sm"
               title="Удалить"
-              @click="deleteNews(item.id)"
             >
               <Icon name="heroicons:trash" class="w-4 h-4 text-red-400" />
             </UiButton>

@@ -99,7 +99,7 @@ function cancel() {
     </div>
 
     <!-- Form -->
-    <form class="space-y-6" @submit.prevent="saveNews">
+    <form @submit.prevent="saveNews" class="space-y-6">
       <!-- Title -->
       <div>
         <label class="block text-sm font-medium text-[var(--text-primary)] mb-2">
@@ -182,8 +182,8 @@ function cancel() {
         </UiButton>
         <UiButton
           :disabled="saving"
-          variant="ghost"
           @click="cancel"
+          variant="ghost"
         >
           Отмена
         </UiButton>

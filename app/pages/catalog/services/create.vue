@@ -125,7 +125,7 @@ onMounted(() => {
       {{ error }}
     </div>
 
-    <form class="space-y-6 max-w-2xl" @submit.prevent="save">
+    <form @submit.prevent="save" class="space-y-6 max-w-2xl">
       <div>
         <label class="block text-sm font-medium text-[var(--text-primary)] mb-2">
           Название *
@@ -206,11 +206,11 @@ onMounted(() => {
         <div class="flex gap-2 mb-3">
           <UiInput
             v-model="newFeature"
+            @keyup.enter.prevent="addFeature"
             placeholder="Добавить характеристику"
             class="flex-1"
-            @keyup.enter.prevent="addFeature"
           />
-          <UiButton type="button" variant="secondary" @click="addFeature">
+          <UiButton @click="addFeature" type="button" variant="secondary">
             <Icon name="heroicons:plus" class="w-5 h-5" />
           </UiButton>
         </div>
@@ -222,9 +222,9 @@ onMounted(() => {
           >
             {{ feature }}
             <button
+              @click="removeFeature(index)"
               type="button"
               class="hover:text-red-400 transition-colors"
-              @click="removeFeature(index)"
             >
               <Icon name="heroicons:x-mark" class="w-4 h-4" />
             </button>
@@ -257,7 +257,7 @@ onMounted(() => {
         <UiButton :loading="saving" :disabled="saving" type="submit">
           Сохранить
         </UiButton>
-        <UiButton :disabled="saving" variant="ghost" @click="router.push('/catalog')">
+        <UiButton :disabled="saving" @click="router.push('/catalog')" variant="ghost">
           Отмена
         </UiButton>
       </div>

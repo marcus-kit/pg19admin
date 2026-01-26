@@ -215,7 +215,7 @@ onMounted(() => {
       <div class="flex items-start justify-between gap-4 mb-6">
         <div>
           <div class="flex items-center gap-3 mb-2">
-            <UiButton variant="ghost" size="sm" @click="router.push('/users')">
+            <UiButton @click="router.push('/users')" variant="ghost" size="sm">
               <Icon name="heroicons:arrow-left" class="w-5 h-5" />
             </UiButton>
             <UiBadge :class="getStatusBadgeClass(user.status)">
@@ -248,9 +248,9 @@ onMounted(() => {
 
         <div class="flex gap-2">
           <UiButton
+            @click="openEditModal"
             variant="secondary"
             size="sm"
-            @click="openEditModal"
           >
             <Icon name="heroicons:pencil" class="w-4 h-4" />
             Редактировать
@@ -309,8 +309,8 @@ onMounted(() => {
               <div
                 v-for="account in user.accounts"
                 :key="account.id"
-                class="p-4 rounded-lg bg-[var(--glass-bg)] border border-[var(--glass-border)] hover:border-primary/30 cursor-pointer transition-colors"
                 @click="router.push(`/accounts/${account.id}`)"
+                class="p-4 rounded-lg bg-[var(--glass-bg)] border border-[var(--glass-border)] hover:border-primary/30 cursor-pointer transition-colors"
               >
                 <div class="flex items-center justify-between mb-2">
                   <span class="font-mono text-primary">
@@ -369,10 +369,10 @@ onMounted(() => {
               <UiButton
                 v-if="user.status !== 'active'"
                 :disabled="saving"
+                @click="updateStatus('active')"
                 variant="secondary"
                 size="sm"
                 class="w-full justify-center"
-                @click="updateStatus('active')"
               >
                 <Icon name="heroicons:check-circle" class="w-4 h-4 text-green-400" />
                 Активировать
@@ -380,10 +380,10 @@ onMounted(() => {
               <UiButton
                 v-if="user.status !== 'suspended'"
                 :disabled="saving"
+                @click="updateStatus('suspended')"
                 variant="secondary"
                 size="sm"
                 class="w-full justify-center"
-                @click="updateStatus('suspended')"
               >
                 <Icon name="heroicons:pause-circle" class="w-4 h-4 text-yellow-400" />
                 Приостановить
@@ -391,10 +391,10 @@ onMounted(() => {
               <UiButton
                 v-if="user.status !== 'terminated'"
                 :disabled="saving"
+                @click="updateStatus('terminated')"
                 variant="secondary"
                 size="sm"
                 class="w-full justify-center"
-                @click="updateStatus('terminated')"
               >
                 <Icon name="heroicons:x-circle" class="w-4 h-4 text-red-400" />
                 Удалить
@@ -432,14 +432,14 @@ onMounted(() => {
       <Teleport to="body">
         <div
           v-if="showEditModal"
-          class="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto"
           @click.self="showEditModal = false"
+          class="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto"
         >
           <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" />
           <div class="relative w-full max-w-2xl glass-card rounded-xl p-6 my-8">
             <h3 class="text-xl font-bold text-[var(--text-primary)] mb-6">Редактировать пользователя</h3>
 
-            <form class="space-y-6" @submit.prevent="saveUser">
+            <form @submit.prevent="saveUser" class="space-y-6">
               <!-- Основные данные -->
               <div>
                 <h4 class="text-sm font-medium text-[var(--text-muted)] mb-3">Основные данные</h4>
@@ -486,7 +486,7 @@ onMounted(() => {
               </div>
 
               <div class="flex justify-end gap-3 pt-4 border-t border-[var(--glass-border)]">
-                <UiButton :disabled="saving" variant="ghost" @click="showEditModal = false">
+                <UiButton :disabled="saving" @click="showEditModal = false" variant="ghost">
                   Отмена
                 </UiButton>
                 <UiButton :loading="saving" :disabled="saving" type="submit">

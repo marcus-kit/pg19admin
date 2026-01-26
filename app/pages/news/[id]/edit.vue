@@ -248,7 +248,7 @@ onMounted(() => {
     </div>
 
     <!-- Form -->
-    <form v-else class="space-y-6" @submit.prevent="saveNews">
+    <form v-else @submit.prevent="saveNews" class="space-y-6">
       <!-- Title -->
       <div>
         <label class="block text-sm font-medium text-[var(--text-primary)] mb-2">
@@ -292,8 +292,8 @@ onMounted(() => {
       <!-- Pin -->
       <div class="flex items-center gap-3">
         <input
-          id="isPinned"
           v-model="form.isPinned"
+          id="isPinned"
           type="checkbox"
           class="w-5 h-5 rounded border-[var(--glass-border)] bg-[var(--glass-bg)] text-primary focus:ring-primary"
         />
@@ -338,10 +338,10 @@ onMounted(() => {
             </a>
             <button
               :disabled="deleting === att.id"
-              class="p-1.5 rounded hover:bg-red-500/10 text-[var(--text-muted)] hover:text-red-400 transition-colors disabled:opacity-50"
+              @click="deleteAttachment(att)"
               title="Удалить"
               type="button"
-              @click="deleteAttachment(att)"
+              class="p-1.5 rounded hover:bg-red-500/10 text-[var(--text-muted)] hover:text-red-400 transition-colors disabled:opacity-50"
             >
               <Icon
                 :name="deleting === att.id ? 'heroicons:arrow-path' : 'heroicons:trash'"
@@ -378,10 +378,10 @@ onMounted(() => {
 
         <input
           ref="fileInput"
+          @change="handleFileSelect"
           type="file"
           class="hidden"
           multiple
-          @change="handleFileSelect"
         />
       </div>
 
@@ -396,8 +396,8 @@ onMounted(() => {
         </UiButton>
         <UiButton
           :disabled="saving"
-          variant="ghost"
           @click="cancel"
+          variant="ghost"
         >
           Отмена
         </UiButton>

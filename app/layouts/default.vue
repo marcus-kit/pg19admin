@@ -1,4 +1,11 @@
 <script setup lang="ts">
+/**
+ * Default layout — основной layout админ-панели
+ *
+ * Содержит боковую навигацию (desktop), мобильную навигацию (bottom bar),
+ * и контейнер для toast-уведомлений.
+ */
+
 const supabase = useSupabaseClient()
 
 async function handleLogout() {
@@ -19,9 +26,9 @@ async function handleLogout() {
             Админ-панель
           </h2>
           <button
-            class="p-2 text-[var(--text-muted)] hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
-            title="Выйти"
             @click="handleLogout"
+            title="Выйти"
+            class="p-2 text-[var(--text-muted)] hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
           >
             <Icon name="heroicons:arrow-right-on-rectangle" class="w-5 h-5" />
           </button>
@@ -29,52 +36,52 @@ async function handleLogout() {
 
         <!-- Навигация -->
         <nav class="space-y-2">
-          <NuxtLink to="/dashboard" class="nav-item" active-class="nav-item-active">
+          <NuxtLink to="/dashboard" active-class="nav-item-active" class="nav-item">
             <Icon name="heroicons:home" class="w-5 h-5" />
             <span>Dashboard</span>
           </NuxtLink>
 
-          <NuxtLink to="/users" class="nav-item" active-class="nav-item-active">
+          <NuxtLink to="/users" active-class="nav-item-active" class="nav-item">
             <Icon name="heroicons:users" class="w-5 h-5" />
             <span>Пользователи</span>
           </NuxtLink>
 
-          <NuxtLink to="/accounts" class="nav-item" active-class="nav-item-active">
+          <NuxtLink to="/accounts" active-class="nav-item-active" class="nav-item">
             <Icon name="heroicons:identification" class="w-5 h-5" />
             <span>Аккаунты</span>
           </NuxtLink>
 
-          <NuxtLink to="/news" class="nav-item" active-class="nav-item-active">
+          <NuxtLink to="/news" active-class="nav-item-active" class="nav-item">
             <Icon name="heroicons:newspaper" class="w-5 h-5" />
             <span>Новости</span>
           </NuxtLink>
 
-          <NuxtLink to="/catalog" class="nav-item" active-class="nav-item-active">
+          <NuxtLink to="/catalog" active-class="nav-item-active" class="nav-item">
             <Icon name="heroicons:squares-2x2" class="w-5 h-5" />
             <span>Каталог</span>
           </NuxtLink>
 
-          <NuxtLink to="/coverage" class="nav-item" active-class="nav-item-active">
+          <NuxtLink to="/coverage" active-class="nav-item-active" class="nav-item">
             <Icon name="heroicons:map" class="w-5 h-5" />
             <span>Карта покрытия</span>
           </NuxtLink>
 
-          <NuxtLink to="/requests" class="nav-item" active-class="nav-item-active">
+          <NuxtLink to="/requests" active-class="nav-item-active" class="nav-item">
             <Icon name="heroicons:clipboard-document-list" class="w-5 h-5" />
             <span>Заявки</span>
           </NuxtLink>
 
-          <NuxtLink to="/chat" class="nav-item" active-class="nav-item-active">
+          <NuxtLink to="/chat" active-class="nav-item-active" class="nav-item">
             <Icon name="heroicons:chat-bubble-left-right" class="w-5 h-5" />
             <span>Чат</span>
           </NuxtLink>
 
-          <NuxtLink to="/tickets" class="nav-item" active-class="nav-item-active">
+          <NuxtLink to="/tickets" active-class="nav-item-active" class="nav-item">
             <Icon name="heroicons:ticket" class="w-5 h-5" />
             <span>Тикеты</span>
           </NuxtLink>
 
-          <NuxtLink to="/settings/ai" class="nav-item" active-class="nav-item-active">
+          <NuxtLink to="/settings/ai" active-class="nav-item-active" class="nav-item">
             <Icon name="heroicons:sparkles" class="w-5 h-5" />
             <span>AI-бот</span>
           </NuxtLink>
@@ -107,7 +114,7 @@ async function handleLogout() {
           <span class="text-xs">Тикеты</span>
         </NuxtLink>
 
-        <button class="mobile-nav-item text-red-400" @click="handleLogout">
+        <button @click="handleLogout" class="mobile-nav-item text-red-400">
           <Icon name="heroicons:arrow-right-on-rectangle" class="w-5 h-5" />
           <span class="text-xs">Выйти</span>
         </button>

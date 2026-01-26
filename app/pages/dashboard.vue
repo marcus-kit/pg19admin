@@ -1,12 +1,4 @@
 <script setup lang="ts">
-definePageMeta({
-  middleware: 'admin',
-})
-
-useHead({ title: 'Админ-панель — ПЖ19' })
-
-const toast = useToast()
-
 // Интерфейс статистики дашборда
 interface DashboardStats {
   news: {
@@ -46,6 +38,14 @@ interface DashboardStats {
     resolved: number
   }
 }
+
+definePageMeta({
+  middleware: 'admin',
+})
+
+useHead({ title: 'Админ-панель — ПЖ19' })
+
+const toast = useToast()
 
 const loading = ref(true)
 const stats = ref<DashboardStats>({

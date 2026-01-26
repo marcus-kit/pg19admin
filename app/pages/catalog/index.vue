@@ -99,7 +99,7 @@ watch(selectedCategoryId, () => {
         Каталог услуг
       </h1>
       <div class="flex gap-2">
-        <UiButton variant="secondary" @click="router.push('/catalog/categories/create')">
+        <UiButton @click="router.push('/catalog/categories/create')" variant="secondary">
           <Icon name="heroicons:folder-plus" class="w-5 h-5" />
           Категория
         </UiButton>
@@ -116,8 +116,8 @@ watch(selectedCategoryId, () => {
         :class="activeTab === 'services'
           ? 'border-primary text-primary'
           : 'border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]'"
-        class="px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px"
         @click="activeTab = 'services'"
+        class="px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px"
       >
         Услуги ({{ services.length }})
       </button>
@@ -125,8 +125,8 @@ watch(selectedCategoryId, () => {
         :class="activeTab === 'categories'
           ? 'border-primary text-primary'
           : 'border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]'"
-        class="px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px"
         @click="activeTab = 'categories'"
+        class="px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px"
       >
         Категории ({{ categories.length }})
       </button>
@@ -138,9 +138,9 @@ watch(selectedCategoryId, () => {
       <div class="flex flex-wrap gap-2 mb-6">
         <UiButton
           :class="{ 'bg-primary/20': selectedCategoryId === null }"
+          @click="selectedCategoryId = null"
           variant="ghost"
           size="sm"
-          @click="selectedCategoryId = null"
         >
           Все
         </UiButton>
@@ -148,9 +148,9 @@ watch(selectedCategoryId, () => {
           v-for="cat in categories"
           :key="cat.id"
           :class="{ 'bg-primary/20': selectedCategoryId === cat.id }"
+          @click="selectedCategoryId = cat.id"
           variant="ghost"
           size="sm"
-          @click="selectedCategoryId = cat.id"
         >
           {{ cat.name }}
         </UiButton>
@@ -198,18 +198,18 @@ watch(selectedCategoryId, () => {
 
             <div class="flex gap-2">
               <UiButton
+                @click="router.push(`/catalog/services/${item.id}/edit`)"
                 variant="ghost"
                 size="sm"
                 title="Редактировать"
-                @click="router.push(`/catalog/services/${item.id}/edit`)"
               >
                 <Icon name="heroicons:pencil" class="w-4 h-4" />
               </UiButton>
               <UiButton
+                @click="deleteService(item.id)"
                 variant="ghost"
                 size="sm"
                 title="Удалить"
-                @click="deleteService(item.id)"
               >
                 <Icon name="heroicons:trash" class="w-4 h-4 text-red-400" />
               </UiButton>
@@ -256,18 +256,18 @@ watch(selectedCategoryId, () => {
 
           <div class="flex gap-2">
             <UiButton
+              @click="router.push(`/catalog/categories/${item.id}/edit`)"
               variant="ghost"
               size="sm"
               title="Редактировать"
-              @click="router.push(`/catalog/categories/${item.id}/edit`)"
             >
               <Icon name="heroicons:pencil" class="w-4 h-4" />
             </UiButton>
             <UiButton
+              @click="deleteCategory(item.id)"
               variant="ghost"
               size="sm"
               title="Удалить"
-              @click="deleteCategory(item.id)"
             >
               <Icon name="heroicons:trash" class="w-4 h-4 text-red-400" />
             </UiButton>

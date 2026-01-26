@@ -76,9 +76,9 @@ const handleClasses = computed(() => {
       :aria-checked="modelValue"
       :disabled="disabled"
       :class="trackClasses"
+      @click="toggle"
       type="button"
       role="switch"
-      @click="toggle"
     >
       <span :class="handleClasses" />
     </button>

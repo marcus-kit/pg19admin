@@ -10,6 +10,13 @@ import {
 } from '~/composables/useStatusConfig'
 import { useAdminList } from '~/composables/useAdminList'
 
+// Фильтры для списка тикетов
+interface TicketFilters {
+  status: string
+  priority: string
+  assignedToMe: boolean
+}
+
 definePageMeta({
   middleware: 'admin',
 })
@@ -17,13 +24,6 @@ definePageMeta({
 useHead({ title: 'Тикеты — Админ-панель' })
 
 const { formatDateTime } = useFormatters()
-
-// Фильтры для списка тикетов
-interface TicketFilters {
-  status: string
-  priority: string
-  assignedToMe: boolean
-}
 
 const {
   items: tickets,
@@ -109,9 +109,9 @@ function goToTicket(id: string) {
       v-else
       :data="tickets"
       :columns="columns"
+      @row-click="(row) => goToTicket(row.id)"
       empty-icon="heroicons:ticket"
       empty-text="Тикетов не найдено"
-      @row-click="(row) => goToTicket(row.id)"
     >
       <template #number="{ row }">
         <span class="font-mono text-sm text-primary">{{ row.number }}</span>

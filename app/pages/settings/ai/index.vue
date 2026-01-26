@@ -1,12 +1,4 @@
 <script setup lang="ts">
-definePageMeta({
-  middleware: 'admin',
-})
-
-useHead({ title: 'Настройки AI-бота — Админ-панель' })
-
-const toast = useToast()
-
 // Интерфейс настроек AI-бота
 interface AISettings {
   id: string
@@ -35,6 +27,14 @@ interface AIStats {
   knowledge: { activeItems: number }
   models: Record<string, number>
 }
+
+definePageMeta({
+  middleware: 'admin',
+})
+
+useHead({ title: 'Настройки AI-бота — Админ-панель' })
+
+const toast = useToast()
 
 // Состояние страницы
 const loading = ref(false)
@@ -226,8 +226,8 @@ watch(statsPeriod, () => {
               />
               <UiButton
                 :disabled="saving || editedOperatorName === settings.operatorName"
-                size="sm"
                 @click="saveOperatorName"
+                size="sm"
               >
                 Сохранить
               </UiButton>
@@ -244,8 +244,8 @@ watch(statsPeriod, () => {
           <textarea
             v-model="editedPrompt"
             rows="10"
-            class="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/20 transition-all resize-none font-mono text-sm"
             placeholder="Инструкции для AI-бота..."
+            class="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/20 transition-all resize-none font-mono text-sm"
           ></textarea>
           <div class="flex justify-end mt-3">
             <UiButton
@@ -268,8 +268,8 @@ watch(statsPeriod, () => {
               :model-value="settings.model"
               :options="models"
               :disabled="saving"
-              label="Модель OpenAI"
               @update:model-value="saveModel($event as string)"
+              label="Модель OpenAI"
             />
 
             <!-- Max Tokens -->
@@ -282,8 +282,8 @@ watch(statsPeriod, () => {
                 :min="100"
                 :max="2000"
                 :step="100"
-                type="number"
                 @change="saveMaxTokens(Number(($event.target as HTMLInputElement).value))"
+                type="number"
               />
             </div>
 
@@ -295,8 +295,8 @@ watch(statsPeriod, () => {
               <UiInput
                 :model-value="settings.maxBotMessages"
                 :min="1"
-                type="number"
                 @change="saveMaxBotMessages(Number(($event.target as HTMLInputElement).value))"
+                type="number"
               />
             </div>
           </div>
@@ -311,8 +311,8 @@ watch(statsPeriod, () => {
           <textarea
             v-model="editedKeywords"
             rows="5"
-            class="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/20 transition-all resize-none text-sm"
             placeholder="Одно слово или фраза на строку..."
+            class="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/20 transition-all resize-none text-sm"
           ></textarea>
           <div class="flex justify-end mt-3">
             <UiButton
@@ -350,8 +350,8 @@ watch(statsPeriod, () => {
                 :min="0.5"
                 :max="0.95"
                 :step="0.05"
-                type="number"
                 @change="saveRagThreshold(Number(($event.target as HTMLInputElement).value))"
+                type="number"
               />
             </div>
 
@@ -364,8 +364,8 @@ watch(statsPeriod, () => {
                 :min="1"
                 :max="10"
                 :step="1"
-                type="number"
                 @change="saveRagCount(Number(($event.target as HTMLInputElement).value))"
+                type="number"
               />
             </div>
           </div>

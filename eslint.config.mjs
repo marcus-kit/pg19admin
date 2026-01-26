@@ -45,10 +45,10 @@ export default withNuxt(
           'TWO_WAY_BINDING', // v-model
           'DEFINITION', // is, v-is
           'OTHER_DIRECTIVES', // v-custom-directive
-          'ATTR_DYNAMIC', // v-bind
-          'ATTR_STATIC', // prop="value"
+          'ATTR_DYNAMIC', // :prop
+          'EVENTS', // @click — перед class по CODE-STYLE-GUIDE
+          'ATTR_STATIC', // class, placeholder
           'ATTR_SHORTHAND_BOOL', // disabled
-          'EVENTS', // @click
           'CONTENT', // v-text, v-html
         ],
         alphabetical: false,

@@ -123,7 +123,7 @@ onMounted(() => {
       {{ error }}
     </div>
 
-    <form v-else class="space-y-6 max-w-2xl" @submit.prevent="save">
+    <form v-else @submit.prevent="save" class="space-y-6 max-w-2xl">
       <div v-if="error" class="p-4 bg-red-500/20 border border-red-500/30 rounded-lg text-red-400">
         {{ error }}
       </div>
@@ -200,7 +200,7 @@ onMounted(() => {
         <UiButton :loading="saving" :disabled="saving" type="submit">
           Сохранить изменения
         </UiButton>
-        <UiButton :disabled="saving" variant="ghost" @click="router.push('/catalog')">
+        <UiButton :disabled="saving" @click="router.push('/catalog')" variant="ghost">
           Отмена
         </UiButton>
       </div>

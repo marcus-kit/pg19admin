@@ -1,56 +1,56 @@
 /**
- * Generic composable for admin list pages
- * Handles common patterns: loading, fetching, filtering, pagination, search debounce
+ * useAdminList — универсальный composable для страниц со списками
+ *
+ * Обрабатывает общие паттерны: загрузка, фильтрация, пагинация, debounce поиска
  */
 
 import type { Ref } from 'vue'
 
 export interface UseAdminListOptions<T, F extends Record<string, unknown> = Record<string, unknown>> {
-  /** API endpoint to fetch data from */
+  /** API endpoint для загрузки данных */
   endpoint: string
-  /** Key in response containing items array (e.g., 'users', 'news') */
+  /** Ключ в ответе с массивом элементов (например, 'users', 'news') */
   responseKey: string
-  /** Initial filter values */
+  /** Начальные значения фильтров */
   initialFilters?: F
-  /** Debounce delay for search in ms */
+  /** Задержка debounce для поиска в мс */
   searchDebounceMs?: number
-  /** Auto-fetch on mount */
+  /** Загружать данные при монтировании */
   fetchOnMount?: boolean
-  /** Transform response items */
+  /** Трансформировать элементы ответа */
   transform?: (items: unknown[]) => T[]
   /**
-   * Transform filters before building query params
-   * Use for virtual filters like 'active' → don't send to API
-   * Return null/undefined to skip a param
+   * Трансформировать фильтры перед построением query params
+   * Используется для виртуальных фильтров — вернуть null/undefined чтобы пропустить параметр
    */
   transformParams?: (filters: F) => Record<string, string | null | undefined>
 }
 
 export interface UseAdminListReturn<T, F extends Record<string, unknown>> {
-  /** Items array */
+  /** Массив элементов */
   items: Ref<T[]>
-  /** Loading state */
+  /** Состояние загрузки */
   loading: Ref<boolean>
-  /** Total count (for pagination) */
+  /** Общее количество (для пагинации) */
   total: Ref<number>
-  /** Current filters */
+  /** Текущие фильтры */
   filters: Ref<F>
-  /** Search query (separate from filters for debounce) */
+  /** Поисковый запрос (отдельно от фильтров для debounce) */
   searchQuery: Ref<string>
-  /** Fetch items with current filters */
+  /** Загрузить элементы с текущими фильтрами */
   fetchItems: () => Promise<void>
-  /** Update single filter and refetch */
+  /** Обновить один фильтр */
   setFilter: <K extends keyof F>(key: K, value: F[K]) => void
-  /** Reset all filters to initial values */
+  /** Сбросить все фильтры к начальным значениям */
   resetFilters: () => void
-  /** Handle search input with debounce */
+  /** Обработчик ввода поиска с debounce */
   onSearchInput: () => void
-  /** Delete item by ID */
+  /** Удалить элемент по ID */
   deleteItem: (id: string | number, confirmMessage?: string) => Promise<boolean>
 }
 
 /**
- * Generic list composable for admin pages
+ * Универсальный composable для списков в админке
  *
  * @example
  * ```ts
@@ -77,7 +77,7 @@ export function useAdminList<
 
   const toast = useToast()
 
-  // State
+  // Состояние
   const items = ref<T[]>([]) as Ref<T[]>
   const loading = ref(false)
   const total = ref(0)
@@ -88,13 +88,13 @@ export function useAdminList<
   function buildQueryParams(): URLSearchParams {
     const params = new URLSearchParams()
 
-    // Use transformParams if provided, otherwise use filters directly
+    // Использовать transformParams если есть, иначе фильтры напрямую
     const paramsToSend = transformParams
       ? transformParams(filters.value)
       : filters.value as Record<string, unknown>
 
     for (const [key, value] of Object.entries(paramsToSend)) {
-      // Skip null, undefined, 'all', and empty strings
+      // Пропускаем null, undefined, 'all' и пустые строки
       if (value !== 'all' && value !== '' && value !== null && value !== undefined) {
         params.set(key, String(value))
       }
@@ -172,21 +172,21 @@ export function useAdminList<
     }
   }
 
-  // Watch filters and refetch
+  // Следим за фильтрами и перезагружаем
   watch(
     () => ({ ...filters.value }),
     () => fetchItems(),
     { deep: true },
   )
 
-  // Fetch on mount
+  // Загрузка при монтировании
   if (fetchOnMount) {
     onMounted(() => {
       fetchItems()
     })
   }
 
-  // Cleanup debounce timer
+  // Очистка таймера debounce
   onUnmounted(() => {
     if (searchDebounceTimer.value) {
       clearTimeout(searchDebounceTimer.value)
@@ -207,10 +207,10 @@ export function useAdminList<
   }
 }
 
-// ==================== SPECIALIZED VARIANTS ====================
+// ==================== СПЕЦИАЛИЗИРОВАННЫЕ ВАРИАНТЫ ====================
 
 /**
- * Simplified version for pages with just status filter
+ * Упрощённая версия для страниц только с фильтром статуса
  */
 export function useAdminListSimple<T>(
   endpoint: string,

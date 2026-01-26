@@ -152,7 +152,7 @@ onUnmounted(() => {
   <div>
     <!-- Header -->
     <div class="flex items-center gap-3 mb-6">
-      <UiButton variant="ghost" size="sm" @click="cancel">
+      <UiButton @click="cancel" variant="ghost" size="sm">
         <Icon name="heroicons:arrow-left" class="w-5 h-5" />
       </UiButton>
       <h1 class="text-2xl font-bold text-[var(--text-primary)]">Создать аккаунт</h1>
@@ -165,7 +165,7 @@ onUnmounted(() => {
 
     <!-- Form -->
     <div class="max-w-2xl">
-      <form class="space-y-6" @submit.prevent="createAccount">
+      <form @submit.prevent="createAccount" class="space-y-6">
         <!-- Владелец -->
         <UiCard>
           <template #header>
@@ -182,7 +182,7 @@ onUnmounted(() => {
                   {{ selectedUser.phone || selectedUser.email || 'Контакты не указаны' }}
                 </p>
               </div>
-              <UiButton variant="ghost" size="sm" @click="clearUser">
+              <UiButton @click="clearUser" variant="ghost" size="sm">
                 <Icon name="heroicons:x-mark" class="w-4 h-4" />
               </UiButton>
             </div>
@@ -190,9 +190,9 @@ onUnmounted(() => {
             <div v-else>
               <UiInput
                 v-model="userSearch"
-                placeholder="Поиск по имени, телефону, email..."
                 @input="onUserSearchInput"
                 @focus="showUserDropdown = true"
+                placeholder="Поиск по имени, телефону, email..."
               >
                 <template #leading>
                   <Icon name="heroicons:magnifying-glass" class="w-4 h-4 text-[var(--text-muted)]" />
@@ -210,8 +210,8 @@ onUnmounted(() => {
                 <div
                   v-for="user in userSearchResults"
                   :key="user.id"
-                  class="px-4 py-2 cursor-pointer hover:bg-[var(--glass-bg)] transition-colors"
                   @click="selectUser(user)"
+                  class="px-4 py-2 cursor-pointer hover:bg-[var(--glass-bg)] transition-colors"
                 >
                   <p class="font-medium text-[var(--text-primary)]">{{ user.fullName }}</p>
                   <p class="text-sm text-[var(--text-muted)]">
@@ -293,8 +293,8 @@ onUnmounted(() => {
           <textarea
             v-model="form.notes"
             rows="3"
-            class="w-full px-4 py-3 glass-card rounded-lg text-[var(--text-primary)] border border-[var(--glass-border)] focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all bg-[var(--glass-bg)] resize-none"
             placeholder="Заметки..."
+            class="w-full px-4 py-3 glass-card rounded-lg text-[var(--text-primary)] border border-[var(--glass-border)] focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all bg-[var(--glass-bg)] resize-none"
           />
         </UiCard>
 
@@ -304,7 +304,7 @@ onUnmounted(() => {
             <Icon name="heroicons:plus" class="w-4 h-4" />
             Создать
           </UiButton>
-          <UiButton :disabled="saving" variant="ghost" @click="cancel">
+          <UiButton :disabled="saving" @click="cancel" variant="ghost">
             Отмена
           </UiButton>
         </div>

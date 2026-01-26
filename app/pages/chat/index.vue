@@ -8,17 +8,17 @@ import {
 } from '~/composables/useStatusConfig'
 import { useAdminList } from '~/composables/useAdminList'
 
-definePageMeta({
-  middleware: 'admin',
-})
-
-useHead({ title: 'Чаты поддержки — Админ-панель' })
-
 // Фильтры для списка чатов
 interface ChatFilters {
   status: string
   assignedToMe: boolean
 }
+
+definePageMeta({
+  middleware: 'admin',
+})
+
+useHead({ title: 'Чаты поддержки — Админ-панель' })
 
 const {
   items: chats,
@@ -58,8 +58,8 @@ function goToChat(id: string) {
 
       <div class="flex items-center gap-2 ml-auto">
         <input
-          id="showMine"
           v-model="filters.assignedToMe"
+          id="showMine"
           type="checkbox"
           class="w-4 h-4 rounded border-[var(--glass-border)] bg-[var(--glass-bg)] text-primary focus:ring-primary"
         />
@@ -78,9 +78,9 @@ function goToChat(id: string) {
         v-for="chat in chats"
         :key="chat.id"
         :hover="true"
+        @click="goToChat(chat.id)"
         padding="sm"
         class="cursor-pointer"
-        @click="goToChat(chat.id)"
       >
         <div class="flex items-start justify-between gap-4">
           <div class="flex-1 min-w-0">

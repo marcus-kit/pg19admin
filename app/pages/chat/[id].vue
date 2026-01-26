@@ -331,7 +331,7 @@ onUnmounted(() => {
     <!-- Header (бывший ChatDetailHeader) -->
     <div v-if="chat" class="flex items-center justify-between gap-4 pb-2 border-b border-[var(--glass-border)]">
       <div class="flex items-center gap-3">
-        <UiButton variant="ghost" size="sm" @click="router.push('/chat')">
+        <UiButton @click="router.push('/chat')" variant="ghost" size="sm">
           <Icon name="heroicons:arrow-left" class="w-5 h-5" />
         </UiButton>
         <div>
@@ -360,18 +360,18 @@ onUnmounted(() => {
       <div class="flex gap-2">
         <UiButton
           v-if="!chat.assignedAdmin && chat.status !== 'closed'"
+          @click="handleAssignToMe"
           variant="secondary"
           size="sm"
-          @click="handleAssignToMe"
         >
           <Icon name="heroicons:hand-raised" class="w-4 h-4" />
           Взять себе
         </UiButton>
         <UiButton
           v-if="chat.status !== 'closed'"
+          @click="handleClose"
           variant="ghost"
           size="sm"
-          @click="handleClose"
         >
           <Icon name="heroicons:x-circle" class="w-4 h-4 text-red-400" />
           Закрыть
@@ -531,9 +531,9 @@ onUnmounted(() => {
           <p class="text-xs text-[var(--text-muted)]">{{ formatFileSize(pendingFile.size) }}</p>
         </div>
         <button
-          class="p-1.5 rounded-lg hover:bg-white/10 transition-colors flex-shrink-0"
-          title="Удалить"
           @click="removePendingFile"
+          title="Удалить"
+          class="p-1.5 rounded-lg hover:bg-white/10 transition-colors flex-shrink-0"
         >
           <Icon name="heroicons:x-mark" class="w-4 h-4 text-[var(--text-muted)]" />
         </button>
@@ -543,19 +543,19 @@ onUnmounted(() => {
       <input
         ref="fileInput"
         :accept="ACCEPT_FILES"
+        @change="handleFileSelect"
         type="file"
         class="hidden"
-        @change="handleFileSelect"
       />
 
-      <form class="flex gap-2" @submit.prevent="handleSubmit">
+      <form @submit.prevent="handleSubmit" class="flex gap-2">
         <!-- Attach button -->
         <UiButton
           :disabled="sending"
+          @click="openFileDialog"
           type="button"
           variant="ghost"
           title="Прикрепить файл"
-          @click="openFileDialog"
         >
           <Icon name="heroicons:paper-clip" class="w-5 h-5" />
         </UiButton>
@@ -563,11 +563,11 @@ onUnmounted(() => {
         <textarea
           v-model="newMessage"
           :disabled="sending"
+          @keydown.enter.exact.prevent="handleSubmit"
+          @input="handleTextareaInput"
           placeholder="Введите сообщение..."
           rows="1"
           class="flex-1 px-3 py-2 glass-card rounded-lg text-[var(--text-primary)] border border-[var(--glass-border)] focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all bg-[var(--glass-bg)] resize-none min-h-[40px] max-h-[120px]"
-          @keydown.enter.exact.prevent="handleSubmit"
-          @input="handleTextareaInput"
         />
 
         <UiButton

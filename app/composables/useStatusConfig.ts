@@ -1,6 +1,8 @@
 /**
- * Centralized status configuration for all admin entities
- * Eliminates duplicate getStatusBadgeClass/getStatusLabel functions across pages
+ * useStatusConfig — централизованная конфигурация статусов
+ *
+ * Содержит все статусы, их лейблы и CSS классы для бейджей.
+ * Устраняет дублирование getStatusBadgeClass/getStatusLabel на страницах.
  */
 
 import type {
@@ -21,7 +23,7 @@ import type {
   FilterOption,
 } from '~/types/admin'
 
-// ==================== STATUS CONFIGURATIONS ====================
+// ==================== КОНФИГУРАЦИИ СТАТУСОВ ====================
 
 export const NEWS_STATUS: Record<NewsStatus, StatusConfig> = {
   draft: { label: 'Черновик', badgeClass: 'bg-gray-500/20 text-gray-400' },
@@ -111,13 +113,13 @@ export const REQUEST_SOURCE: Record<RequestSource, StatusConfig> = {
   call_center: { label: 'Колл-центр', badgeClass: 'bg-green-500/20 text-green-400' },
 }
 
-// Generic boolean active/inactive status for services, categories, etc.
+// Универсальный статус активен/неактивен для сервисов, категорий и т.д.
 export const ACTIVE_STATUS: Record<'active' | 'inactive', StatusConfig> = {
   active: { label: 'Активна', badgeClass: 'bg-green-500/20 text-green-400' },
   inactive: { label: 'Неактивна', badgeClass: 'bg-gray-500/20 text-gray-400' },
 }
 
-// ==================== FILTER OPTIONS ====================
+// ==================== ОПЦИИ ДЛЯ ФИЛЬТРОВ ====================
 
 export const NEWS_STATUS_OPTIONS: FilterOption<NewsStatus>[] = [
   { value: 'all', label: 'Все' },
@@ -186,10 +188,10 @@ export const CALLBACK_STATUS_OPTIONS: FilterOption<CallbackRequestStatus>[] = [
   { value: 'all', label: 'Все' },
 ]
 
-// ==================== HELPER FUNCTIONS ====================
+// ==================== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ====================
 
 /**
- * Get status label from config map
+ * Получить лейбл статуса из конфига
  */
 export function getStatusLabel<T extends string>(
   config: Record<T, StatusConfig>,
@@ -199,7 +201,7 @@ export function getStatusLabel<T extends string>(
 }
 
 /**
- * Get badge class from config map
+ * Получить CSS класс бейджа из конфига
  */
 export function getStatusBadgeClass<T extends string>(
   config: Record<T, StatusConfig>,
@@ -209,7 +211,7 @@ export function getStatusBadgeClass<T extends string>(
 }
 
 /**
- * Get both label and badge class
+ * Получить полный конфиг статуса (лейбл + класс)
  */
 export function getStatusConfig<T extends string>(
   config: Record<T, StatusConfig>,
@@ -221,8 +223,8 @@ export function getStatusConfig<T extends string>(
 // ==================== COMPOSABLE ====================
 
 /**
- * Composable for accessing status configurations
- * Provides reactive access to all status configs and helper methods
+ * Composable для доступа к конфигурациям статусов
+ * Предоставляет все конфиги и вспомогательные методы
  */
 export function useStatusConfig() {
   return {

@@ -1,12 +1,4 @@
 <script setup lang="ts">
-definePageMeta({
-  middleware: 'admin',
-})
-
-useHead({ title: 'База знаний AI — Админ-панель' })
-
-const toast = useToast()
-
 // Интерфейс записи базы знаний
 interface KnowledgeItem {
   id: string
@@ -20,6 +12,14 @@ interface KnowledgeItem {
   createdAt: string
   updatedAt: string
 }
+
+definePageMeta({
+  middleware: 'admin',
+})
+
+useHead({ title: 'База знаний AI — Админ-панель' })
+
+const toast = useToast()
 
 // Состояние страницы
 const loading = ref(false)
@@ -332,9 +332,9 @@ watch([categoryFilter, statusFilter], () => {
           <div class="flex gap-2 flex-shrink-0">
             <UiButton
               :title="item.isActive ? 'Деактивировать' : 'Активировать'"
+              @click="toggleActive(item)"
               variant="ghost"
               size="sm"
-              @click="toggleActive(item)"
             >
               <Icon
                 :name="item.isActive ? 'heroicons:eye' : 'heroicons:eye-slash'"
@@ -342,18 +342,18 @@ watch([categoryFilter, statusFilter], () => {
               />
             </UiButton>
             <UiButton
+              @click="openEditModal(item)"
               variant="ghost"
               size="sm"
               title="Редактировать"
-              @click="openEditModal(item)"
             >
               <Icon name="heroicons:pencil" class="w-4 h-4" />
             </UiButton>
             <UiButton
+              @click="deleteItem(item)"
               variant="ghost"
               size="sm"
               title="Удалить"
-              @click="deleteItem(item)"
             >
               <Icon name="heroicons:trash" class="w-4 h-4 text-red-400" />
             </UiButton>
@@ -367,7 +367,7 @@ watch([categoryFilter, statusFilter], () => {
         <p class="text-[var(--text-muted)]">
           {{ searchQuery ? 'Ничего не найдено' : 'База знаний пуста' }}
         </p>
-        <UiButton class="mt-4" @click="openCreateModal">
+        <UiButton @click="openCreateModal" class="mt-4">
           Добавить первую запись
         </UiButton>
       </div>
@@ -378,8 +378,8 @@ watch([categoryFilter, statusFilter], () => {
       <Teleport to="body">
         <div
           v-if="showModal"
-          class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
           @click.self="showModal = false"
+          class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
         >
           <div class="w-full max-w-2xl glass-card rounded-2xl p-6 max-h-[90vh] overflow-y-auto">
             <div class="flex items-center justify-between mb-6">
@@ -387,8 +387,8 @@ watch([categoryFilter, statusFilter], () => {
                 {{ editingItem ? 'Редактировать запись' : 'Новая запись' }}
               </h2>
               <button
-                class="p-2 rounded-lg hover:bg-white/10 transition-colors"
                 @click="showModal = false"
+                class="p-2 rounded-lg hover:bg-white/10 transition-colors"
               >
                 <Icon name="heroicons:x-mark" class="w-5 h-5 text-[var(--text-muted)]" />
               </button>
@@ -416,8 +416,8 @@ watch([categoryFilter, statusFilter], () => {
                 <textarea
                   v-model="formData.question"
                   rows="2"
-                  class="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-primary/50 resize-none"
                   placeholder="Какой вопрос задаёт пользователь?"
+                  class="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-primary/50 resize-none"
                 ></textarea>
               </div>
 
@@ -429,8 +429,8 @@ watch([categoryFilter, statusFilter], () => {
                 <textarea
                   v-model="formData.answer"
                   rows="5"
-                  class="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-primary/50 resize-none"
                   placeholder="Как AI должен ответить?"
+                  class="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-primary/50 resize-none"
                 ></textarea>
               </div>
 
@@ -442,8 +442,8 @@ watch([categoryFilter, statusFilter], () => {
                 <input
                   v-model="formData.keywords"
                   type="text"
-                  class="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-primary/50"
                   placeholder="интернет, скорость, тариф"
+                  class="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-primary/50"
                 />
               </div>
 
@@ -475,7 +475,7 @@ watch([categoryFilter, statusFilter], () => {
             </div>
 
             <div class="flex justify-end gap-3 mt-6">
-              <UiButton variant="ghost" @click="showModal = false">
+              <UiButton @click="showModal = false" variant="ghost">
                 Отмена
               </UiButton>
               <UiButton :disabled="saving" @click="saveItem">

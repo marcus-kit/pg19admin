@@ -1,3 +1,4 @@
+<script setup lang="ts">
 /**
  * UiToastContainer — контейнер для toast-уведомлений
  *
@@ -5,7 +6,6 @@
  * Поддерживает 4 типа: success, error, warning, info.
  * Glass-морфизм стиль, анимации появления/исчезновения.
  */
-<script setup lang="ts">
 import type { Toast } from '~/composables/useToast'
 
 // =============================================================================
@@ -68,8 +68,8 @@ const bgColors: Record<Toast['type'], string> = {
 
             <!-- Close button -->
             <button
-              class="flex-shrink-0 p-1 rounded-lg hover:bg-[var(--glass-bg)] transition-colors"
               @click="remove(toast.id)"
+              class="flex-shrink-0 p-1 rounded-lg hover:bg-[var(--glass-bg)] transition-colors"
             >
               <Icon
                 name="heroicons:x-mark"

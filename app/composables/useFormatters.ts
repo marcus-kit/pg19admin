@@ -1,12 +1,13 @@
 /**
- * Centralized formatting utilities
- * Available to all portals via Nuxt layer inheritance
+ * useFormatters — централизованные утилиты форматирования
+ *
+ * Доступны всем порталам через наследование Nuxt layer
  */
 
 /**
- * Format date with relative time support
- * Shows "только что", "X мин. назад", "X ч. назад" for recent dates
- * Falls back to locale date string for older dates
+ * Форматирование даты с относительным временем
+ * Показывает "только что", "X мин. назад", "X ч. назад" для недавних дат
+ * Для старых дат — локализованная строка
  */
 export function formatRelativeDate(dateStr: string | null | undefined): string {
   if (!dateStr) return '—'
@@ -15,34 +16,34 @@ export function formatRelativeDate(dateStr: string | null | undefined): string {
   const now = new Date()
   const diff = now.getTime() - date.getTime()
 
-  // Less than a minute
+  // Меньше минуты
   if (diff < 60000) return 'только что'
 
-  // Less than an hour
+  // Меньше часа
   if (diff < 3600000) {
     const mins = Math.floor(diff / 60000)
     return `${mins} мин. назад`
   }
 
-  // Less than a day
+  // Меньше суток
   if (diff < 86400000) {
     const hours = Math.floor(diff / 3600000)
     return `${hours} ч. назад`
   }
 
-  // Same day - show time only
+  // Сегодня — только время
   if (date.toDateString() === now.toDateString()) {
     return date.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })
   }
 
-  // Yesterday
+  // Вчера
   const yesterday = new Date(now)
   yesterday.setDate(yesterday.getDate() - 1)
   if (date.toDateString() === yesterday.toDateString()) {
     return 'вчера ' + date.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })
   }
 
-  // Other dates
+  // Остальные даты
   return date.toLocaleDateString('ru-RU', {
     day: 'numeric',
     month: 'short',
@@ -51,7 +52,7 @@ export function formatRelativeDate(dateStr: string | null | undefined): string {
 }
 
 /**
- * Format date with time for logs/history
+ * Форматирование даты со временем для логов/истории
  */
 export function formatDateTime(dateStr: string | null | undefined): string {
   if (!dateStr) return '—'
@@ -66,7 +67,7 @@ export function formatDateTime(dateStr: string | null | undefined): string {
 }
 
 /**
- * Format date without time
+ * Форматирование даты без времени
  */
 export function formatDate(dateStr: string | null | undefined): string {
   if (!dateStr) return '—'
@@ -79,7 +80,7 @@ export function formatDate(dateStr: string | null | undefined): string {
 }
 
 /**
- * Format date short (for tables)
+ * Короткий формат даты (для таблиц)
  */
 export function formatDateShort(dateStr: string | null | undefined): string {
   if (!dateStr) return '—'
@@ -95,7 +96,7 @@ export function formatDateShort(dateStr: string | null | undefined): string {
 }
 
 /**
- * Format time only (for chat messages)
+ * Только время (для сообщений чата)
  */
 export function formatTime(dateStr: string | null | undefined): string {
   if (!dateStr) return '—'
@@ -106,10 +107,10 @@ export function formatTime(dateStr: string | null | undefined): string {
 }
 
 /**
- * Format kopeks to rubles (without currency symbol)
- * Input: 150050 (kopeks)
- * Output: "1 500,50"
- * Use for displaying amounts where ₽ is shown separately
+ * Форматирование копеек в рубли (без символа валюты)
+ * Вход: 150050 (копейки)
+ * Выход: "1 500,50"
+ * Используется когда ₽ показывается отдельно
  */
 export function formatKopeks(kopeks: number | null | undefined): string {
   if (kopeks === null || kopeks === undefined) return '—'
@@ -121,7 +122,7 @@ export function formatKopeks(kopeks: number | null | undefined): string {
 }
 
 /**
- * Format file size
+ * Форматирование размера файла
  */
 export function formatFileSize(bytes: number | null | undefined): string {
   if (bytes === null || bytes === undefined) return '—'
@@ -133,7 +134,7 @@ export function formatFileSize(bytes: number | null | undefined): string {
 }
 
 /**
- * Truncate text with ellipsis
+ * Обрезка текста с многоточием
  */
 export function truncateText(text: string | null | undefined, maxLength: number = 100): string {
   if (!text) return ''
@@ -142,7 +143,7 @@ export function truncateText(text: string | null | undefined, maxLength: number 
 }
 
 /**
- * Format contract number
+ * Форматирование номера договора
  */
 export function formatContractNumber(number: number | null | undefined): string {
   if (number === null || number === undefined) return '—'
@@ -150,7 +151,7 @@ export function formatContractNumber(number: number | null | undefined): string 
 }
 
 /**
- * Format balance (kopeks to rubles with sign)
+ * Форматирование баланса (копейки в рубли со знаком ₽)
  */
 export function formatBalance(kopeks: number | null | undefined): string {
   if (kopeks === null || kopeks === undefined) return '—'
@@ -162,17 +163,17 @@ export function formatBalance(kopeks: number | null | undefined): string {
 }
 
 /**
- * Format phone number
- * Input: "+79001234567" or "79001234567"
- * Output: "+7 (900) 123-45-67"
+ * Форматирование номера телефона
+ * Вход: "+79001234567" или "79001234567"
+ * Выход: "+7 (900) 123-45-67"
  */
 export function formatPhone(phone: string | null | undefined): string {
   if (!phone) return '—'
 
-  // Remove all non-digits
+  // Удаляем все нецифровые символы
   const digits = phone.replace(/\D/g, '')
 
-  // Russian phone format
+  // Российский формат телефона
   if (digits.length === 11 && digits.startsWith('7')) {
     return `+7 (${digits.slice(1, 4)}) ${digits.slice(4, 7)}-${digits.slice(7, 9)}-${digits.slice(9, 11)}`
   }
@@ -181,12 +182,12 @@ export function formatPhone(phone: string | null | undefined): string {
     return `+7 (${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6, 8)}-${digits.slice(8, 10)}`
   }
 
-  // Return as-is if not standard format
+  // Возвращаем как есть, если нестандартный формат
   return phone
 }
 
 /**
- * Format price (kopeks to rubles with currency)
+ * Форматирование цены (копейки в рубли с символом валюты)
  */
 export function formatPrice(kopeks: number | null | undefined): string {
   if (kopeks === null || kopeks === undefined) return '—'
@@ -197,7 +198,7 @@ export function formatPrice(kopeks: number | null | undefined): string {
   }) + ' ₽'
 }
 
-// ==================== ERROR HELPERS ====================
+// ==================== ХЕЛПЕРЫ ДЛЯ ОШИБОК ====================
 
 /**
  * Извлекает HTTP статус код из ошибки (для H3/Nuxt ошибок)
@@ -225,7 +226,7 @@ export function getErrorMessage(error: unknown): string {
 // ==================== COMPOSABLE ====================
 
 /**
- * Composable for accessing all formatters
+ * Composable для доступа ко всем форматтерам
  */
 export function useFormatters() {
   return {

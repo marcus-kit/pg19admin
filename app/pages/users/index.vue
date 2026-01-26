@@ -79,9 +79,9 @@ function goToUser(user: User) {
           v-for="opt in USER_STATUS_OPTIONS"
           :key="opt.value"
           :class="{ 'bg-primary/20': filters.status === opt.value }"
+          @click="filters.status = opt.value"
           variant="ghost"
           size="sm"
-          @click="filters.status = opt.value"
         >
           {{ opt.label }}
         </UiButton>
@@ -91,10 +91,10 @@ function goToUser(user: User) {
       <div class="ml-auto">
         <UiInput
           v-model="searchQuery"
+          @input="onSearchInput"
           placeholder="Поиск по имени, телефону, email..."
           size="sm"
           class="w-64"
-          @input="onSearchInput"
         >
           <template #leading>
             <Icon name="heroicons:magnifying-glass" class="w-4 h-4 text-[var(--text-muted)]" />
@@ -111,9 +111,9 @@ function goToUser(user: User) {
       v-else
       :data="users"
       :columns="columns"
+      @row-click="goToUser"
       empty-icon="heroicons:users"
       empty-text="Пользователей не найдено"
-      @row-click="goToUser"
     >
       <template #user="{ row }">
         <div class="flex items-center gap-3">

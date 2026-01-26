@@ -35,8 +35,8 @@ const model = defineModel<string>({ required: true })
       :key="opt.value"
       :class="{ 'bg-primary/20': model === opt.value }"
       :size="size"
-      variant="ghost"
       @click="model = opt.value"
+      variant="ghost"
     >
       {{ opt.label }}
     </UiButton>

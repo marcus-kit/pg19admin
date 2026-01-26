@@ -51,7 +51,8 @@ const internalSort = ref<SortState>({ key: null, direction: 'desc' })
 
 const currentSort = computed(() => props.sort ?? internalSort.value)
 
-const handleSort = (column: TableColumn) => {
+// Обработка клика по заголовку колонки для сортировки
+function handleSort(column: TableColumn) {
   if (!column.sortable) return
 
   const newSort: SortState = {
@@ -89,11 +90,13 @@ const sortedData = computed(() => {
   })
 })
 
-const handleRowClick = (row: Record<string, unknown>) => {
+// Обработка клика по строке таблицы
+function handleRowClick(row: Record<string, unknown>) {
   emit('row-click', row)
 }
 
-const getSortIcon = (column: TableColumn) => {
+// Получить иконку сортировки для колонки
+function getSortIcon(column: TableColumn) {
   if (!column.sortable) return null
   if (currentSort.value.key !== column.key) return 'heroicons:chevron-up-down'
   return currentSort.value.direction === 'asc'

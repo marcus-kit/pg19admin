@@ -75,9 +75,9 @@ function goToAccount(account: Account) {
           v-for="opt in ACCOUNT_STATUS_OPTIONS"
           :key="opt.value"
           :class="{ 'bg-primary/20': filters.status === opt.value }"
+          @click="filters.status = opt.value"
           variant="ghost"
           size="sm"
-          @click="filters.status = opt.value"
         >
           {{ opt.label }}
         </UiButton>
@@ -95,10 +95,10 @@ function goToAccount(account: Account) {
         <!-- Search -->
         <UiInput
           v-model="searchQuery"
+          @input="onSearchInput"
           placeholder="Поиск по № договора или адресу..."
           size="sm"
           class="w-64"
-          @input="onSearchInput"
         >
           <template #leading>
             <Icon name="heroicons:magnifying-glass" class="w-4 h-4 text-[var(--text-muted)]" />
@@ -115,9 +115,9 @@ function goToAccount(account: Account) {
       v-else
       :data="accounts"
       :columns="columns"
+      @row-click="goToAccount"
       empty-icon="heroicons:identification"
       empty-text="Аккаунтов не найдено"
-      @row-click="goToAccount"
     >
       <template #contractNumber="{ row }">
         <span class="font-mono text-primary">{{ row.contractNumber || '—' }}</span>
@@ -126,8 +126,8 @@ function goToAccount(account: Account) {
       <template #user="{ row }">
         <template v-if="row.user">
           <span
-            class="text-[var(--text-primary)] hover:text-primary cursor-pointer"
             @click.stop="router.push(`/users/${row.user.id}`)"
+            class="text-[var(--text-primary)] hover:text-primary cursor-pointer"
           >
             {{ row.user.fullName }}
           </span>

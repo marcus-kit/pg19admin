@@ -84,9 +84,9 @@ onUnmounted(() => {
       >
         <div
           v-if="modelValue"
+          @click.self="handleBackdropClick"
           class="fixed inset-0 z-50 flex items-center justify-center p-4"
           style="background-color: var(--modal-backdrop, rgba(0, 0, 0, 0.5));"
-          @click.self="handleBackdropClick"
         >
           <!-- Контент модалки -->
           <Transition

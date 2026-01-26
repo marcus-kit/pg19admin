@@ -218,7 +218,7 @@ onMounted(() => {
       <div class="flex items-start justify-between gap-4 mb-6">
         <div>
           <div class="flex items-center gap-3 mb-2">
-            <UiButton variant="ghost" size="sm" @click="router.push('/accounts')">
+            <UiButton @click="router.push('/accounts')" variant="ghost" size="sm">
               <Icon name="heroicons:arrow-left" class="w-5 h-5" />
             </UiButton>
             <UiBadge :class="getStatusBadgeClass(account.status)">
@@ -233,9 +233,9 @@ onMounted(() => {
 
         <div class="flex gap-2">
           <UiButton
+            @click="openEditModal"
             variant="secondary"
             size="sm"
-            @click="openEditModal"
           >
             <Icon name="heroicons:pencil" class="w-4 h-4" />
             Редактировать
@@ -327,8 +327,8 @@ onMounted(() => {
             </template>
 
             <div
-              class="flex items-center gap-4 p-3 rounded-lg bg-[var(--glass-bg)] border border-[var(--glass-border)] hover:border-primary/30 cursor-pointer transition-colors"
               @click="router.push(`/users/${account.user.id}`)"
+              class="flex items-center gap-4 p-3 rounded-lg bg-[var(--glass-bg)] border border-[var(--glass-border)] hover:border-primary/30 cursor-pointer transition-colors"
             >
               <div
                 v-if="account.user.avatar"
@@ -383,10 +383,10 @@ onMounted(() => {
               <UiButton
                 v-if="account.status !== 'active'"
                 :disabled="saving"
+                @click="updateStatus('active')"
                 variant="secondary"
                 size="sm"
                 class="w-full justify-center"
-                @click="updateStatus('active')"
               >
                 <Icon name="heroicons:check-circle" class="w-4 h-4 text-green-400" />
                 Активировать
@@ -394,10 +394,10 @@ onMounted(() => {
               <UiButton
                 v-if="account.status !== 'blocked'"
                 :disabled="saving"
+                @click="updateStatus('blocked')"
                 variant="secondary"
                 size="sm"
                 class="w-full justify-center"
-                @click="updateStatus('blocked')"
               >
                 <Icon name="heroicons:no-symbol" class="w-4 h-4 text-red-400" />
                 Заблокировать
@@ -405,10 +405,10 @@ onMounted(() => {
               <UiButton
                 v-if="account.status !== 'closed'"
                 :disabled="saving"
+                @click="updateStatus('closed')"
                 variant="secondary"
                 size="sm"
                 class="w-full justify-center"
-                @click="updateStatus('closed')"
               >
                 <Icon name="heroicons:x-circle" class="w-4 h-4 text-gray-400" />
                 Закрыть
@@ -447,14 +447,14 @@ onMounted(() => {
       <Teleport to="body">
         <div
           v-if="showEditModal"
-          class="fixed inset-0 z-50 flex items-center justify-center p-4"
           @click.self="showEditModal = false"
+          class="fixed inset-0 z-50 flex items-center justify-center p-4"
         >
           <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" />
           <div class="relative w-full max-w-2xl glass-card rounded-xl p-6 max-h-[90vh] overflow-y-auto">
             <h3 class="text-xl font-bold text-[var(--text-primary)] mb-6">Редактировать аккаунт</h3>
 
-            <form class="space-y-6" @submit.prevent="saveAccount">
+            <form @submit.prevent="saveAccount" class="space-y-6">
               <!-- Contract Info -->
               <div>
                 <h4 class="text-sm font-medium text-[var(--text-muted)] mb-3">Договор</h4>
@@ -497,13 +497,13 @@ onMounted(() => {
                 <textarea
                   v-model="editForm.notes"
                   rows="3"
-                  class="w-full px-4 py-3 glass-card rounded-lg text-[var(--text-primary)] border border-[var(--glass-border)] focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all bg-[var(--glass-bg)] resize-none"
                   placeholder="Заметки..."
+                  class="w-full px-4 py-3 glass-card rounded-lg text-[var(--text-primary)] border border-[var(--glass-border)] focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all bg-[var(--glass-bg)] resize-none"
                 />
               </div>
 
               <div class="flex justify-end gap-3 pt-4">
-                <UiButton :disabled="saving" variant="ghost" @click="showEditModal = false">
+                <UiButton :disabled="saving" @click="showEditModal = false" variant="ghost">
                   Отмена
                 </UiButton>
                 <UiButton :loading="saving" :disabled="saving" type="submit">

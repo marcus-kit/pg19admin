@@ -192,9 +192,9 @@ watch(activeTab, (newTab) => {
             v-for="opt in CONNECTION_STATUS_OPTIONS"
             :key="opt.value"
             :class="{ 'bg-primary/20': connectionStatusFilter === opt.value }"
+            @click="connectionStatusFilter = opt.value"
             variant="ghost"
             size="sm"
-            @click="connectionStatusFilter = opt.value"
           >
             {{ opt.label }}
           </UiButton>
@@ -202,8 +202,8 @@ watch(activeTab, (newTab) => {
 
         <div class="flex items-center gap-2 ml-auto">
           <input
-            id="onlyInCoverage"
             v-model="onlyInCoverage"
+            id="onlyInCoverage"
             type="checkbox"
             class="w-4 h-4 rounded border-[var(--glass-border)] bg-[var(--glass-bg)] text-primary focus:ring-primary"
           />
@@ -222,9 +222,9 @@ watch(activeTab, (newTab) => {
           v-for="request in connectionRequests"
           :key="request.id"
           :hover="true"
+          @click="goToRequest(request.id)"
           padding="sm"
           class="cursor-pointer"
-          @click="goToRequest(request.id)"
         >
           <div class="flex items-start justify-between gap-4">
             <div class="flex-1 min-w-0">
@@ -300,9 +300,9 @@ watch(activeTab, (newTab) => {
             v-for="opt in CALLBACK_STATUS_OPTIONS"
             :key="opt.value"
             :class="{ 'bg-primary/20': callbackStatusFilter === opt.value }"
+            @click="callbackStatusFilter = opt.value"
             variant="ghost"
             size="sm"
-            @click="callbackStatusFilter = opt.value"
           >
             {{ opt.label }}
           </UiButton>
@@ -327,8 +327,8 @@ watch(activeTab, (newTab) => {
                 </span>
                 <a
                   :href="`tel:${callback.phone}`"
-                  class="text-sm text-primary hover:underline"
                   @click.stop
+                  class="text-sm text-primary hover:underline"
                 >
                   {{ formatPhone(callback.phone) }}
                 </a>
@@ -360,9 +360,9 @@ watch(activeTab, (newTab) => {
               <!-- Call button -->
               <a
                 :href="`tel:${callback.phone}`"
+                @click.stop
                 class="p-2 rounded-lg bg-green-500/20 hover:bg-green-500/30 transition-colors"
                 title="Позвонить"
-                @click.stop
               >
                 <Icon name="heroicons:phone" class="w-4 h-4 text-green-400" />
               </a>
@@ -382,8 +382,8 @@ watch(activeTab, (newTab) => {
                   <button
                     v-for="opt in CALLBACK_STATUS_OPTIONS.filter(o => o.value !== 'all' && o.value !== callback.status)"
                     :key="opt.value"
-                    class="w-full px-3 py-2 text-left text-sm text-[var(--text-primary)] hover:bg-[var(--glass-bg)] transition-colors"
                     @click="updateCallbackStatus(callback, opt.value)"
+                    class="w-full px-3 py-2 text-left text-sm text-[var(--text-primary)] hover:bg-[var(--glass-bg)] transition-colors"
                   >
                     {{ opt.label }}
                   </button>

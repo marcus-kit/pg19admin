@@ -107,16 +107,16 @@ async function save() {
       {{ error }}
     </div>
 
-    <form class="space-y-6 max-w-2xl" @submit.prevent="save">
+    <form @submit.prevent="save" class="space-y-6 max-w-2xl">
       <div>
         <label class="block text-sm font-medium text-[var(--text-primary)] mb-2">
           Название *
         </label>
         <UiInput
           v-model="form.name"
+          @blur="generateSlug"
           placeholder="Например: Интернет"
           size="lg"
-          @blur="generateSlug"
         />
       </div>
 
@@ -185,7 +185,7 @@ async function save() {
         <UiButton :loading="saving" :disabled="saving" type="submit">
           Сохранить
         </UiButton>
-        <UiButton :disabled="saving" variant="ghost" @click="router.push('/catalog')">
+        <UiButton :disabled="saving" @click="router.push('/catalog')" variant="ghost">
           Отмена
         </UiButton>
       </div>

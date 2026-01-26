@@ -110,7 +110,7 @@ onMounted(() => {
   <div>
     <!-- Back button -->
     <div class="mb-6">
-      <UiButton variant="ghost" @click="router.push('/requests')">
+      <UiButton @click="router.push('/requests')" variant="ghost">
         <Icon name="heroicons:arrow-left" class="w-4 h-4 mr-2" />
         Назад к списку
       </UiButton>
@@ -201,8 +201,8 @@ onMounted(() => {
             <UiButton
               :disabled="saving || selectedStatus === request.status"
               :loading="saving"
-              class="w-full"
               @click="updateStatus"
+              class="w-full"
             >
               {{ saving ? 'Сохранение...' : 'Сохранить' }}
             </UiButton>

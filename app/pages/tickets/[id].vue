@@ -202,7 +202,7 @@ onMounted(() => {
       <div class="flex items-start justify-between gap-4 mb-6">
         <div>
           <div class="flex items-center gap-3 mb-2">
-            <UiButton variant="ghost" size="sm" @click="router.push('/tickets')">
+            <UiButton @click="router.push('/tickets')" variant="ghost" size="sm">
               <Icon name="heroicons:arrow-left" class="w-5 h-5" />
             </UiButton>
             <span class="font-mono text-primary">{{ ticket.number }}</span>
@@ -216,9 +216,9 @@ onMounted(() => {
           <UiButton
             v-if="!ticket.assignedAdmin && ticket.status !== 'closed'"
             :disabled="saving"
+            @click="handleAssignToMe"
             variant="secondary"
             size="sm"
-            @click="handleAssignToMe"
           >
             <Icon name="heroicons:hand-raised" class="w-4 h-4" />
             Взять себе
@@ -376,8 +376,8 @@ onMounted(() => {
           <UiCard>
             <template #header>
               <button
-                class="flex items-center justify-between w-full"
                 @click="showHistory = !showHistory"
+                class="flex items-center justify-between w-full"
               >
                 <span class="font-medium text-[var(--text-primary)]">История</span>
                 <Icon

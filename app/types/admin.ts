@@ -1,9 +1,9 @@
 /**
- * Centralized type definitions for Admin Portal
- * All entity types and status configurations in one place
+ * Централизованные типы для админ-портала
+ * Все типы сущностей и конфигурации статусов в одном месте
  */
 
-// ==================== GENERIC STATUS SYSTEM ====================
+// ==================== СИСТЕМА СТАТУСОВ ====================
 
 export interface StatusConfig {
   label: string
@@ -12,7 +12,7 @@ export interface StatusConfig {
 
 export type StatusMap<T extends string = string> = Record<T, StatusConfig>
 
-// ==================== NEWS ====================
+// ==================== НОВОСТИ ====================
 
 export type NewsCategory = 'announcement' | 'protocol' | 'notification'
 export type NewsStatus = 'draft' | 'published' | 'archived'
@@ -56,7 +56,7 @@ export interface CreateNewsData {
 
 export interface UpdateNewsData extends Partial<CreateNewsData> {}
 
-// ==================== USERS ====================
+// ==================== ПОЛЬЗОВАТЕЛИ ====================
 
 export type UserStatus = 'active' | 'suspended' | 'terminated'
 export type OnlineStatus = 'online' | 'away' | 'offline'
@@ -104,7 +104,7 @@ export interface UpdateUserData {
   nickname?: string | null
 }
 
-// ==================== ACCOUNTS ====================
+// ==================== ЛИЦЕВЫЕ СЧЕТА ====================
 
 export type AccountStatus = 'active' | 'blocked' | 'closed'
 export type ContractStatus = 'draft' | 'active' | 'terminated' | 'stopped'
@@ -143,7 +143,7 @@ export interface UpdateAccountData {
   tariffId?: string | null
 }
 
-// ==================== TICKETS ====================
+// ==================== ТИКЕТЫ ====================
 
 export type TicketStatus = 'new' | 'open' | 'pending' | 'resolved' | 'closed'
 export type TicketPriority = 'low' | 'normal' | 'high' | 'urgent'
@@ -199,7 +199,7 @@ export interface UpdateTicketData {
   assignedAdminId?: string | null
 }
 
-// ==================== CHATS ====================
+// ==================== ЧАТЫ ====================
 
 export type ChatStatus = 'active' | 'waiting' | 'processing' | 'closed' | 'resolved'
 
@@ -232,7 +232,7 @@ export interface ChatMessage {
   createdAt: string
 }
 
-// ==================== REQUESTS ====================
+// ==================== ЗАЯВКИ ====================
 
 export type ConnectionRequestStatus = 'new' | 'contacted' | 'approved' | 'rejected' | 'completed'
 export type CallbackRequestStatus = 'new' | 'processing' | 'completed' | 'rejected'
@@ -267,7 +267,7 @@ export interface CallbackRequest {
   processedByAdmin: { id: string, fullName: string } | null
 }
 
-// ==================== CATALOG ====================
+// ==================== КАТАЛОГ ====================
 
 export interface ServiceCategory {
   id: string
@@ -312,7 +312,7 @@ export interface CreateServiceData {
 
 export interface UpdateServiceData extends Partial<CreateServiceData> {}
 
-// ==================== ADMINS ====================
+// ==================== АДМИНИСТРАТОРЫ ====================
 
 export type AdminRole = 'admin' | 'moderator' | 'support' | 'viewer'
 
@@ -335,14 +335,14 @@ export interface AdminAuthState {
   permissions: string[]
 }
 
-// ==================== FILTER OPTIONS ====================
+// ==================== ОПЦИИ ФИЛЬТРОВ ====================
 
 export interface FilterOption<T extends string = string> {
   value: T | 'all'
   label: string
 }
 
-// ==================== API RESPONSES ====================
+// ==================== API ОТВЕТЫ ====================
 
 export interface PaginatedResponse<T> {
   items: T[]
@@ -357,7 +357,7 @@ export interface ApiError {
   data?: unknown
 }
 
-// ==================== UTILITY TYPES ====================
+// ==================== ВСПОМОГАТЕЛЬНЫЕ ТИПЫ ====================
 
 /** Краткая информация о категории для выпадающих списков */
 export interface CategoryOption {
