@@ -150,6 +150,42 @@ export function formatBalance(kopeks: number | null | undefined): string {
   }) + ' ₽'
 }
 
+/**
+ * Format phone number
+ * Input: "+79001234567" or "79001234567"
+ * Output: "+7 (900) 123-45-67"
+ */
+export function formatPhone(phone: string | null | undefined): string {
+  if (!phone) return '—'
+
+  // Remove all non-digits
+  const digits = phone.replace(/\D/g, '')
+
+  // Russian phone format
+  if (digits.length === 11 && digits.startsWith('7')) {
+    return `+7 (${digits.slice(1, 4)}) ${digits.slice(4, 7)}-${digits.slice(7, 9)}-${digits.slice(9, 11)}`
+  }
+
+  if (digits.length === 10) {
+    return `+7 (${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6, 8)}-${digits.slice(8, 10)}`
+  }
+
+  // Return as-is if not standard format
+  return phone
+}
+
+/**
+ * Format price (kopeks to rubles with currency)
+ */
+export function formatPrice(kopeks: number | null | undefined): string {
+  if (kopeks === null || kopeks === undefined) return '—'
+  const rubles = kopeks / 100
+  return rubles.toLocaleString('ru-RU', {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  }) + ' ₽'
+}
+
 // ==================== ERROR HELPERS ====================
 
 /**
@@ -191,6 +227,8 @@ export function useFormatters() {
     truncateText,
     formatContractNumber,
     formatBalance,
+    formatPhone,
+    formatPrice,
     getErrorStatusCode,
     getErrorMessage,
   }
