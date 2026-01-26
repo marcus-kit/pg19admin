@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { getErrorStatusCode, getErrorMessage } from '~/composables/useFormatters'
+
 definePageMeta({
   middleware: 'admin',
 })
@@ -76,10 +78,10 @@ const fetchAccount = async () => {
     const data = await $fetch<{ account: Account }>(`/api/admin/accounts/${accountId.value}`)
     account.value = data.account
   }
-  catch (error: any) {
+  catch (error: unknown) {
     console.error('Failed to fetch account:', error)
     toast.error('Не удалось загрузить аккаунт')
-    if (error.statusCode === 404) {
+    if (getErrorStatusCode(error) === 404) {
       router.push('/accounts')
     }
   }
@@ -124,9 +126,9 @@ const saveAccount = async () => {
     showEditModal.value = false
     toast.success('Аккаунт сохранён')
   }
-  catch (error: any) {
+  catch (error: unknown) {
     console.error('Failed to save account:', error)
-    toast.error(error.data?.message || 'Не удалось сохранить аккаунт')
+    toast.error(getErrorMessage(error) || 'Не удалось сохранить аккаунт')
   }
   finally {
     saving.value = false
@@ -148,9 +150,9 @@ const updateStatus = async (newStatus: string) => {
     await fetchAccount()
     toast.success('Статус аккаунта обновлён')
   }
-  catch (error: any) {
+  catch (error: unknown) {
     console.error('Failed to update account status:', error)
-    toast.error(error.data?.message || 'Не удалось обновить статус')
+    toast.error(getErrorMessage(error) || 'Не удалось обновить статус')
   }
   finally {
     saving.value = false
@@ -224,9 +226,7 @@ onMounted(() => {
 <template>
   <div>
     <!-- Loading -->
-    <div v-if="loading" class="flex justify-center py-12">
-      <Icon name="heroicons:arrow-path" class="w-8 h-8 animate-spin text-primary" />
-    </div>
+    <UiLoading v-if="loading" />
 
     <template v-else-if="account">
       <!-- Header -->

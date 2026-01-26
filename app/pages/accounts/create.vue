@@ -114,8 +114,9 @@ const createAccount = async () => {
       router.push(`/accounts/${response.account.id}`)
     }
   }
-  catch (e: any) {
-    error.value = e.data?.message || 'Ошибка при создании аккаунта'
+  catch (e: unknown) {
+    const message = e instanceof Error ? e.message : 'Ошибка при создании аккаунта'
+    error.value = message
     toast.error('Не удалось создать аккаунт')
   }
   finally {

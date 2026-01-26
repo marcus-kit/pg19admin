@@ -16,7 +16,7 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 const emit = defineEmits<{
-  import: [data: { geojson: any, type: string, partnerId?: string, replaceExisting: boolean }]
+  import: [data: { geojson: unknown, type: string, partnerId?: string, replaceExisting: boolean }]
   export: [query: string]
 }>()
 
@@ -80,8 +80,8 @@ const handleFileSelect = async (event: Event) => {
       replaceExisting: replaceExisting.value,
     })
   }
-  catch (err: any) {
-    error.value = err.message || 'Ошибка при чтении файла'
+  catch (err: unknown) {
+    error.value = (err as Error).message || 'Ошибка при чтении файла'
   }
   finally {
     importing.value = false

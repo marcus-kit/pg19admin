@@ -1,5 +1,7 @@
 <script setup lang="ts">
+import type { RealtimeChannel } from '@supabase/supabase-js'
 import type { Chat, ChatMessage } from '~/types/admin'
+import { getErrorStatusCode } from '~/composables/useFormatters'
 
 definePageMeta({
   middleware: 'admin',
@@ -21,7 +23,7 @@ const messagesContainer = ref<HTMLElement | null>(null)
 
 // Supabase Realtime
 const supabase = useSupabaseClient()
-let subscription: any = null
+let subscription: RealtimeChannel | null = null
 
 const fetchChat = async () => {
   loading.value = true
@@ -37,10 +39,10 @@ const fetchChat = async () => {
     await nextTick()
     scrollToBottom()
   }
-  catch (error: any) {
+  catch (error: unknown) {
     console.error('Failed to fetch chat:', error)
     toast.error('Не удалось загрузить чат')
-    if (error.statusCode === 404) {
+    if (getErrorStatusCode(error) === 404) {
       router.push('/chat')
     }
   }
@@ -93,7 +95,7 @@ const handleSendMessage = async (content: string, file: File | null) => {
     await nextTick()
     scrollToBottom()
   }
-  catch (error: any) {
+  catch (error: unknown) {
     console.error('Failed to send message:', error)
     toast.error('Ошибка при отправке сообщения')
   }
@@ -111,7 +113,7 @@ const handleClose = async () => {
       chat.value.status = 'closed'
     }
   }
-  catch (error: any) {
+  catch (error: unknown) {
     console.error('Failed to close chat:', error)
     toast.error('Ошибка при закрытии чата')
   }
@@ -127,7 +129,7 @@ const handleAssignToMe = async () => {
     })
     await fetchChat()
   }
-  catch (error: any) {
+  catch (error: unknown) {
     console.error('Failed to assign chat:', error)
     toast.error('Ошибка при назначении чата')
   }
@@ -190,12 +192,25 @@ const setupRealtime = () => {
         filter: `chat_id=eq.${chatId.value}`,
       },
       (payload) => {
-        const newMsg = payload.new as any
+        // Типизация Supabase realtime payload для chat_messages
+        const newMsg = payload.new as {
+          id: string
+          chat_id: string
+          sender_type: string
+          sender_id: string | null
+          sender_name: string | null
+          content: string
+          attachment_url: string | null
+          attachment_name: string | null
+          attachment_size: number | null
+          is_read: boolean
+          created_at: string
+        }
         if (!messages.value.some(m => m.id === newMsg.id)) {
           messages.value.push({
             id: newMsg.id,
             chatId: newMsg.chat_id,
-            senderType: newMsg.sender_type,
+            senderType: newMsg.sender_type as ChatMessage['senderType'],
             senderId: newMsg.sender_id,
             senderName: newMsg.sender_name,
             content: newMsg.content,
@@ -240,9 +255,7 @@ onUnmounted(() => {
     />
 
     <!-- Loading -->
-    <div v-if="loading" class="flex-1 flex items-center justify-center">
-      <Icon name="heroicons:arrow-path" class="w-8 h-8 animate-spin text-primary" />
-    </div>
+    <UiLoading v-if="loading" class="flex-1" />
 
     <!-- Messages -->
     <div

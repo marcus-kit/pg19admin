@@ -15,6 +15,19 @@ interface Category {
   name: string
 }
 
+// Интерфейс ответа API для услуги
+interface ServiceResponse {
+  id: string
+  name: string
+  description: string | null
+  fullDescription: string | null
+  imageUrl: string | null
+  features: string[]
+  sortOrder: number
+  isActive: boolean
+  categoryId: number | null
+}
+
 const form = reactive({
   name: '',
   description: '',
@@ -55,7 +68,7 @@ const categoryOptions = computed(() => [
 const fetchService = async () => {
   loading.value = true
   try {
-    const data = await $fetch<{ service: any }>(`/api/admin/catalog/services/${serviceId.value}`)
+    const data = await $fetch<{ service: ServiceResponse }>(`/api/admin/catalog/services/${serviceId.value}`)
     const svc = data.service
 
     form.name = svc.name
@@ -71,10 +84,10 @@ const fetchService = async () => {
     priceMonthlyRub.value = (svc.priceMonthly || 0) / 100
     priceConnectionRub.value = (svc.priceConnection || 0) / 100
   }
-  catch (err: any) {
+  catch (err: unknown) {
     console.error('Failed to fetch service:', err)
     toast.error('Не удалось загрузить услугу')
-    error.value = err.data?.message || 'Ошибка при загрузке услуги'
+    error.value = 'Ошибка при загрузке услуги'
   }
   finally {
     loading.value = false
@@ -127,10 +140,10 @@ const save = async () => {
     toast.success('Услуга успешно сохранена')
     router.push('/catalog')
   }
-  catch (err: any) {
+  catch (err: unknown) {
     console.error('Failed to update service:', err)
     toast.error('Не удалось сохранить услугу')
-    error.value = err.data?.message || 'Ошибка при обновлении услуги'
+    error.value = 'Ошибка при обновлении услуги'
   }
   finally {
     saving.value = false
@@ -151,9 +164,7 @@ onMounted(async () => {
       </h1>
     </div>
 
-    <div v-if="loading" class="flex justify-center py-12">
-      <Icon name="heroicons:arrow-path" class="w-8 h-8 animate-spin text-primary" />
-    </div>
+    <UiLoading v-if="loading" />
 
     <div v-else-if="error && !form.name" class="p-4 bg-red-500/20 border border-red-500/30 rounded-lg text-red-400">
       {{ error }}

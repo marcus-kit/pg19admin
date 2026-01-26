@@ -150,6 +150,31 @@ export function formatBalance(kopeks: number | null | undefined): string {
   }) + ' ₽'
 }
 
+// ==================== ERROR HELPERS ====================
+
+/**
+ * Извлекает HTTP статус код из ошибки (для H3/Nuxt ошибок)
+ * @param error — неизвестная ошибка из catch блока
+ * @returns статус код или undefined
+ */
+export function getErrorStatusCode(error: unknown): number | undefined {
+  if (typeof error === 'object' && error !== null && 'statusCode' in error) {
+    return (error as { statusCode: number }).statusCode
+  }
+  return undefined
+}
+
+/**
+ * Извлекает сообщение из ошибки
+ * @param error — неизвестная ошибка из catch блока
+ * @returns строка с сообщением ошибки
+ */
+export function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) return error.message
+  if (typeof error === 'string') return error
+  return 'Unknown error'
+}
+
 // ==================== COMPOSABLE ====================
 
 /**
@@ -166,5 +191,7 @@ export function useFormatters() {
     truncateText,
     formatContractNumber,
     formatBalance,
+    getErrorStatusCode,
+    getErrorMessage,
   }
 }

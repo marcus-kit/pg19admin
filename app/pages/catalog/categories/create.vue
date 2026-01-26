@@ -80,9 +80,9 @@ const save = async () => {
     toast.success('Категория создана')
     router.push('/catalog')
   }
-  catch (err: any) {
+  catch (err: unknown) {
     console.error('Failed to create category:', err)
-    error.value = err.data?.message || 'Ошибка при создании категории'
+    error.value = 'Ошибка при создании категории'
     toast.error('Не удалось создать категорию')
   }
   finally {

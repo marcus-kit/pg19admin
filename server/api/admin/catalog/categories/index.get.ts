@@ -1,4 +1,5 @@
 import { useSupabaseAdmin } from '~~/server/utils/supabase'
+import { type DbServiceCategoryFull, mapServiceCategoryFull } from '~~/server/utils/mappers'
 
 export default defineEventHandler(async (event) => {
   const query = getQuery(event)
@@ -27,17 +28,7 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  const categories = (data || []).map((item: any) => ({
-    id: item.id,
-    name: item.name,
-    slug: item.slug,
-    description: item.description,
-    icon: item.icon,
-    sortOrder: item.sort_order,
-    isActive: item.is_active,
-    createdAt: item.created_at,
-    updatedAt: item.updated_at,
-  }))
+  const categories = (data || []).map((item: DbServiceCategoryFull) => mapServiceCategoryFull(item))
 
   return { categories }
 })

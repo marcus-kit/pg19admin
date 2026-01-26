@@ -5,7 +5,22 @@ export default defineEventHandler(async (event) => {
   const supabase = useSupabaseAdmin(event)
 
   // Собираем данные для вставки
-  const insertData: Record<string, any> = {}
+  const insertData: {
+    user_id?: string
+    contract_number?: number
+    contract_status?: string
+    start_date?: string
+    end_date?: string
+    notes?: string
+    address_city?: string
+    address_district?: string
+    address_street?: string
+    address_building?: string
+    address_apartment?: string
+    address_entrance?: string
+    address_floor?: string
+    address_intercom?: string
+  } = {}
 
   // Привязка к пользователю (опционально)
   if (body.userId) {

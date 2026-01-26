@@ -59,7 +59,7 @@ const deleteCategory = async (id: string) => {
     toast.success('Категория успешно удалена')
     await fetchCategories()
   }
-  catch (error: any) {
+  catch (error: unknown) {
     console.error('Failed to delete category:', error)
     toast.error('Не удалось удалить категорию')
   }
@@ -73,7 +73,7 @@ const deleteService = async (id: string) => {
     toast.success('Услуга успешно удалена')
     await fetchServices()
   }
-  catch (error: any) {
+  catch (error: unknown) {
     console.error('Failed to delete service:', error)
     toast.error('Не удалось удалить услугу')
   }

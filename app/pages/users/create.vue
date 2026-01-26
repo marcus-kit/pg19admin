@@ -55,8 +55,9 @@ const createUser = async () => {
       router.push(`/users/${response.user.id}`)
     }
   }
-  catch (e: any) {
-    error.value = e.data?.message || 'Ошибка при создании пользователя'
+  catch (e: unknown) {
+    const message = e instanceof Error ? e.message : 'Ошибка при создании пользователя'
+    error.value = message
     toast.error('Не удалось создать пользователя')
   }
   finally {

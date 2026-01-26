@@ -27,7 +27,22 @@ export default defineEventHandler(async (event) => {
   }
 
   // Собираем поля для обновления
-  const updateData: Record<string, any> = {
+  const updateData: {
+    date_updated: string
+    contract_number?: number
+    contract_status?: string
+    start_date?: string
+    end_date?: string
+    notes?: string
+    address_city?: string
+    address_district?: string
+    address_street?: string
+    address_building?: string
+    address_apartment?: string
+    address_entrance?: string
+    address_floor?: string
+    address_intercom?: string
+  } = {
     date_updated: new Date().toISOString(),
   }
 

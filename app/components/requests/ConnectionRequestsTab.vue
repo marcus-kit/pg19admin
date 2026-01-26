@@ -70,9 +70,7 @@ const localOnlyInCoverage = computed({
     </div>
 
     <!-- Loading -->
-    <div v-if="loading" class="flex justify-center py-12">
-      <Icon name="heroicons:arrow-path" class="w-8 h-8 animate-spin text-primary" />
-    </div>
+    <UiLoading v-if="loading" />
 
     <!-- Requests List -->
     <div v-else class="space-y-3">

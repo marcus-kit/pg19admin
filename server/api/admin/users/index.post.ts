@@ -20,7 +20,23 @@ export default defineEventHandler(async (event) => {
   }
 
   // Собираем данные для вставки
-  const insertData: Record<string, any> = {
+  const insertData: {
+    first_name: string
+    last_name: string
+    middle_name?: string
+    phone?: string
+    email?: string
+    birth_date?: string
+    telegram_username?: string
+    vk_id?: string
+    passport_series?: string
+    passport_number?: string
+    reg_city?: string
+    reg_street?: string
+    reg_building?: string
+    reg_apartment?: string
+    full_name?: string
+  } = {
     first_name: body.firstName.trim(),
     last_name: body.lastName.trim(),
   }

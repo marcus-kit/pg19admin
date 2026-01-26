@@ -13,14 +13,14 @@ interface ConnectionRequest {
   fullName: string
   phone: string
   addressText: string
-  addressComponents: Record<string, any> | null
+  addressComponents: Record<string, unknown> | null
   latitude: number
   longitude: number
   inCoverageZone: boolean
   coverageZoneId: number | null
   status: 'new' | 'contacted' | 'approved' | 'rejected' | 'completed'
   source: string
-  metadata: Record<string, any> | null
+  metadata: Record<string, unknown> | null
   createdAt: string
   updatedAt: string
 }
@@ -156,9 +156,7 @@ onMounted(() => {
     </div>
 
     <!-- Loading -->
-    <div v-if="loading" class="flex justify-center py-12">
-      <Icon name="heroicons:arrow-path" class="w-8 h-8 animate-spin text-primary" />
-    </div>
+    <UiLoading v-if="loading" />
 
     <!-- Content -->
     <div v-else-if="request" class="space-y-6">

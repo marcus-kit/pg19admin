@@ -92,9 +92,7 @@ const getOnlineStatusClass = (status: string) => {
     </div>
 
     <!-- Loading -->
-    <div v-if="loading" class="flex justify-center py-12">
-      <Icon name="heroicons:arrow-path" class="w-8 h-8 animate-spin text-primary" />
-    </div>
+    <UiLoading v-if="loading" />
 
     <!-- Users Table -->
     <div v-else class="overflow-x-auto">

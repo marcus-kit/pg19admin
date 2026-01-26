@@ -81,3 +81,6 @@ SUPABASE_KEY=eyJ...
 | Coverage Map | OpenLayers |
 | News Editor | TipTap |
 | AI Bot | OpenAI API |
+
+## Code Style
+Следуй правилам из файла CODE-STYLE.md

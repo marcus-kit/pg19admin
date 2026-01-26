@@ -1,4 +1,5 @@
 import { useSupabaseAdmin } from '~~/server/utils/supabase'
+import { type DbPage, mapPage } from '~~/server/utils/mappers'
 
 export default defineEventHandler(async (event) => {
   // Проверка авторизации и прав
@@ -32,20 +33,7 @@ export default defineEventHandler(async (event) => {
   }
 
   // Маппинг snake_case → camelCase
-  const pages = (data || []).map((item: any) => ({
-    id: item.id,
-    slug: item.slug,
-    title: item.title,
-    content: item.content,
-    metaTitle: item.meta_title,
-    metaDescription: item.meta_description,
-    isPublished: item.is_published,
-    sortOrder: item.sort_order,
-    authorId: item.author_id,
-    publishedAt: item.published_at,
-    createdAt: item.created_at,
-    updatedAt: item.updated_at,
-  }))
+  const pages = (data || []).map((item: DbPage) => mapPage(item))
 
   return { pages }
 })

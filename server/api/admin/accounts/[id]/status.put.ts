@@ -36,7 +36,11 @@ export default defineEventHandler(async (event) => {
   }
 
   // Обновляем статус
-  const updateData: Record<string, any> = {
+  const updateData: {
+    status: string
+    date_updated: string
+    blocked_at?: string | null
+  } = {
     status,
     date_updated: new Date().toISOString(),
   }

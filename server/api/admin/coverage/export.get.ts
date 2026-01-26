@@ -1,10 +1,42 @@
 import { serverSupabaseServiceRole } from '#supabase/server'
 
+// Типы для GeoJSON экспорта
+interface GeoJSONFeature {
+  type: 'Feature'
+  id: string
+  geometry: unknown
+  properties: Record<string, unknown>
+}
+
+interface CoverageZoneRow {
+  id: number
+  name: string
+  description: string | null
+  geometry: unknown
+  type: string
+  partner_id: number | null
+  color: string
+  fill_opacity: number
+  stroke_width: number
+  is_active: boolean
+  partner: { id: number, organization_name: string } | null
+}
+
+interface PartnerCoverageZoneRow {
+  id: number
+  name: string
+  description: string | null
+  geometry: unknown
+  partner_id: number | null
+  active: boolean
+  partner: { id: number, organization_name: string } | null
+}
+
 export default defineEventHandler(async (event) => {
   const query = getQuery(event)
   const supabase = serverSupabaseServiceRole(event)
 
-  const features: any[] = []
+  const features: GeoJSONFeature[] = []
 
   const filterPartnerId = query.partnerId as string | undefined
 
@@ -26,7 +58,7 @@ export default defineEventHandler(async (event) => {
 
     const { data: pg19Data } = await pg19Query
 
-    features.push(...(pg19Data || []).map((zone: any) => ({
+    features.push(...(pg19Data || []).map((zone: CoverageZoneRow) => ({
       type: 'Feature',
       id: `cz_${zone.id}`,
       geometry: zone.geometry,
@@ -64,7 +96,7 @@ export default defineEventHandler(async (event) => {
 
     const { data: partnerData } = await partnerQuery
 
-    features.push(...(partnerData || []).map((zone: any) => ({
+    features.push(...(partnerData || []).map((zone: PartnerCoverageZoneRow) => ({
       type: 'Feature',
       id: `pcz_${zone.id}`,
       geometry: zone.geometry,

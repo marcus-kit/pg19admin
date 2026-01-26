@@ -1,3 +1,5 @@
+import { type DbNewsAttachmentInline, mapNewsAttachmentInline } from '~~/server/utils/mappers'
+
 export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, 'id')
 
@@ -45,14 +47,7 @@ export default defineEventHandler(async (event) => {
       publishedAt: newsItem.published_at,
       isPinned: newsItem.is_pinned,
       createdAt: newsItem.date_created,
-      attachments: (newsItem.news_attachments || []).map((att: any) => ({
-        id: att.id,
-        fileName: att.file_name,
-        filePath: att.file_path,
-        fileSize: att.file_size,
-        mimeType: att.mime_type,
-        sortOrder: att.sort_order,
-      })),
+      attachments: (newsItem.news_attachments || []).map((att: DbNewsAttachmentInline) => mapNewsAttachmentInline(att)),
     },
   }
 })

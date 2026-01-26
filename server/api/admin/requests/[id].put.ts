@@ -43,7 +43,9 @@ export default defineEventHandler(async (event) => {
   }
 
   // Обновляем
-  const updateData: Record<string, any> = {}
+  const updateData: {
+    status?: 'new' | 'contacted' | 'approved' | 'rejected' | 'completed'
+  } = {}
   if (body.status) {
     updateData.status = body.status
   }

@@ -1,3 +1,5 @@
+import { type DbNews, mapNews } from '~~/server/utils/mappers'
+
 export default defineEventHandler(async (event) => {
   const query = getQuery(event)
 
@@ -32,19 +34,7 @@ export default defineEventHandler(async (event) => {
   }
 
   // Преобразование snake_case → camelCase
-  const news = (data || []).map((item: any) => ({
-    id: item.id,
-    title: item.title,
-    summary: item.summary,
-    content: item.content,
-    category: item.category,
-    status: item.status,
-    publishedAt: item.published_at,
-    expiresAt: item.expires_at,
-    isPinned: item.is_pinned,
-    createdAt: item.date_created,
-    updatedAt: item.date_updated,
-  }))
+  const news = (data || []).map((item: DbNews) => mapNews(item))
 
   return { news }
 })

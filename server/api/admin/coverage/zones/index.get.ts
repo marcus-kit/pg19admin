@@ -1,10 +1,58 @@
 import { serverSupabaseServiceRole } from '#supabase/server'
 
+// Типы для coverage zones
+interface CoverageZoneRow {
+  id: number
+  name: string
+  description: string | null
+  geometry: unknown
+  type: string
+  partner_id: number | null
+  color: string
+  fill_opacity: number
+  stroke_width: number
+  is_active: boolean
+  sort_order: number
+  created_at: string
+  updated_at: string
+  partner: { id: number, organization_name: string } | null
+}
+
+interface PartnerCoverageZoneRow {
+  id: number
+  name: string
+  description: string | null
+  geometry: unknown
+  partner_id: number | null
+  active: boolean
+  created_at: string
+  updated_at: string
+  partner: { id: number, organization_name: string, color: string | null } | null
+}
+
+interface ZoneResponse {
+  id: number
+  source: 'coverage_zones' | 'partner_coverage_zones'
+  name: string
+  description: string | null
+  type: string
+  partnerId: number | null
+  partner: { id: number, name: string } | null
+  geometry: unknown
+  color: string
+  fillOpacity: number
+  strokeWidth: number
+  isActive: boolean
+  sortOrder: number
+  createdAt: string
+  updatedAt: string
+}
+
 export default defineEventHandler(async (event) => {
   const query = getQuery(event)
   const supabase = serverSupabaseServiceRole(event)
 
-  const zones: any[] = []
+  const zones: ZoneResponse[] = []
 
   // Fetch from coverage_zones (ПЖ19 zones)
   if (query.type !== 'partner') {
@@ -34,7 +82,7 @@ export default defineEventHandler(async (event) => {
       console.error('Failed to fetch coverage_zones:', pg19Error)
     }
     else {
-      zones.push(...(pg19Data || []).map((item: any) => ({
+      zones.push(...(pg19Data || []).map((item: CoverageZoneRow) => ({
         id: item.id,
         source: 'coverage_zones',
         name: item.name,
@@ -78,7 +126,7 @@ export default defineEventHandler(async (event) => {
       console.error('Failed to fetch partner_coverage_zones:', partnerError)
     }
     else {
-      zones.push(...(partnerData || []).map((item: any) => ({
+      zones.push(...(partnerData || []).map((item: PartnerCoverageZoneRow) => ({
         id: item.id,
         source: 'partner_coverage_zones',
         name: item.name,

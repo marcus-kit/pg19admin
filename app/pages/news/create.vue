@@ -65,10 +65,11 @@ const saveNews = async () => {
     toast.success('Новость успешно создана')
     router.push(`/news/${response.news.id}/edit`)
   }
-  catch (err: any) {
+  catch (err: unknown) {
     console.error('Failed to create news:', err)
     toast.error('Не удалось создать новость')
-    error.value = err.data?.message || 'Ошибка при создании новости'
+    const message = err instanceof Error ? err.message : 'Ошибка при создании новости'
+    error.value = message
   }
   finally {
     saving.value = false

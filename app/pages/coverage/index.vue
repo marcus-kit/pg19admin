@@ -110,7 +110,7 @@ const handleZoneClick = (zone: CoverageZone) => {
   selectedZone.value = zone
 }
 
-const handleImport = async (data: { geojson: any, type: string, partnerId?: string, replaceExisting: boolean }) => {
+const handleImport = async (data: { geojson: unknown, type: string, partnerId?: string, replaceExisting: boolean }) => {
   try {
     const result = await $fetch<{ success: boolean, imported: number }>('/api/admin/coverage/import', {
       method: 'POST',
@@ -127,9 +127,10 @@ const handleImport = async (data: { geojson: any, type: string, partnerId?: stri
       await fetchZones()
     }
   }
-  catch (error: any) {
+  catch (error: unknown) {
     console.error('Failed to import zones:', error)
-    toast.error(error.data?.message || 'Не удалось импортировать зоны')
+    const message = error instanceof Error ? error.message : 'Не удалось импортировать зоны'
+    toast.error(message)
   }
 }
 
@@ -160,9 +161,10 @@ const confirmDelete = async () => {
     zoneToDelete.value = null
     toast.success('Зона покрытия удалена')
   }
-  catch (error: any) {
+  catch (error: unknown) {
     console.error('Failed to delete zone:', error)
-    toast.error(error.data?.message || 'Не удалось удалить зону')
+    const message = error instanceof Error ? error.message : 'Не удалось удалить зону'
+    toast.error(message)
   }
 }
 

@@ -1,5 +1,15 @@
 import { useSupabaseAdmin } from '~~/server/utils/supabase'
 
+// Тип для вложений новости
+interface NewsAttachmentRow {
+  id: number
+  file_name: string
+  file_path: string
+  file_size: number
+  mime_type: string
+  sort_order: number
+}
+
 export default defineEventHandler(async (event) => {
   // Проверка авторизации и прав
 
@@ -52,7 +62,7 @@ export default defineEventHandler(async (event) => {
       authorId: newsItem.author_id,
       createdAt: newsItem.date_created,
       updatedAt: newsItem.date_updated,
-      attachments: (newsItem.news_attachments || []).map((att: any) => ({
+      attachments: (newsItem.news_attachments || []).map((att: NewsAttachmentRow) => ({
         id: att.id,
         fileName: att.file_name,
         filePath: att.file_path,

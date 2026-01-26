@@ -33,7 +33,7 @@ export function mapNews(item: DbNews) {
     isPinned: item.is_pinned,
     authorId: item.author_id,
     createdAt: item.date_created,
-    updatedAt: item.date_updated
+    updatedAt: item.date_updated,
   }
 }
 
@@ -71,10 +71,12 @@ export function mapUser(user: DbUser, accountsCount?: number) {
     phone: user.phone,
     avatar: user.avatar,
     status: user.status,
-    telegram: user.telegram_id ? {
-      id: user.telegram_id,
-      username: user.telegram_username
-    } : null,
+    telegram: user.telegram_id
+      ? {
+          id: user.telegram_id,
+          username: user.telegram_username,
+        }
+      : null,
     vkId: user.vk_id,
     onlineStatus: user.online_status,
     lastSeenAt: user.last_seen_at,
@@ -82,14 +84,14 @@ export function mapUser(user: DbUser, accountsCount?: number) {
     nickname: user.nickname,
     accountsCount: accountsCount ?? 0,
     createdAt: user.created_at,
-    updatedAt: user.updated_at
+    updatedAt: user.updated_at,
   }
 }
 
 export function mapUserShort(user: Pick<DbUser, 'id' | 'first_name' | 'last_name' | 'full_name'>) {
   return {
     id: user.id,
-    fullName: user.full_name || `${user.last_name} ${user.first_name}`.trim()
+    fullName: user.full_name || `${user.last_name} ${user.first_name}`.trim(),
   }
 }
 
@@ -111,7 +113,7 @@ export interface DbAccount {
 
 export function mapAccount(
   acc: DbAccount,
-  user?: { id: string; fullName: string } | null
+  user?: { id: string, fullName: string } | null,
 ) {
   return {
     id: acc.id,
@@ -124,7 +126,7 @@ export function mapAccount(
     startDate: acc.start_date,
     blockedAt: acc.blocked_at,
     createdAt: acc.date_created,
-    updatedAt: acc.date_updated
+    updatedAt: acc.date_updated,
   }
 }
 
@@ -151,7 +153,7 @@ export interface DbTicket {
 
 export function mapTicket(
   ticket: DbTicket,
-  assignedAdmin?: { id: string; fullName: string } | null
+  assignedAdmin?: { id: string, fullName: string } | null,
 ) {
   return {
     id: ticket.id,
@@ -169,7 +171,7 @@ export function mapTicket(
     createdAt: ticket.created_at,
     updatedAt: ticket.updated_at,
     firstResponseAt: ticket.first_response_at,
-    resolvedAt: ticket.resolved_at
+    resolvedAt: ticket.resolved_at,
   }
 }
 
@@ -185,7 +187,7 @@ export interface DbChat {
   status: string
   subject: string | null
   assigned_admin_id: string | null
-  assigned_admin?: { id: string; full_name: string } | null
+  assigned_admin?: { id: string, full_name: string } | null
   last_message_at: string | null
   last_admin_message_at: string | null
   last_user_message_at: string | null
@@ -212,7 +214,7 @@ export function mapChat(chat: DbChat) {
     lastAdminMessageAt: chat.last_admin_message_at,
     lastUserMessageAt: chat.last_user_message_at,
     createdAt: chat.created_at,
-    closedAt: chat.closed_at
+    closedAt: chat.closed_at,
   }
 }
 
@@ -242,7 +244,7 @@ export function mapChatMessage(msg: DbChatMessage) {
     attachmentName: msg.attachment_name,
     attachmentSize: msg.attachment_size,
     isRead: msg.is_read,
-    createdAt: msg.created_at
+    createdAt: msg.created_at,
   }
 }
 
@@ -257,7 +259,7 @@ export interface DbConnectionRequest {
   status: string
   source: string
   comment: string | null
-  coordinates: { lat: number; lon: number } | null
+  coordinates: { lat: number, lon: number } | null
   processed_by: string | null
   processed_at: string | null
   created_at: string
@@ -278,7 +280,7 @@ export function mapConnectionRequest(req: DbConnectionRequest) {
     processedBy: req.processed_by,
     processedAt: req.processed_at,
     createdAt: req.created_at,
-    updatedAt: req.updated_at
+    updatedAt: req.updated_at,
   }
 }
 
@@ -294,7 +296,7 @@ export interface DbCallbackRequest {
 
 export function mapCallbackRequest(
   req: DbCallbackRequest,
-  admin?: { id: string; fullName: string } | null
+  admin?: { id: string, fullName: string } | null,
 ) {
   return {
     id: req.id,
@@ -303,7 +305,7 @@ export function mapCallbackRequest(
     status: req.status,
     source: req.source,
     processedByAdmin: admin ?? null,
-    createdAt: req.created_at
+    createdAt: req.created_at,
   }
 }
 
@@ -325,7 +327,7 @@ export interface DbService {
 
 export function mapService(
   service: DbService,
-  categoryName?: string
+  categoryName?: string,
 ) {
   return {
     id: service.id,
@@ -339,7 +341,7 @@ export function mapService(
     isActive: service.is_active,
     sortOrder: service.sort_order,
     createdAt: service.date_created,
-    updatedAt: service.date_updated
+    updatedAt: service.date_updated,
   }
 }
 
@@ -355,7 +357,7 @@ export interface DbServiceCategory {
 
 export function mapServiceCategory(
   cat: DbServiceCategory,
-  servicesCount?: number
+  servicesCount?: number,
 ) {
   return {
     id: cat.id,
@@ -365,7 +367,7 @@ export function mapServiceCategory(
     icon: cat.icon,
     sortOrder: cat.sort_order,
     isActive: cat.is_active,
-    servicesCount: servicesCount ?? 0
+    servicesCount: servicesCount ?? 0,
   }
 }
 
@@ -395,7 +397,7 @@ export function mapAdmin(admin: DbAdmin) {
     permissions: admin.permissions,
     isActive: admin.is_active,
     lastLoginAt: admin.last_login_at,
-    createdAt: admin.created_at
+    createdAt: admin.created_at,
   }
 }
 
@@ -419,6 +421,128 @@ export function mapNewsAttachment(att: DbNewsAttachment) {
     storagePath: att.storage_path,
     fileSize: att.file_size,
     mimeType: att.mime_type,
-    createdAt: att.created_at
+    createdAt: att.created_at,
+  }
+}
+
+// ==================== PAGES ====================
+
+export interface DbPage {
+  id: string
+  slug: string
+  title: string
+  content: string | null
+  meta_title: string | null
+  meta_description: string | null
+  is_published: boolean
+  sort_order: number
+  author_id: string | null
+  published_at: string | null
+  created_at: string
+  updated_at: string
+}
+
+export function mapPage(page: DbPage) {
+  return {
+    id: page.id,
+    slug: page.slug,
+    title: page.title,
+    content: page.content,
+    metaTitle: page.meta_title,
+    metaDescription: page.meta_description,
+    isPublished: page.is_published,
+    sortOrder: page.sort_order,
+    authorId: page.author_id,
+    publishedAt: page.published_at,
+    createdAt: page.created_at,
+    updatedAt: page.updated_at,
+  }
+}
+
+// ==================== NEWS ATTACHMENT (inline) ====================
+
+export interface DbNewsAttachmentInline {
+  id: string
+  file_name: string
+  file_path: string
+  file_size: number
+  mime_type: string
+  sort_order: number
+}
+
+export function mapNewsAttachmentInline(att: DbNewsAttachmentInline) {
+  return {
+    id: att.id,
+    fileName: att.file_name,
+    filePath: att.file_path,
+    fileSize: att.file_size,
+    mimeType: att.mime_type,
+    sortOrder: att.sort_order,
+  }
+}
+
+// ==================== SERVICE (inline with category) ====================
+
+export interface DbServiceWithCategory {
+  id: string
+  name: string
+  description: string | null
+  full_description: string | null
+  price_monthly: number | null
+  price_connection: number | null
+  image_url: string | null
+  features: unknown[] | null
+  sort_order: number
+  is_active: boolean
+  category_id: string
+  category: { id: string, name: string, slug: string } | null
+  created_at: string
+  updated_at: string
+}
+
+export function mapServiceWithCategory(service: DbServiceWithCategory) {
+  return {
+    id: service.id,
+    name: service.name,
+    description: service.description,
+    fullDescription: service.full_description,
+    priceMonthly: service.price_monthly,
+    priceConnection: service.price_connection,
+    imageUrl: service.image_url,
+    features: service.features || [],
+    sortOrder: service.sort_order,
+    isActive: service.is_active,
+    categoryId: service.category_id,
+    category: service.category,
+    createdAt: service.created_at,
+    updatedAt: service.updated_at,
+  }
+}
+
+// ==================== SERVICE CATEGORY (with dates) ====================
+
+export interface DbServiceCategoryFull {
+  id: string
+  name: string
+  slug: string
+  description: string | null
+  icon: string | null
+  sort_order: number
+  is_active: boolean
+  created_at: string
+  updated_at: string
+}
+
+export function mapServiceCategoryFull(cat: DbServiceCategoryFull) {
+  return {
+    id: cat.id,
+    name: cat.name,
+    slug: cat.slug,
+    description: cat.description,
+    icon: cat.icon,
+    sortOrder: cat.sort_order,
+    isActive: cat.is_active,
+    createdAt: cat.created_at,
+    updatedAt: cat.updated_at,
   }
 }

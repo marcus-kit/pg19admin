@@ -1,4 +1,15 @@
 <script setup lang="ts">
+// Интерфейс ответа API для категории
+interface CategoryResponse {
+  id: string
+  name: string
+  slug: string
+  description: string | null
+  icon: string | null
+  sortOrder: number
+  isActive: boolean
+}
+
 definePageMeta({
   middleware: 'admin',
 })
@@ -37,7 +48,7 @@ const iconOptions = [
 const fetchCategory = async () => {
   loading.value = true
   try {
-    const data = await $fetch<{ category: any }>(`/api/admin/catalog/categories/${categoryId.value}`)
+    const data = await $fetch<{ category: CategoryResponse }>(`/api/admin/catalog/categories/${categoryId.value}`)
     const cat = data.category
     form.name = cat.name
     form.slug = cat.slug
@@ -46,9 +57,9 @@ const fetchCategory = async () => {
     form.sortOrder = cat.sortOrder
     form.isActive = cat.isActive
   }
-  catch (err: any) {
+  catch (err: unknown) {
     console.error('Failed to fetch category:', err)
-    error.value = err.data?.message || 'Ошибка при загрузке категории'
+    error.value = 'Ошибка при загрузке категории'
     toast.error('Не удалось загрузить категорию')
   }
   finally {
@@ -81,9 +92,9 @@ const save = async () => {
     toast.success('Категория сохранена')
     router.push('/catalog')
   }
-  catch (err: any) {
+  catch (err: unknown) {
     console.error('Failed to update category:', err)
-    error.value = err.data?.message || 'Ошибка при обновлении категории'
+    error.value = 'Ошибка при обновлении категории'
     toast.error('Не удалось сохранить категорию')
   }
   finally {
@@ -104,9 +115,7 @@ onMounted(() => {
       </h1>
     </div>
 
-    <div v-if="loading" class="flex justify-center py-12">
-      <Icon name="heroicons:arrow-path" class="w-8 h-8 animate-spin text-primary" />
-    </div>
+    <UiLoading v-if="loading" />
 
     <div v-else-if="error && !form.name" class="p-4 bg-red-500/20 border border-red-500/30 rounded-lg text-red-400">
       {{ error }}

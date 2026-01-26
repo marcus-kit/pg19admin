@@ -21,7 +21,12 @@ export default defineEventHandler(async (event) => {
   const supabase = useSupabaseAdmin(event)
 
   // Подготавливаем данные для обновления
-  const updateData: Record<string, any> = {
+  const updateData: {
+    status: string
+    updated_at: string
+    processed_by?: string
+    processed_at?: string
+  } = {
     status,
     updated_at: new Date().toISOString(),
   }

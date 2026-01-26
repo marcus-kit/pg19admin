@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { Ticket, TicketComment, TicketHistoryItem } from '~/types/admin'
+import { getErrorStatusCode } from '~/composables/useFormatters'
 
 definePageMeta({
   middleware: 'admin',
@@ -29,10 +30,10 @@ const fetchTicket = async () => {
     comments.value = data.comments
     history.value = data.history
   }
-  catch (error: any) {
+  catch (error: unknown) {
     console.error('Failed to fetch ticket:', error)
     toast.error('Не удалось загрузить тикет')
-    if (error.statusCode === 404) {
+    if (getErrorStatusCode(error) === 404) {
       router.push('/tickets')
     }
   }
@@ -57,7 +58,7 @@ const handleAddComment = async (content: string, isInternal: boolean) => {
       ticket.value.status = 'open'
     }
   }
-  catch (error: any) {
+  catch (error: unknown) {
     console.error('Failed to add comment:', error)
     toast.error('Ошибка при добавлении комментария')
   }
@@ -79,7 +80,7 @@ const handleUpdateStatus = async (newStatus: string) => {
     ticket.value.status = newStatus as Ticket['status']
     await fetchTicket()
   }
-  catch (error: any) {
+  catch (error: unknown) {
     console.error('Failed to update status:', error)
     toast.error('Ошибка при обновлении статуса')
   }
@@ -100,7 +101,7 @@ const handleUpdatePriority = async (newPriority: string) => {
 
     ticket.value.priority = newPriority as Ticket['priority']
   }
-  catch (error: any) {
+  catch (error: unknown) {
     console.error('Failed to update priority:', error)
     toast.error('Ошибка при обновлении приоритета')
   }
@@ -121,7 +122,7 @@ const handleAssignToMe = async () => {
 
     await fetchTicket()
   }
-  catch (error: any) {
+  catch (error: unknown) {
     console.error('Failed to assign ticket:', error)
     toast.error('Ошибка при назначении тикета')
   }
@@ -148,9 +149,7 @@ onMounted(() => {
 <template>
   <div>
     <!-- Loading -->
-    <div v-if="loading" class="flex justify-center py-12">
-      <Icon name="heroicons:arrow-path" class="w-8 h-8 animate-spin text-primary" />
-    </div>
+    <UiLoading v-if="loading" />
 
     <template v-else-if="ticket">
       <!-- Header -->

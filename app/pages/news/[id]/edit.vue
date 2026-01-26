@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import type { NewsAttachment, NewsCategory, NewsStatus } from '~/types/admin'
+import { getErrorMessage } from '~/composables/useFormatters'
+
 const toast = useToast()
 
 definePageMeta({
@@ -12,19 +15,31 @@ const route = useRoute()
 
 const newsId = computed(() => route.params.id as string)
 
+// Интерфейс для ответа API
+interface NewsDetailResponse {
+  id: string
+  title: string
+  summary: string | null
+  content: string
+  category: NewsCategory
+  status: NewsStatus
+  isPinned: boolean
+  attachments: NewsAttachment[]
+}
+
 const form = reactive({
   title: '',
   summary: '',
   content: '',
-  category: 'announcement' as 'announcement' | 'protocol' | 'notification',
-  status: 'draft' as 'draft' | 'published' | 'archived',
+  category: 'announcement' as NewsCategory,
+  status: 'draft' as NewsStatus,
   isPinned: false,
 })
 
 const loading = ref(true)
 const saving = ref(false)
 const error = ref('')
-const attachments = ref<any[]>([])
+const attachments = ref<NewsAttachment[]>([])
 
 const categoryOptions = [
   { label: 'Объявление', value: 'announcement' },
@@ -44,7 +59,7 @@ const fetchNews = async () => {
   error.value = ''
 
   try {
-    const data = await $fetch<{ news: any }>(`/api/admin/news/${newsId.value}`)
+    const data = await $fetch<{ news: NewsDetailResponse }>(`/api/admin/news/${newsId.value}`)
     const news = data.news
 
     // Заполняем форму
@@ -58,10 +73,10 @@ const fetchNews = async () => {
     // Сохраняем вложения
     attachments.value = news.attachments || []
   }
-  catch (err: any) {
+  catch (err: unknown) {
     console.error('Failed to fetch news:', err)
     toast.error('Не удалось загрузить новость')
-    error.value = err.data?.message || 'Ошибка при загрузке новости'
+    error.value = getErrorMessage(err) || 'Ошибка при загрузке новости'
   }
   finally {
     loading.value = false
@@ -100,10 +115,10 @@ const saveNews = async () => {
     toast.success('Новость успешно сохранена')
     router.push('/news')
   }
-  catch (err: any) {
+  catch (err: unknown) {
     console.error('Failed to update news:', err)
     toast.error('Не удалось сохранить новость')
-    error.value = err.data?.message || 'Ошибка при обновлении новости'
+    error.value = getErrorMessage(err) || 'Ошибка при обновлении новости'
   }
   finally {
     saving.value = false
@@ -130,9 +145,7 @@ onMounted(() => {
     </div>
 
     <!-- Loading -->
-    <div v-if="loading" class="flex justify-center py-12">
-      <Icon name="heroicons:arrow-path" class="w-8 h-8 animate-spin text-primary" />
-    </div>
+    <UiLoading v-if="loading" />
 
     <!-- Error -->
     <div v-else-if="error && !loading" class="mb-6 p-4 bg-red-500/20 border border-red-500/30 rounded-lg text-red-400">

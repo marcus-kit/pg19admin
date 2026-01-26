@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { getErrorStatusCode, getErrorMessage } from '~/composables/useFormatters'
+
 definePageMeta({
   middleware: 'admin',
 })
@@ -75,10 +77,10 @@ const fetchUser = async () => {
     const data = await $fetch<{ user: User }>(`/api/admin/users/${userId.value}`)
     user.value = data.user
   }
-  catch (error: any) {
+  catch (error: unknown) {
     console.error('Failed to fetch user:', error)
     toast.error('Не удалось загрузить пользователя')
-    if (error.statusCode === 404) {
+    if (getErrorStatusCode(error) === 404) {
       router.push('/users')
     }
   }
@@ -124,9 +126,9 @@ const saveUser = async () => {
     showEditModal.value = false
     toast.success('Пользователь сохранён')
   }
-  catch (error: any) {
+  catch (error: unknown) {
     console.error('Failed to save user:', error)
-    toast.error(error.data?.message || 'Не удалось сохранить пользователя')
+    toast.error(getErrorMessage(error) || 'Не удалось сохранить пользователя')
   }
   finally {
     saving.value = false
@@ -148,9 +150,9 @@ const updateStatus = async (newStatus: string) => {
     user.value.status = newStatus as User['status']
     toast.success('Статус пользователя обновлён')
   }
-  catch (error: any) {
+  catch (error: unknown) {
     console.error('Failed to update user status:', error)
-    toast.error(error.data?.message || 'Не удалось обновить статус')
+    toast.error(getErrorMessage(error) || 'Не удалось обновить статус')
   }
   finally {
     saving.value = false
@@ -225,9 +227,7 @@ onMounted(() => {
 <template>
   <div>
     <!-- Loading -->
-    <div v-if="loading" class="flex justify-center py-12">
-      <Icon name="heroicons:arrow-path" class="w-8 h-8 animate-spin text-primary" />
-    </div>
+    <UiLoading v-if="loading" />
 
     <template v-else-if="user">
       <!-- Header -->

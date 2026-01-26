@@ -1,7 +1,26 @@
 import { serverSupabaseServiceRole } from '#supabase/server'
 
+// Типы для GeoJSON импорта
+interface GeoJSONGeometry {
+  type: string
+  coordinates: unknown
+}
+
+interface GeoJSONFeature {
+  type: 'Feature'
+  geometry: GeoJSONGeometry
+  properties?: Record<string, unknown>
+}
+
+interface GeoJSONFeatureCollection {
+  type: 'FeatureCollection'
+  features: GeoJSONFeature[]
+}
+
+type GeoJSONInput = GeoJSONFeatureCollection | GeoJSONFeature | GeoJSONGeometry
+
 interface ImportOptions {
-  geojson: any
+  geojson: GeoJSONInput
   type?: 'pg19' | 'partner'
   partnerId?: number
   defaultColor?: string
@@ -16,7 +35,7 @@ export default defineEventHandler(async (event) => {
   }
 
   const geojson = body.geojson
-  let features: any[] = []
+  let features: GeoJSONFeature[] = []
 
   // Support both FeatureCollection and single Feature
   if (geojson.type === 'FeatureCollection') {

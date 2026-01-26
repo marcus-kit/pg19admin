@@ -97,10 +97,10 @@ const save = async () => {
     toast.success('Услуга успешно создана')
     router.push('/catalog')
   }
-  catch (err: any) {
+  catch (err: unknown) {
     console.error('Failed to create service:', err)
     toast.error('Не удалось создать услугу')
-    error.value = err.data?.message || 'Ошибка при создании услуги'
+    error.value = 'Ошибка при создании услуги'
   }
   finally {
     saving.value = false
