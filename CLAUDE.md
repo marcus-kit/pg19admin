@@ -35,6 +35,9 @@ git add -A && git commit -m "message" && git push
 9. **Supabase Auth** — используй встроенный auth, НЕ кастомный auth_sessions
 10. **Vue attributes order** — порядок: `:props` → `class` → статические → `@events` (ESLint vue/attributes-order)
 11. **Tailwind CSS v4** — используй `@import "tailwindcss"` вместо `@tailwind` директив. Warning `@import must precede` — некритичен
+12. **Computed setter + объекты** — мутация свойств объекта НЕ триггерит setter. Используй watch с `deep: true` или создавай новый объект
+13. **Двусторонняя синхронизация** — при watch↔watch добавь флаг `isSyncing` чтобы избежать бесконечного цикла
+14. **ESLint стиль** — `} else {` запрещён, только `}\nelse {`. Один statement на строку в стрелочных функциях
 
 ## Environment Variables
 
