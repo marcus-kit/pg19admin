@@ -1,21 +1,12 @@
 <script setup lang="ts">
 import type { Ticket } from '~/types/admin'
+import type { ColumnConfig, FilterConfig } from '~/types/admin-list'
 import {
   TICKET_STATUS,
-  TICKET_PRIORITY,
   TICKET_STATUS_OPTIONS,
+  TICKET_PRIORITY,
   TICKET_PRIORITY_OPTIONS,
-  getStatusLabel,
-  getStatusBadgeClass,
 } from '~/composables/useStatusConfig'
-import { useAdminList } from '~/composables/useAdminList'
-
-// Фильтры для списка тикетов
-interface TicketFilters {
-  status: string
-  priority: string
-  assignedToMe: boolean
-}
 
 definePageMeta({
   middleware: 'admin',
@@ -23,131 +14,75 @@ definePageMeta({
 
 useHead({ title: 'Тикеты — Админ-панель' })
 
-const { formatDateTime } = useFormatters()
+const router = useRouter()
 
-const {
-  items: tickets,
-  loading,
-  total,
-  filters,
-} = useAdminList<Ticket, TicketFilters>({
-  endpoint: '/api/admin/tickets',
-  responseKey: 'tickets',
-  initialFilters: {
-    status: 'active',
-    priority: 'all',
-    assignedToMe: false,
-  },
-  // Transform virtual 'active' filter to API format
-  transformParams: f => ({
-    // 'active' is default — API shows new, open, pending when no status param
-    status: f.status === 'active' ? null : f.status,
-    priority: f.priority,
-    assignedToMe: f.assignedToMe ? 'true' : null,
-  }),
-})
-
-// Колонки таблицы тикетов
-const columns = [
-  { key: 'number', label: 'Номер' },
+// Конфигурация колонок
+const columns: ColumnConfig[] = [
+  { key: 'number', label: 'Номер', width: 'w-24' },
   { key: 'subject', label: 'Тема' },
-  { key: 'status', label: 'Статус' },
-  { key: 'priority', label: 'Приоритет' },
+  { key: 'status', label: 'Статус', badge: { config: TICKET_STATUS } },
+  { key: 'priority', label: 'Приоритет', badge: { config: TICKET_PRIORITY } },
   { key: 'assignedAdmin', label: 'Назначен' },
-  { key: 'createdAt', label: 'Создан', sortable: true },
+  { key: 'createdAt', label: 'Создан', sortable: true, format: 'date' },
 ]
 
-// Переход на страницу тикета
-function goToTicket(id: string) {
-  navigateTo(`/tickets/${id}`)
+// Конфигурация фильтров
+const filters: FilterConfig[] = [
+  { key: 'status', type: 'buttons', options: TICKET_STATUS_OPTIONS, defaultValue: 'active' },
+  { key: 'priority', type: 'select', options: TICKET_PRIORITY_OPTIONS, defaultValue: 'all', placeholder: 'Приоритет' },
+  { key: 'assignedToMe', type: 'checkbox', label: 'Только мои', defaultValue: false },
+]
+
+// Трансформация параметров (виртуальный фильтр 'active')
+function transformParams(f: Record<string, unknown>) {
+  return {
+    status: f.status === 'active' ? null : String(f.status),
+    priority: f.priority === 'all' ? null : String(f.priority),
+    assignedToMe: f.assignedToMe ? 'true' : null,
+  }
+}
+
+// Переход к тикету
+function goToTicket(ticket: Ticket) {
+  router.push(`/tickets/${ticket.id}`)
 }
 </script>
 
 <template>
-  <div>
-    <!-- Header -->
-    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
-      <h1 class="text-3xl font-bold text-[var(--text-primary)]">
-        Тикеты
-        <span v-if="total > 0" class="text-lg font-normal text-[var(--text-muted)]">
-          ({{ total }})
-        </span>
-      </h1>
-    </div>
+  <AdminListPage
+    :columns="columns"
+    :filters="filters"
+    :transform-params="transformParams"
+    @row-click="goToTicket"
+    title="Тикеты"
+    icon="heroicons:ticket"
+    endpoint="/api/admin/tickets"
+    response-key="tickets"
+    search-placeholder="Поиск по номеру или теме..."
+    empty-icon="heroicons:ticket"
+    empty-text="Тикетов не найдено"
+  >
+    <!-- Номер тикета -->
+    <template #number="{ row }">
+      <span class="font-mono text-sm text-primary">{{ row.number }}</span>
+    </template>
 
-    <!-- Filters -->
-    <div class="flex flex-wrap gap-4 mb-6">
-      <!-- Status Filter -->
-      <UiFilterTabs v-model="filters.status" :options="TICKET_STATUS_OPTIONS" />
-
-      <div class="flex items-center gap-4 ml-auto">
-        <!-- Priority Filter -->
-        <UiSelect
-          v-model="filters.priority"
-          :options="TICKET_PRIORITY_OPTIONS"
-          :placeholder="undefined"
-          size="sm"
-        />
-
-        <!-- My Tickets -->
-        <label class="flex items-center gap-2 cursor-pointer">
-          <input
-            v-model="filters.assignedToMe"
-            type="checkbox"
-            class="w-4 h-4 rounded border-[var(--glass-border)] bg-[var(--glass-bg)] text-primary focus:ring-primary"
-          />
-          <span class="text-sm text-[var(--text-secondary)]">Только мои</span>
-        </label>
+    <!-- Тема + пользователь -->
+    <template #subject="{ row }">
+      <div class="max-w-md">
+        <p class="truncate font-medium text-[var(--text-primary)]">{{ row.subject }}</p>
+        <p class="text-xs text-[var(--text-muted)]">
+          {{ row.userName || `Пользователь #${row.userId}` }}
+          <span v-if="row.userEmail" class="ml-1">· {{ row.userEmail }}</span>
+        </p>
       </div>
-    </div>
+    </template>
 
-    <!-- Loading -->
-    <UiLoading v-if="loading" />
-
-    <!-- Tickets Table -->
-    <UiTable
-      v-else
-      :data="tickets"
-      :columns="columns"
-      @row-click="(row) => goToTicket(row.id)"
-      empty-icon="heroicons:ticket"
-      empty-text="Тикетов не найдено"
-    >
-      <template #number="{ row }">
-        <span class="font-mono text-sm text-primary">{{ row.number }}</span>
-      </template>
-
-      <template #subject="{ row }">
-        <div class="max-w-md">
-          <p class="font-medium text-[var(--text-primary)] truncate">{{ row.subject }}</p>
-          <p class="text-xs text-[var(--text-muted)]">
-            {{ row.userName || `Пользователь #${row.userId}` }}
-            <span v-if="row.userEmail" class="ml-1">· {{ row.userEmail }}</span>
-          </p>
-        </div>
-      </template>
-
-      <template #status="{ row }">
-        <UiBadge :class="getStatusBadgeClass(TICKET_STATUS, row.status)" size="sm">
-          {{ getStatusLabel(TICKET_STATUS, row.status) }}
-        </UiBadge>
-      </template>
-
-      <template #priority="{ row }">
-        <UiBadge :class="getStatusBadgeClass(TICKET_PRIORITY, row.priority)" size="sm">
-          {{ getStatusLabel(TICKET_PRIORITY, row.priority) }}
-        </UiBadge>
-      </template>
-
-      <template #assignedAdmin="{ row }">
-        <span class="text-sm text-[var(--text-secondary)]">
-          {{ row.assignedAdmin?.fullName || '—' }}
-        </span>
-      </template>
-
-      <template #createdAt="{ row }">
-        <span class="text-sm text-[var(--text-muted)]">{{ formatDateTime(row.createdAt) }}</span>
-      </template>
-    </UiTable>
-  </div>
+    <!-- Назначенный админ -->
+    <template #assignedAdmin="{ row }">
+      <span class="text-sm text-[var(--text-secondary)]">
+        {{ row.assignedAdmin?.fullName || '—' }}
+      </span>
+    </template>
+  </AdminListPage>
 </template>
