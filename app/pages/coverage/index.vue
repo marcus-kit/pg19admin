@@ -65,6 +65,7 @@ let map: OLMap | null = null
 let vectorLayer: VectorLayer<VectorSource<Feature<Geometry>>> | null = null
 let popupOverlay: Overlay | null = null
 let hoveredFeatureId: number | null = null
+let isInitialLoad = true
 
 const mapContainer = ref<HTMLDivElement | null>(null)
 const popupContainer = ref<HTMLDivElement | null>(null)
@@ -352,10 +353,14 @@ async function updateZones() {
   const features = geoJsonFormat.readFeatures(featureCollection)
   vectorSource!.addFeatures(features)
 
-  const extent = vectorSource!.getExtent()
-  if (extent && extent[0] !== Infinity) {
-    map!.getView().fit(extent, { padding: [50, 50, 50, 50], duration: 500 })
+  // Fit to extent только при изменении фильтров, не при первой загрузке
+  if (!isInitialLoad) {
+    const extent = vectorSource!.getExtent()
+    if (extent && extent[0] !== Infinity) {
+      map!.getView().fit(extent, { padding: [50, 50, 50, 50], duration: 500 })
+    }
   }
+  isInitialLoad = false
 }
 
 function closePopup() {
