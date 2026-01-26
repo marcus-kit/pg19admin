@@ -255,11 +255,11 @@ async function initMap() {
         </div>
       `
 
-      popupOverlay.setPosition(coordinate)
+      popupOverlay!.setPosition(coordinate)
       handleZoneClick(zone)
     }
     else {
-      popupOverlay.setPosition(undefined)
+      popupOverlay!.setPosition(undefined)
     }
   })
 
@@ -267,7 +267,7 @@ async function initMap() {
     if (evt.dragging) return
 
     const feature = map!.forEachFeatureAtPixel(evt.pixel, f => f)
-    const newHoveredId = feature ? feature.getId() : null
+    const newHoveredId = feature ? (feature.getId() as number | null) : null
 
     if (newHoveredId !== hoveredFeatureId) {
       hoveredFeatureId = newHoveredId
