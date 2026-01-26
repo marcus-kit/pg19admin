@@ -275,6 +275,43 @@ export function mapConnectionRequest(req: DbConnectionRequest) {
   }
 }
 
+// ==================== CALLBACK REQUESTS ====================
+
+export interface DbCallbackRequest {
+  id: string
+  name: string
+  phone: string
+  status: string
+  source: string | null
+  comment: string | null
+  processed_by: string | null
+  processed_at: string | null
+  created_at: string
+  updated_at: string
+  // Join с admins для processedBy
+  admins?: { id: string, full_name: string } | null
+}
+
+/**
+ * Преобразует заявку на обратный звонок из БД формата в API формат
+ */
+export function mapCallbackRequest(req: DbCallbackRequest) {
+  return {
+    id: req.id,
+    name: req.name,
+    phone: req.phone,
+    status: req.status,
+    source: req.source,
+    comment: req.comment,
+    processedBy: req.admins
+      ? { id: req.admins.id, fullName: req.admins.full_name }
+      : null,
+    processedAt: req.processed_at,
+    createdAt: req.created_at,
+    updatedAt: req.updated_at,
+  }
+}
+
 // ==================== PAGES ====================
 
 export interface DbPage {

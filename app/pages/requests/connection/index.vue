@@ -50,17 +50,17 @@ function goToRequest(request: Record<string, unknown>) {
   >
     <!-- Табы переключения типа заявок -->
     <template #header-actions>
-      <div class="flex gap-2">
+      <div class="flex gap-1 p-1 rounded-xl bg-[var(--glass-bg)] border border-[var(--glass-border)]">
         <NuxtLink
           to="/requests/connection"
-          class="inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors bg-[var(--glass-bg)] border border-primary/50 text-[var(--text-primary)]"
+          class="inline-flex items-center justify-center gap-2 rounded-lg px-6 py-2.5 text-sm font-medium transition-colors min-w-[160px] bg-primary text-white"
         >
           <Icon name="heroicons:signal" class="h-4 w-4" />
           Подключение
         </NuxtLink>
         <NuxtLink
           to="/requests/callback"
-          class="inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors bg-transparent border border-[var(--glass-border)] text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:border-[var(--glass-hover-border)]"
+          class="inline-flex items-center justify-center gap-2 rounded-lg px-6 py-2.5 text-sm font-medium transition-colors min-w-[180px] text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--glass-hover-bg)]"
         >
           <Icon name="heroicons:phone-arrow-up-right" class="h-4 w-4" />
           Обратный звонок
