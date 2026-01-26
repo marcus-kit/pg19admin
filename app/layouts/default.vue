@@ -1,15 +1,17 @@
 <script setup lang="ts">
+// Composables
 const supabase = useSupabaseClient()
 const router = useRouter()
 
-const handleLogout = async () => {
+// Handlers
+async function handleLogout() {
   await supabase.auth.signOut()
   router.push('/admin/login')
 }
 </script>
 
 <template>
-  <div class="min-h-screen flex" style="background-color: var(--bg-base);">
+  <div class="layout-root min-h-screen flex">
     <!-- Sidebar -->
     <aside class="hidden md:flex w-64 flex-col glass-card border-r border-[var(--glass-border)]">
       <div class="p-6">
@@ -120,6 +122,10 @@ const handleLogout = async () => {
 </template>
 
 <style scoped>
+.layout-root {
+  background-color: var(--bg-base);
+}
+
 .nav-item {
   @apply flex items-center gap-3 px-4 py-3 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--glass-bg)] hover:text-[var(--text-primary)] transition-colors cursor-pointer;
 }

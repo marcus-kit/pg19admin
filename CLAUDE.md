@@ -46,7 +46,7 @@ git add -A && git commit -m "message" && git push
 7. **Glass card hover** — работает только с CSS классом, не inline styles
 8. **pathPrefix: false** — компоненты регистрируются по filename, следи за конфликтами
 9. **Supabase Auth** — используй встроенный auth, НЕ кастомный auth_sessions
-10. **Vue attributes order** — динамические `:attr` перед статическими `attr` (ESLint vue/attributes-order)
+10. **Vue attributes order** — порядок: `:props` → `class` → статические → `@events` (ESLint vue/attributes-order)
 11. **Tailwind CSS v4** — используй `@import "tailwindcss"` вместо `@tailwind` директив. Warning `@import must precede` — некритичен
 
 ## Environment Variables
@@ -91,6 +91,8 @@ SUPABASE_KEY=eyJ...
 
 ## Code Style
 
+**Принцип: минимализм, читаемость, никакого мусора.**
+
 ### Именование файлов
 | Тип | Формат | Пример |
 |-----|--------|--------|
@@ -118,15 +120,85 @@ SUPABASE_KEY=eyJ...
 ```
 
 ### Порядок атрибутов в template
-`v-if → v-for → :key → ref → v-model → :props → @events → class`
+`v-if → v-for → :key → ref → v-model → :props → class → статические → @events`
 
 ### ESLint (автоматически)
 - 2 пробела, одинарные кавычки, без `;`, trailing commas
 - `pnpm lint:fix` исправляет автоматически
 
-### Обязательно
-- **Комментарии на русском** — всегда
-- **Guard clauses** — ранний return вместо вложенных if
-- **Деструктуризация** — `const { name } = user` вместо `user.name`
-- **JSDoc** — для экспортируемых функций
-- **Константы** — `USER_ROLE.ADMIN`, не `'admin'`
+### Чего избегать
+| ❌ Не используй | ✅ Используй | Почему |
+|-----------------|--------------|--------|
+| `var` | `const` / `let` | var имеет проблемы с областью видимости |
+| `==` | `===` | == делает неявное преобразование типов |
+| `any` | Конкретный тип | Теряется смысл TypeScript |
+| `// @ts-ignore` | Исправить тип | Скрывает реальные проблемы |
+| `v-if` + `v-for` вместе | computed для фильтрации | Антипаттерн Vue |
+| Изменение props | `emit()` | Props только для чтения |
+| Магические строки `'admin'` | Константы `USER_ROLE.ADMIN` | Легче искать и менять |
+| `console.log` в проде | Удалять перед коммитом | Засоряет консоль |
+| Arrow functions для handlers | `function name()` | Читаемость и hoisting |
+| Inline styles | CSS классы | Gotcha #6, #7 |
+
+### Best Practices
+
+**Пиши коротко:**
+```typescript
+// ❌ Плохо
+const isActive = computed(() => {
+  if (user.value.status === 'active') return true
+  else return false
+})
+
+// ✅ Хорошо
+const isActive = computed(() => user.value.status === 'active')
+```
+
+**Guard clauses:**
+```typescript
+// ❌ Плохо — много вложенности
+function process(user) {
+  if (user) {
+    if (user.isActive) {
+      // логика
+    }
+  }
+}
+
+// ✅ Хорошо — ранний выход
+function process(user) {
+  if (!user) return
+  if (!user.isActive) return
+  // логика
+}
+```
+
+**Удаляй мёртвый код** — Git помнит историю, не комментируй старый код
+
+### Комментарии
+- **На русском** — всегда
+- **Объясняй неочевидное:**
+```typescript
+// Задержка 1с — API имеет лимит 60 req/min
+await sleep(1000)
+
+// ВАЖНО: Supabase возвращает null если не найдено, а не ошибку
+const { data } = await supabase.from('users').single()
+```
+- **JSDoc** — для экспортируемых функций:
+```typescript
+/**
+ * Форматирует дату в читаемый вид.
+ * @param date — дата ISO или Date
+ * @returns "15 янв. 2024"
+ */
+export function formatDate(date: string | Date): string
+```
+
+### Чеклист перед коммитом
+- [ ] Нет закомментированного кода
+- [ ] Нет `console.log`
+- [ ] Нет `any` типов
+- [ ] Понятные имена переменных
+- [ ] Комментарии на русском
+- [ ] ESLint без ошибок (`pnpm lint`)
