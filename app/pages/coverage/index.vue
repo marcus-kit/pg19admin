@@ -57,6 +57,9 @@ const partners = ref<Partner[]>([])
 const showDeleteModal = ref(false)
 const zoneToDelete = ref<CoverageZone | null>(null)
 
+// Drawer со списком зон
+const showZonesDrawer = ref(false)
+
 // Карта OpenLayers (не реактивные — работаем напрямую с библиотекой)
 let map: OLMap | null = null
 let vectorLayer: VectorLayer<VectorSource<Feature<Geometry>>> | null = null
@@ -405,11 +408,16 @@ onUnmounted(() => {
           Управление зонами обслуживания ПЖ19 и партнёров
         </p>
       </div>
+
+      <UiButton @click="showZonesDrawer = true" variant="secondary">
+        <Icon name="heroicons:queue-list" class="w-4 h-4" />
+        Список зон ({{ filteredZones.length }})
+      </UiButton>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      <!-- Map (2/3 width) -->
-      <div class="lg:col-span-2 space-y-4">
+    <div class="space-y-4">
+      <!-- Map (full width) -->
+      <div class="space-y-4">
         <!-- Filters -->
         <UiCard padding="sm">
           <div class="flex flex-wrap gap-3 items-center">
@@ -450,7 +458,7 @@ onUnmounted(() => {
             <div
               ref="mapContainer"
               class="rounded-xl overflow-hidden border border-[var(--glass-border)]"
-              style="height: 500px"
+              style="height: calc(66vh - 2rem)"
             />
 
             <!-- Popup overlay -->
@@ -504,85 +512,108 @@ onUnmounted(() => {
           </div>
         </UiCard>
       </div>
-
-      <!-- Sidebar (1/3 width) -->
-      <div class="space-y-4">
-        <!-- Zone List -->
-        <UiCard>
-          <h3 class="text-lg font-semibold text-[var(--text-primary)] mb-4">
-            Зоны ({{ filteredZones.length }})
-          </h3>
-
-          <UiLoading v-if="loading" size="sm" />
-
-          <div v-else class="space-y-2 max-h-[400px] overflow-y-auto">
-            <div
-              v-for="zone in filteredZones"
-              :key="zone.id"
-              :class="{ 'ring-2 ring-primary': selectedZone?.id === zone.id, 'opacity-50': hiddenZoneIds.has(zone.id) }"
-              @click="selectedZone = zone"
-              class="p-3 rounded-lg border border-[var(--glass-border)] hover:bg-[var(--glass-bg)] transition-colors cursor-pointer flex items-start justify-between gap-2"
-            >
-              <div class="flex-1 min-w-0">
-                <div class="flex items-center gap-2 mb-1">
-                  <span :style="{ backgroundColor: zone.color }" class="w-3 h-3 rounded-full flex-shrink-0" />
-                  <span class="font-medium text-sm text-[var(--text-primary)] truncate">{{ zone.name }}</span>
-                </div>
-                <div class="flex gap-1 flex-wrap">
-                  <UiBadge variant="info" size="sm">{{ zone.partner?.name || 'Партнёр' }}</UiBadge>
-                  <UiBadge v-if="!zone.isActive" variant="neutral" size="sm">Неактивна</UiBadge>
-                  <UiBadge v-if="hiddenZoneIds.has(zone.id)" variant="neutral" size="sm">Скрыта</UiBadge>
-                </div>
-              </div>
-              <div class="flex gap-1 flex-shrink-0">
-                <button :title="hiddenZoneIds.has(zone.id) ? 'Показать' : 'Скрыть'" @click.stop="toggleZoneVisibility(zone)" class="p-1 hover:bg-[var(--glass-bg)] rounded">
-                  <Icon :name="hiddenZoneIds.has(zone.id) ? 'heroicons:eye-slash' : 'heroicons:eye'" class="w-4 h-4 text-[var(--text-muted)]" />
-                </button>
-                <button @click.stop="zoneToDelete = zone; showDeleteModal = true" title="Удалить" class="p-1 hover:bg-red-500/10 rounded">
-                  <Icon name="heroicons:trash" class="w-4 h-4 text-red-400" />
-                </button>
-              </div>
-            </div>
-            <UiEmptyState v-if="filteredZones.length === 0" icon="heroicons:map" title="Нет зон покрытия" description="Импортируйте GeoJSON файл" />
-          </div>
-        </UiCard>
-
-        <!-- Selected Zone Details -->
-        <UiCard v-if="selectedZone" class="text-sm">
-          <div class="flex items-center justify-between mb-4">
-            <h3 class="text-lg font-semibold text-[var(--text-primary)]">{{ selectedZone.name }}</h3>
-            <button @click="selectedZone = null" class="p-1 hover:bg-[var(--glass-bg)] rounded text-[var(--text-muted)]">
-              <Icon name="heroicons:x-mark" class="w-5 h-5" />
-            </button>
-          </div>
-          <div class="space-y-3">
-            <div v-if="selectedZone.partner">
-              <span class="text-[var(--text-muted)]">Партнёр:</span>
-              <span class="ml-2 text-[var(--text-primary)]">{{ selectedZone.partner.name }}</span>
-            </div>
-            <div v-if="selectedZone.description">
-              <span class="text-[var(--text-muted)]">Описание:</span>
-              <p class="mt-1 text-[var(--text-secondary)]">{{ selectedZone.description }}</p>
-            </div>
-            <div class="flex items-center gap-2">
-              <span class="text-[var(--text-muted)]">Цвет:</span>
-              <span :style="{ backgroundColor: selectedZone.color }" class="w-5 h-5 rounded" />
-              <span class="text-[var(--text-primary)] font-mono text-xs">{{ selectedZone.color }}</span>
-            </div>
-            <div>
-              <span class="text-[var(--text-muted)]">Статус:</span>
-              <UiBadge :variant="selectedZone.isActive ? 'success' : 'neutral'" size="sm" class="ml-2">
-                {{ selectedZone.isActive ? 'Активна' : 'Неактивна' }}
-              </UiBadge>
-            </div>
-            <div>
-              <span class="text-[var(--text-muted)]">Создана:</span>
-              <span class="ml-2 text-[var(--text-secondary)]">{{ new Date(selectedZone.createdAt).toLocaleDateString('ru-RU') }}</span>
-            </div>
-          </div>
-        </UiCard>
-      </div>
     </div>
+
+    <!-- Zones Drawer -->
+    <ClientOnly>
+      <Teleport to="body">
+        <!-- Backdrop -->
+        <Transition name="fade">
+          <div
+            v-if="showZonesDrawer"
+            @click="showZonesDrawer = false"
+            class="fixed inset-0 bg-black/50 z-40"
+          />
+        </Transition>
+
+        <!-- Drawer Panel -->
+        <Transition name="slide-right">
+          <div
+            v-if="showZonesDrawer"
+            class="fixed right-0 top-0 h-full w-full max-w-md bg-[var(--bg-secondary)] border-l border-[var(--glass-border)] z-50 overflow-y-auto"
+          >
+            <!-- Header -->
+            <div class="sticky top-0 bg-[var(--bg-secondary)] border-b border-[var(--glass-border)] p-4 flex items-center justify-between">
+              <h2 class="text-lg font-semibold text-[var(--text-primary)]">
+                Зоны покрытия ({{ filteredZones.length }})
+              </h2>
+              <button @click="showZonesDrawer = false" class="p-2 hover:bg-[var(--glass-bg)] rounded-lg text-[var(--text-muted)]">
+                <Icon name="heroicons:x-mark" class="w-5 h-5" />
+              </button>
+            </div>
+
+            <!-- Content -->
+            <div class="p-4 space-y-4">
+              <!-- Zone List -->
+              <UiLoading v-if="loading" size="sm" />
+
+              <div v-else class="space-y-2">
+                <div
+                  v-for="zone in filteredZones"
+                  :key="zone.id"
+                  :class="{ 'ring-2 ring-primary': selectedZone?.id === zone.id, 'opacity-50': hiddenZoneIds.has(zone.id) }"
+                  @click="selectedZone = selectedZone?.id === zone.id ? null : zone"
+                  class="p-3 rounded-lg border border-[var(--glass-border)] hover:bg-[var(--glass-bg)] transition-colors cursor-pointer"
+                >
+                  <div class="flex items-start justify-between gap-2">
+                    <div class="flex-1 min-w-0">
+                      <div class="flex items-center gap-2 mb-1">
+                        <span :style="{ backgroundColor: zone.color }" class="w-3 h-3 rounded-full flex-shrink-0" />
+                        <span class="font-medium text-sm text-[var(--text-primary)] truncate">{{ zone.name }}</span>
+                      </div>
+                      <div class="flex gap-1 flex-wrap">
+                        <UiBadge variant="info" size="sm">{{ zone.partner?.name || 'Партнёр' }}</UiBadge>
+                        <UiBadge v-if="!zone.isActive" variant="neutral" size="sm">Неактивна</UiBadge>
+                        <UiBadge v-if="hiddenZoneIds.has(zone.id)" variant="neutral" size="sm">Скрыта</UiBadge>
+                      </div>
+                    </div>
+                    <div class="flex gap-1 flex-shrink-0">
+                      <button :title="hiddenZoneIds.has(zone.id) ? 'Показать' : 'Скрыть'" @click.stop="toggleZoneVisibility(zone)" class="p-1 hover:bg-[var(--glass-bg)] rounded">
+                        <Icon :name="hiddenZoneIds.has(zone.id) ? 'heroicons:eye-slash' : 'heroicons:eye'" class="w-4 h-4 text-[var(--text-muted)]" />
+                      </button>
+                      <button @click.stop="zoneToDelete = zone; showDeleteModal = true" title="Удалить" class="p-1 hover:bg-red-500/10 rounded">
+                        <Icon name="heroicons:trash" class="w-4 h-4 text-red-400" />
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- Expanded Details -->
+                  <Transition name="expand">
+                    <div v-if="selectedZone?.id === zone.id" class="mt-3 pt-3 border-t border-[var(--glass-border)] text-sm space-y-2">
+                      <div v-if="zone.partner">
+                        <span class="text-[var(--text-muted)]">Партнёр:</span>
+                        <span class="ml-2 text-[var(--text-primary)]">{{ zone.partner.name }}</span>
+                      </div>
+                      <div v-if="zone.description">
+                        <span class="text-[var(--text-muted)]">Описание:</span>
+                        <p class="mt-1 text-[var(--text-secondary)]">{{ zone.description }}</p>
+                      </div>
+                      <div class="flex items-center gap-2">
+                        <span class="text-[var(--text-muted)]">Цвет:</span>
+                        <span :style="{ backgroundColor: zone.color }" class="w-5 h-5 rounded" />
+                        <span class="text-[var(--text-primary)] font-mono text-xs">{{ zone.color }}</span>
+                      </div>
+                      <div>
+                        <span class="text-[var(--text-muted)]">Статус:</span>
+                        <UiBadge :variant="zone.isActive ? 'success' : 'neutral'" size="sm" class="ml-2">
+                          {{ zone.isActive ? 'Активна' : 'Неактивна' }}
+                        </UiBadge>
+                      </div>
+                      <div>
+                        <span class="text-[var(--text-muted)]">Создана:</span>
+                        <span class="ml-2 text-[var(--text-secondary)]">{{ new Date(zone.createdAt).toLocaleDateString('ru-RU') }}</span>
+                      </div>
+                    </div>
+                  </Transition>
+                </div>
+
+                <UiEmptyState v-if="filteredZones.length === 0" icon="heroicons:map" title="Нет зон покрытия" description="Импортируйте GeoJSON файл" />
+              </div>
+            </div>
+          </div>
+        </Transition>
+      </Teleport>
+    </ClientOnly>
 
     <!-- Delete Confirmation Modal -->
     <UiDeleteConfirmModal
@@ -707,5 +738,45 @@ onUnmounted(() => {
 .ol-control button:hover,
 .ol-control button:focus {
   background-color: rgba(255, 255, 255, 1);
+}
+
+/* Drawer animations */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.2s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+.slide-right-enter-active,
+.slide-right-leave-active {
+  transition: transform 0.3s ease;
+}
+
+.slide-right-enter-from,
+.slide-right-leave-to {
+  transform: translateX(100%);
+}
+
+.expand-enter-active,
+.expand-leave-active {
+  transition: all 0.2s ease;
+  overflow: hidden;
+}
+
+.expand-enter-from,
+.expand-leave-to {
+  opacity: 0;
+  max-height: 0;
+  padding-top: 0;
+  margin-top: 0;
+}
+
+.expand-enter-to,
+.expand-leave-from {
+  max-height: 200px;
 }
 </style>
