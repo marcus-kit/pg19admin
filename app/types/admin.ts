@@ -356,3 +356,19 @@ export interface ApiError {
   message: string
   data?: unknown
 }
+
+// ==================== UTILITY TYPES ====================
+
+/** Краткая информация о категории для выпадающих списков */
+export interface CategoryOption {
+  id: number
+  name: string
+}
+
+/** Пользователь для поиска (accounts/create) */
+export interface UserSearchResult {
+  id: string
+  fullName: string
+  phone: string | null
+  email: string | null
+}

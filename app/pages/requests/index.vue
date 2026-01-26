@@ -42,8 +42,7 @@ const fetchConnectionRequests = async () => {
     const data = await $fetch<{ requests: ConnectionRequest[] }>(`/api/admin/requests?${params}`)
     connectionRequests.value = data.requests
   }
-  catch (error) {
-    console.error('Failed to fetch connection requests:', error)
+  catch {
     toast.error('Не удалось загрузить заявки на подключение')
   }
   finally {
@@ -71,8 +70,7 @@ const fetchCallbackRequests = async () => {
     const data = await $fetch<{ callbacks: CallbackRequest[] }>(`/api/admin/callbacks?${params}`)
     callbackRequests.value = data.callbacks
   }
-  catch (error) {
-    console.error('Failed to fetch callback requests:', error)
+  catch {
     toast.error('Не удалось загрузить заявки на обратный звонок')
   }
   finally {
@@ -89,8 +87,7 @@ const updateCallbackStatus = async (callback: CallbackRequest, newStatus: string
     callback.status = newStatus as CallbackRequest['status']
     toast.success('Статус заявки обновлён')
   }
-  catch (error) {
-    console.error('Failed to update callback status:', error)
+  catch {
     toast.error('Не удалось обновить статус заявки')
   }
 }
@@ -143,11 +140,12 @@ watch(activeTab, (newTab) => {
     <!-- Tabs -->
     <div class="flex gap-2 mb-6">
       <button
-        :class="activeTab === 'connection'
-          ? 'bg-primary text-white'
-          : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'"
-        :style="activeTab !== 'connection' ? 'background: var(--glass-bg);' : ''"
-        class="px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
+        :class="[
+          'px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2',
+          activeTab === 'connection'
+            ? 'bg-primary text-white'
+            : 'text-[var(--text-muted)] hover:text-[var(--text-primary)] glass-card',
+        ]"
         @click="activeTab = 'connection'"
       >
         <Icon name="heroicons:home" class="w-4 h-4" />
@@ -161,11 +159,12 @@ watch(activeTab, (newTab) => {
         </span>
       </button>
       <button
-        :class="activeTab === 'callback'
-          ? 'bg-primary text-white'
-          : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'"
-        :style="activeTab !== 'callback' ? 'background: var(--glass-bg);' : ''"
-        class="px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
+        :class="[
+          'px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2',
+          activeTab === 'callback'
+            ? 'bg-primary text-white'
+            : 'text-[var(--text-muted)] hover:text-[var(--text-primary)] glass-card',
+        ]"
         @click="activeTab = 'callback'"
       >
         <Icon name="heroicons:phone" class="w-4 h-4" />

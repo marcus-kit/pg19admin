@@ -95,6 +95,17 @@ export function formatDateShort(dateStr: string | null | undefined): string {
 }
 
 /**
+ * Format time only (for chat messages)
+ */
+export function formatTime(dateStr: string | null | undefined): string {
+  if (!dateStr) return '—'
+  return new Date(dateStr).toLocaleTimeString('ru-RU', {
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+}
+
+/**
  * Format kopeks to rubles (without currency symbol)
  * Input: 150050 (kopeks)
  * Output: "1 500,50"
@@ -222,6 +233,7 @@ export function useFormatters() {
     formatDateTime,
     formatDate,
     formatDateShort,
+    formatTime,
     formatKopeks,
     formatFileSize,
     truncateText,

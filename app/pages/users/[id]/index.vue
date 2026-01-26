@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { getErrorStatusCode, getErrorMessage } from '~/composables/useFormatters'
+import { getErrorStatusCode, getErrorMessage, formatBalance, formatDate, formatDateTime } from '~/composables/useFormatters'
 
 definePageMeta({
   middleware: 'admin',
@@ -78,7 +78,6 @@ const fetchUser = async () => {
     user.value = data.user
   }
   catch (error: unknown) {
-    console.error('Failed to fetch user:', error)
     toast.error('Не удалось загрузить пользователя')
     if (getErrorStatusCode(error) === 404) {
       router.push('/users')
@@ -127,7 +126,6 @@ const saveUser = async () => {
     toast.success('Пользователь сохранён')
   }
   catch (error: unknown) {
-    console.error('Failed to save user:', error)
     toast.error(getErrorMessage(error) || 'Не удалось сохранить пользователя')
   }
   finally {
@@ -151,7 +149,6 @@ const updateStatus = async (newStatus: string) => {
     toast.success('Статус пользователя обновлён')
   }
   catch (error: unknown) {
-    console.error('Failed to update user status:', error)
     toast.error(getErrorMessage(error) || 'Не удалось обновить статус')
   }
   finally {
@@ -193,30 +190,6 @@ const getAccountStatusLabel = (status: string) => {
     case 'closed': return 'Закрыт'
     default: return status
   }
-}
-
-const formatBalance = (kopeks: number) => {
-  return (kopeks / 100).toLocaleString('ru-RU', { minimumFractionDigits: 2 }) + ' ₽'
-}
-
-const formatDate = (dateStr: string | null) => {
-  if (!dateStr) return '—'
-  return new Date(dateStr).toLocaleDateString('ru-RU', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  })
-}
-
-const formatDateTime = (dateStr: string | null) => {
-  if (!dateStr) return '—'
-  return new Date(dateStr).toLocaleString('ru-RU', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  })
 }
 
 onMounted(() => {

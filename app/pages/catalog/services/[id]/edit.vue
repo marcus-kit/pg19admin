@@ -1,4 +1,21 @@
 <script setup lang="ts">
+import type { CategoryOption } from '~/types/admin'
+
+// Интерфейс ответа API для услуги
+interface ServiceResponse {
+  id: string
+  name: string
+  description: string | null
+  fullDescription: string | null
+  priceMonthly: number
+  priceConnection: number | null
+  imageUrl: string | null
+  features: string[]
+  sortOrder: number
+  isActive: boolean
+  categoryId: number | null
+}
+
 definePageMeta({
   middleware: 'admin',
 })
@@ -9,24 +26,6 @@ const toast = useToast()
 const router = useRouter()
 const route = useRoute()
 const serviceId = computed(() => route.params.id as string)
-
-interface Category {
-  id: number
-  name: string
-}
-
-// Интерфейс ответа API для услуги
-interface ServiceResponse {
-  id: string
-  name: string
-  description: string | null
-  fullDescription: string | null
-  imageUrl: string | null
-  features: string[]
-  sortOrder: number
-  isActive: boolean
-  categoryId: number | null
-}
 
 const form = reactive({
   name: '',
@@ -42,7 +41,7 @@ const form = reactive({
 const loading = ref(true)
 const saving = ref(false)
 const error = ref('')
-const categories = ref<Category[]>([])
+const categories = ref<CategoryOption[]>([])
 const newFeature = ref('')
 
 // Цены в рублях для отображения
@@ -51,11 +50,10 @@ const priceConnectionRub = ref(0)
 
 const fetchCategories = async () => {
   try {
-    const data = await $fetch<{ categories: Category[] }>('/api/admin/catalog/categories')
+    const data = await $fetch<{ categories: CategoryOption[] }>('/api/admin/catalog/categories')
     categories.value = data.categories
   }
-  catch (err) {
-    console.error('Failed to fetch categories:', err)
+  catch {
     toast.error('Не удалось загрузить категории')
   }
 }
@@ -84,8 +82,7 @@ const fetchService = async () => {
     priceMonthlyRub.value = (svc.priceMonthly || 0) / 100
     priceConnectionRub.value = (svc.priceConnection || 0) / 100
   }
-  catch (err: unknown) {
-    console.error('Failed to fetch service:', err)
+  catch {
     toast.error('Не удалось загрузить услугу')
     error.value = 'Ошибка при загрузке услуги'
   }
@@ -140,8 +137,7 @@ const save = async () => {
     toast.success('Услуга успешно сохранена')
     router.push('/catalog')
   }
-  catch (err: unknown) {
-    console.error('Failed to update service:', err)
+  catch {
     toast.error('Не удалось сохранить услугу')
     error.value = 'Ошибка при обновлении услуги'
   }

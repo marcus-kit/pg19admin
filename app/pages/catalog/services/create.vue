@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import type { CategoryOption } from '~/types/admin'
+
 definePageMeta({
   middleware: 'admin',
 })
@@ -7,11 +9,6 @@ useHead({ title: 'Создать услугу — Админ-панель' })
 
 const toast = useToast()
 const router = useRouter()
-
-interface Category {
-  id: number
-  name: string
-}
 
 const form = reactive({
   name: '',
@@ -28,7 +25,7 @@ const form = reactive({
 
 const saving = ref(false)
 const error = ref('')
-const categories = ref<Category[]>([])
+const categories = ref<CategoryOption[]>([])
 const newFeature = ref('')
 
 // Цены в форме в рублях, конвертируем в копейки при сохранении
@@ -37,11 +34,10 @@ const priceConnectionRub = ref(0)
 
 const fetchCategories = async () => {
   try {
-    const data = await $fetch<{ categories: Category[] }>('/api/admin/catalog/categories')
+    const data = await $fetch<{ categories: CategoryOption[] }>('/api/admin/catalog/categories')
     categories.value = data.categories
   }
-  catch (err) {
-    console.error('Failed to fetch categories:', err)
+  catch {
     toast.error('Не удалось загрузить категории')
   }
 }
@@ -97,8 +93,7 @@ const save = async () => {
     toast.success('Услуга успешно создана')
     router.push('/catalog')
   }
-  catch (err: unknown) {
-    console.error('Failed to create service:', err)
+  catch {
     toast.error('Не удалось создать услугу')
     error.value = 'Ошибка при создании услуги'
   }

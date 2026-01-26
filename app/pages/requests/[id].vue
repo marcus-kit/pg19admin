@@ -1,4 +1,12 @@
 <script setup lang="ts">
+import { formatDateTime, formatPhone } from '~/composables/useFormatters'
+import {
+  CONNECTION_REQUEST_STATUS,
+  REQUEST_SOURCE,
+  getStatusLabel,
+  getStatusBadgeClass,
+} from '~/composables/useStatusConfig'
+
 definePageMeta({
   middleware: 'admin',
 })
@@ -41,8 +49,7 @@ const fetchRequest = async () => {
     request.value = data.request
     selectedStatus.value = data.request.status
   }
-  catch (error) {
-    console.error('Failed to fetch request:', error)
+  catch {
     toast.error('Не удалось загрузить заявку')
     router.push('/requests')
   }
@@ -63,64 +70,12 @@ const updateStatus = async () => {
     request.value.status = selectedStatus.value as ConnectionRequest['status']
     toast.success('Статус заявки обновлён')
   }
-  catch (error) {
-    console.error('Failed to update status:', error)
+  catch {
     toast.error('Не удалось обновить статус заявки')
     selectedStatus.value = request.value.status
   }
   finally {
     saving.value = false
-  }
-}
-
-const formatDate = (dateStr: string | null) => {
-  if (!dateStr) return '—'
-  const date = new Date(dateStr)
-  return date.toLocaleDateString('ru-RU', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  })
-}
-
-const formatPhone = (phone: string) => {
-  const digits = phone.replace(/\D/g, '')
-  if (digits.length === 11) {
-    return `+${digits[0]} (${digits.slice(1, 4)}) ${digits.slice(4, 7)}-${digits.slice(7, 9)}-${digits.slice(9, 11)}`
-  }
-  return phone
-}
-
-const getStatusBadgeClass = (status: string) => {
-  switch (status) {
-    case 'new': return 'bg-blue-500/20 text-blue-400'
-    case 'contacted': return 'bg-yellow-500/20 text-yellow-400'
-    case 'approved': return 'bg-green-500/20 text-green-400'
-    case 'rejected': return 'bg-red-500/20 text-red-400'
-    case 'completed': return 'bg-gray-500/20 text-gray-400'
-    default: return 'bg-gray-500/20 text-gray-400'
-  }
-}
-
-const getStatusLabel = (status: string) => {
-  switch (status) {
-    case 'new': return 'Новая'
-    case 'contacted': return 'Связались'
-    case 'approved': return 'Одобрена'
-    case 'rejected': return 'Отклонена'
-    case 'completed': return 'Выполнена'
-    default: return status
-  }
-}
-
-const getSourceLabel = (source: string) => {
-  switch (source) {
-    case 'website': return 'Сайт'
-    case 'mobile_app': return 'Приложение'
-    case 'call_center': return 'Колл-центр'
-    default: return source
   }
 }
 
@@ -167,8 +122,8 @@ onMounted(() => {
             Заявка #{{ request.id }}
           </h1>
           <div class="flex items-center gap-3">
-            <UiBadge :class="getStatusBadgeClass(request.status)" size="sm">
-              {{ getStatusLabel(request.status) }}
+            <UiBadge :class="getStatusBadgeClass(CONNECTION_REQUEST_STATUS, request.status)" size="sm">
+              {{ getStatusLabel(CONNECTION_REQUEST_STATUS, request.status) }}
             </UiBadge>
             <UiBadge
               v-if="request.inCoverageZone"
@@ -274,15 +229,15 @@ onMounted(() => {
         <dl class="grid md:grid-cols-2 gap-4">
           <div>
             <dt class="text-sm text-[var(--text-muted)]">Источник</dt>
-            <dd class="text-[var(--text-primary)]">{{ getSourceLabel(request.source) }}</dd>
+            <dd class="text-[var(--text-primary)]">{{ getStatusLabel(REQUEST_SOURCE, request.source) }}</dd>
           </div>
           <div>
             <dt class="text-sm text-[var(--text-muted)]">Дата создания</dt>
-            <dd class="text-[var(--text-primary)]">{{ formatDate(request.createdAt) }}</dd>
+            <dd class="text-[var(--text-primary)]">{{ formatDateTime(request.createdAt) }}</dd>
           </div>
           <div>
             <dt class="text-sm text-[var(--text-muted)]">Последнее обновление</dt>
-            <dd class="text-[var(--text-primary)]">{{ formatDate(request.updatedAt) }}</dd>
+            <dd class="text-[var(--text-primary)]">{{ formatDateTime(request.updatedAt) }}</dd>
           </div>
           <div v-if="request.metadata?.ip">
             <dt class="text-sm text-[var(--text-muted)]">IP адрес</dt>

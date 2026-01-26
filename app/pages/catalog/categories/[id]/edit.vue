@@ -57,8 +57,7 @@ const fetchCategory = async () => {
     form.sortOrder = cat.sortOrder
     form.isActive = cat.isActive
   }
-  catch (err: unknown) {
-    console.error('Failed to fetch category:', err)
+  catch {
     error.value = 'Ошибка при загрузке категории'
     toast.error('Не удалось загрузить категорию')
   }
@@ -92,8 +91,7 @@ const save = async () => {
     toast.success('Категория сохранена')
     router.push('/catalog')
   }
-  catch (err: unknown) {
-    console.error('Failed to update category:', err)
+  catch {
     error.value = 'Ошибка при обновлении категории'
     toast.error('Не удалось сохранить категорию')
   }

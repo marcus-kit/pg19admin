@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import type { UserSearchResult } from '~/types/admin'
+
 definePageMeta({
   middleware: 'admin',
 })
@@ -8,23 +10,16 @@ useHead({ title: 'Создать аккаунт — Админ-панель' })
 const toast = useToast()
 const router = useRouter()
 
-interface User {
-  id: string
-  fullName: string
-  phone: string | null
-  email: string | null
-}
-
 const saving = ref(false)
 const error = ref('')
 
 // User search
 const userSearch = ref('')
-const userSearchResults = ref<User[]>([])
+const userSearchResults = ref<UserSearchResult[]>([])
 const userSearchLoading = ref(false)
 const userSearchDebounce = ref<ReturnType<typeof setTimeout> | null>(null)
 const showUserDropdown = ref(false)
-const selectedUser = ref<User | null>(null)
+const selectedUser = ref<UserSearchResult | null>(null)
 
 const form = ref({
   userId: null as string | null,
@@ -60,11 +55,10 @@ const searchUsers = async (query: string) => {
 
   userSearchLoading.value = true
   try {
-    const data = await $fetch<{ users: User[] }>(`/api/admin/users?search=${encodeURIComponent(query)}&limit=10`)
+    const data = await $fetch<{ users: UserSearchResult[] }>(`/api/admin/users?search=${encodeURIComponent(query)}&limit=10`)
     userSearchResults.value = data.users
   }
-  catch (e) {
-    console.error('User search failed:', e)
+  catch {
     toast.error('Не удалось найти пользователей')
     userSearchResults.value = []
   }
@@ -83,7 +77,7 @@ const onUserSearchInput = () => {
   }, 300)
 }
 
-const selectUser = (user: User) => {
+function selectUser(user: UserSearchResult) {
   selectedUser.value = user
   form.value.userId = user.id
   userSearch.value = user.fullName

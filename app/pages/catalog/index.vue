@@ -26,8 +26,7 @@ const fetchCategories = async () => {
     const data = await $fetch<{ categories: ServiceCategory[] }>('/api/admin/catalog/categories')
     categories.value = data.categories
   }
-  catch (error) {
-    console.error('Failed to fetch categories:', error)
+  catch {
     toast.error('Не удалось загрузить категории')
   }
 }
@@ -42,8 +41,7 @@ const fetchServices = async () => {
     const data = await $fetch<{ services: Service[] }>(`/api/admin/catalog/services?${query}`)
     services.value = data.services
   }
-  catch (error) {
-    console.error('Failed to fetch services:', error)
+  catch {
     toast.error('Не удалось загрузить услуги')
   }
   finally {
@@ -59,8 +57,7 @@ const deleteCategory = async (id: string) => {
     toast.success('Категория успешно удалена')
     await fetchCategories()
   }
-  catch (error: unknown) {
-    console.error('Failed to delete category:', error)
+  catch {
     toast.error('Не удалось удалить категорию')
   }
 }
@@ -73,8 +70,7 @@ const deleteService = async (id: string) => {
     toast.success('Услуга успешно удалена')
     await fetchServices()
   }
-  catch (error: unknown) {
-    console.error('Failed to delete service:', error)
+  catch {
     toast.error('Не удалось удалить услугу')
   }
 }

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { RealtimeChannel } from '@supabase/supabase-js'
 import type { Chat, ChatMessage } from '~/types/admin'
-import { getErrorStatusCode } from '~/composables/useFormatters'
+import { getErrorStatusCode, formatFileSize, formatTime } from '~/composables/useFormatters'
 
 definePageMeta({
   middleware: 'admin',
@@ -12,7 +12,6 @@ const router = useRouter()
 const chatId = computed(() => route.params.id as string)
 const toast = useToast()
 const user = useSupabaseUser()
-const { formatFileSize } = useFormatters()
 
 useHead({ title: 'Чат — Админ-панель' })
 
@@ -50,7 +49,6 @@ const fetchChat = async () => {
     scrollToBottom()
   }
   catch (error: unknown) {
-    console.error('Failed to fetch chat:', error)
     toast.error('Не удалось загрузить чат')
     if (getErrorStatusCode(error) === 404) {
       router.push('/chat')
@@ -105,8 +103,7 @@ const handleSendMessage = async (content: string, file: File | null) => {
     await nextTick()
     scrollToBottom()
   }
-  catch (error: unknown) {
-    console.error('Failed to send message:', error)
+  catch {
     toast.error('Ошибка при отправке сообщения')
   }
   finally {
@@ -123,8 +120,7 @@ const handleClose = async () => {
       chat.value.status = 'closed'
     }
   }
-  catch (error: unknown) {
-    console.error('Failed to close chat:', error)
+  catch {
     toast.error('Ошибка при закрытии чата')
   }
 }
@@ -139,8 +135,7 @@ const handleAssignToMe = async () => {
     })
     await fetchChat()
   }
-  catch (error: unknown) {
-    console.error('Failed to assign chat:', error)
+  catch {
     toast.error('Ошибка при назначении чата')
   }
 }
@@ -151,7 +146,8 @@ const scrollToBottom = () => {
   }
 }
 
-const formatDate = (dateStr: string) => {
+// Метка даты для группировки сообщений (Сегодня/Вчера/дата)
+function getDateLabel(dateStr: string): string {
   const date = new Date(dateStr)
   const now = new Date()
 
@@ -170,10 +166,6 @@ const formatDate = (dateStr: string) => {
     month: 'long',
     year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined,
   })
-}
-
-const formatTime = (dateStr: string): string => {
-  return new Date(dateStr).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })
 }
 
 const isImageAttachment = (message: ChatMessage): boolean => {
@@ -212,7 +204,7 @@ const handleFileSelect = (event: Event) => {
   input.value = ''
 
   if (file.size > MAX_FILE_SIZE) {
-    alert('Размер файла не должен превышать 10 МБ')
+    toast.error('Размер файла не должен превышать 10 МБ')
     return
   }
 
@@ -382,7 +374,7 @@ onUnmounted(() => {
         <div class="flex items-center gap-2">
           <div class="flex-1 h-px bg-[var(--glass-border)]"></div>
           <span class="text-xs text-[var(--text-muted)] px-2">
-            {{ formatDate(group.date) }}
+            {{ getDateLabel(group.date) }}
           </span>
           <div class="flex-1 h-px bg-[var(--glass-border)]"></div>
         </div>

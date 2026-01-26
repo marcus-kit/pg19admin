@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { Ticket, TicketComment, TicketHistoryItem } from '~/types/admin'
-import { getErrorStatusCode } from '~/composables/useFormatters'
+import { getErrorStatusCode, formatDateTime } from '~/composables/useFormatters'
 import {
   TICKET_CATEGORY,
   getStatusLabel,
@@ -164,25 +164,6 @@ const handleAssignToMe = async () => {
   }
 }
 
-const formatFullDate = (dateStr: string) => {
-  return new Date(dateStr).toLocaleString('ru-RU', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  })
-}
-
-const formatShortDate = (dateStr: string) => {
-  return new Date(dateStr).toLocaleString('ru-RU', {
-    day: 'numeric',
-    month: 'short',
-    hour: '2-digit',
-    minute: '2-digit',
-  })
-}
-
 const getActionLabel = (action: string) => {
   const labels: Record<string, string> = {
     status_change: 'Изменён статус',
@@ -240,7 +221,7 @@ onMounted(() => {
             <template #header>
               <div class="flex items-center justify-between">
                 <span class="font-medium text-[var(--text-primary)]">Описание</span>
-                <span class="text-xs text-[var(--text-muted)]">{{ formatFullDate(ticket.createdAt) }}</span>
+                <span class="text-xs text-[var(--text-muted)]">{{ formatDateTime(ticket.createdAt) }}</span>
               </div>
             </template>
             <p class="text-[var(--text-secondary)] whitespace-pre-wrap">{{ ticket.description }}</p>
@@ -276,7 +257,7 @@ onMounted(() => {
                       Внутренний
                     </UiBadge>
                   </div>
-                  <span class="text-xs text-[var(--text-muted)]">{{ formatShortDate(comment.createdAt) }}</span>
+                  <span class="text-xs text-[var(--text-muted)]">{{ formatDateTime(comment.createdAt) }}</span>
                 </div>
                 <p class="text-[var(--text-secondary)] whitespace-pre-wrap">{{ comment.content }}</p>
               </div>
@@ -406,7 +387,7 @@ onMounted(() => {
                   <span v-if="item.newValue">{{ item.newValue }}</span>
                 </p>
                 <p class="text-xs text-[var(--text-muted)]">
-                  {{ item.adminName }} · {{ formatShortDate(item.createdAt) }}
+                  {{ item.adminName }} · {{ formatDateTime(item.createdAt) }}
                 </p>
               </div>
 

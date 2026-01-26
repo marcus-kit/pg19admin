@@ -90,8 +90,7 @@ const fetchPartners = async () => {
     const data = await $fetch<{ partners: Partner[] }>('/api/admin/partners')
     partners.value = data.partners
   }
-  catch (error) {
-    console.error('Failed to fetch partners:', error)
+  catch {
     toast.error('Не удалось загрузить список партнёров')
   }
   finally {
@@ -130,8 +129,7 @@ const fetchZones = async () => {
     const data = await $fetch<{ zones: CoverageZone[] }>('/api/admin/coverage/zones')
     zones.value = data.zones
   }
-  catch (error) {
-    console.error('Failed to fetch zones:', error)
+  catch {
     toast.error('Не удалось загрузить зоны покрытия')
   }
   finally {
@@ -414,7 +412,6 @@ const confirmDelete = async () => {
     toast.success('Зона покрытия удалена')
   }
   catch (error: unknown) {
-    console.error('Failed to delete zone:', error)
     const message = error instanceof Error ? error.message : 'Не удалось удалить зону'
     toast.error(message)
   }

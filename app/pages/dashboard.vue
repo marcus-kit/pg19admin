@@ -126,8 +126,7 @@ const fetchDashboardData = async () => {
     const data = await $fetch<DashboardStats>('/api/admin/dashboard/stats')
     stats.value = data
   }
-  catch (error) {
-    console.error('Failed to fetch dashboard data:', error)
+  catch {
     toast.error('Не удалось загрузить статистику')
   }
   finally {
