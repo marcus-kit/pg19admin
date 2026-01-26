@@ -34,7 +34,7 @@ const filters: FilterConfig[] = [
 // Обновление статуса заявки
 async function updateStatus(id: string, status: string) {
   try {
-    await $fetch(`/api/admin/requests/callback/${id}`, {
+    await $fetch(`/api/admin/callback-requests/${id}`, {
       method: 'PATCH',
       body: { status },
     })
@@ -76,7 +76,7 @@ const rowActions: RowActionConfig[] = [
     :row-actions="rowActions"
     title="Заявки"
     icon="heroicons:clipboard-document-list"
-    endpoint="/api/admin/requests/callback"
+    endpoint="/api/admin/callback-requests"
     response-key="requests"
     search-placeholder="Поиск по имени или телефону..."
     empty-icon="heroicons:phone-arrow-up-right"
