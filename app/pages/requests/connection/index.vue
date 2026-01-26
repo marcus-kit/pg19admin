@@ -40,14 +40,33 @@ function goToRequest(request: Record<string, unknown>) {
     :columns="columns"
     :filters="filters"
     @row-click="goToRequest"
-    title="Заявки на подключение"
-    icon="heroicons:signal"
+    title="Заявки"
+    icon="heroicons:clipboard-document-list"
     endpoint="/api/admin/requests"
     response-key="requests"
     search-placeholder="Поиск по имени или адресу..."
     empty-icon="heroicons:signal"
     empty-text="Заявок не найдено"
   >
+    <!-- Табы переключения типа заявок -->
+    <template #header-actions>
+      <div class="flex gap-2">
+        <NuxtLink
+          to="/requests/connection"
+          class="inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors bg-[var(--glass-bg)] border border-primary/50 text-[var(--text-primary)]"
+        >
+          <Icon name="heroicons:signal" class="h-4 w-4" />
+          Подключение
+        </NuxtLink>
+        <NuxtLink
+          to="/requests/callback"
+          class="inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors bg-transparent border border-[var(--glass-border)] text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:border-[var(--glass-hover-border)]"
+        >
+          <Icon name="heroicons:phone-arrow-up-right" class="h-4 w-4" />
+          Обратный звонок
+        </NuxtLink>
+      </div>
+    </template>
     <!-- Заявитель -->
     <template #user="{ row }">
       <div>

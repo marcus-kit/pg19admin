@@ -74,14 +74,33 @@ const rowActions: RowActionConfig[] = [
     :columns="columns"
     :filters="filters"
     :row-actions="rowActions"
-    title="Обратный звонок"
-    icon="heroicons:phone-arrow-up-right"
+    title="Заявки"
+    icon="heroicons:clipboard-document-list"
     endpoint="/api/admin/requests/callback"
     response-key="requests"
     search-placeholder="Поиск по имени или телефону..."
     empty-icon="heroicons:phone-arrow-up-right"
     empty-text="Заявок не найдено"
   >
+    <!-- Табы переключения типа заявок -->
+    <template #header-actions>
+      <div class="flex gap-2">
+        <NuxtLink
+          to="/requests/connection"
+          class="inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors bg-transparent border border-[var(--glass-border)] text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:border-[var(--glass-hover-border)]"
+        >
+          <Icon name="heroicons:signal" class="h-4 w-4" />
+          Подключение
+        </NuxtLink>
+        <NuxtLink
+          to="/requests/callback"
+          class="inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors bg-[var(--glass-bg)] border border-primary/50 text-[var(--text-primary)]"
+        >
+          <Icon name="heroicons:phone-arrow-up-right" class="h-4 w-4" />
+          Обратный звонок
+        </NuxtLink>
+      </div>
+    </template>
     <!-- Имя -->
     <template #name="{ row }">
       <span class="font-medium text-[var(--text-primary)]">{{ row.name }}</span>
