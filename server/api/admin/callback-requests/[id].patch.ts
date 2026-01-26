@@ -1,4 +1,4 @@
-import { useSupabaseAdmin, getAdminId } from '~~/server/utils/supabase'
+import { useSupabaseAdmin, getAdminFromEvent } from '~~/server/utils/supabase'
 
 export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, 'id')
@@ -21,8 +21,8 @@ export default defineEventHandler(async (event) => {
 
     // Если статус меняется на обработанный, записываем кто обработал
     if (['completed', 'rejected'].includes(body.status)) {
-      const adminId = await getAdminId(event)
-      updateData.processed_by = adminId
+      const admin = await getAdminFromEvent(event)
+      updateData.processed_by = admin.id
       updateData.processed_at = new Date().toISOString()
     }
   }
