@@ -102,10 +102,8 @@
   --btn-secondary-text: #374151;
   --btn-secondary-hover-bg: rgba(247, 148, 29, 0.1);
 
-  /* Таблицы (админ-специфично) */
+  /* TipTap toolbar background */
   --table-header-bg: rgba(0, 0, 0, 0.02);
-  --table-row-hover: rgba(247, 148, 29, 0.05);
-  --table-border: rgba(0, 0, 0, 0.06);
 }
 
 /* -----------------------------------------------------------------------------
@@ -154,10 +152,8 @@
   --btn-secondary-text: #ffffff;
   --btn-secondary-hover-bg: rgba(247, 148, 29, 0.1);
 
-  /* Таблицы */
+  /* TipTap toolbar background */
   --table-header-bg: rgba(255, 255, 255, 0.02);
-  --table-row-hover: rgba(247, 148, 29, 0.08);
-  --table-border: rgba(255, 255, 255, 0.06);
 }
 
 /* -----------------------------------------------------------------------------
@@ -237,38 +233,47 @@ html {
 }
 
 /* -----------------------------------------------------------------------------
-   Admin Table — стили таблиц
+   UI Table — стили унифицированной таблицы (UiTable)
    ----------------------------------------------------------------------------- */
-.admin-table {
+.ui-table {
   width: 100%;
-  border-collapse: separate;
-  border-spacing: 0;
 }
 
-.admin-table th {
-  background: var(--table-header-bg);
-  padding: 0.75rem 1rem;
+.ui-table th {
   text-align: left;
-  font-weight: 600;
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
   color: var(--text-muted);
-  border-bottom: 1px solid var(--table-border);
+  border-bottom: 1px solid var(--glass-border);
+  white-space: nowrap;
 }
 
-.admin-table td {
-  padding: 0.875rem 1rem;
-  border-bottom: 1px solid var(--table-border);
+.ui-table th.sortable {
+  cursor: pointer;
+  user-select: none;
+}
+
+.ui-table th.sortable:hover {
   color: var(--text-primary);
 }
 
-.admin-table tr:hover td {
-  background: var(--table-row-hover);
+.ui-table td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--glass-border);
 }
 
-.admin-table tr:last-child td {
+.ui-table tr:last-child td {
   border-bottom: none;
+}
+
+.ui-table tbody tr.clickable {
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+
+.ui-table tbody tr.clickable:hover {
+  background: var(--glass-bg);
 }
 
 /* -----------------------------------------------------------------------------
