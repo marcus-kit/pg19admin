@@ -1,6 +1,5 @@
 import { serverSupabaseServiceRole } from '#supabase/server'
 
-// Типы для GeoJSON импорта
 interface GeoJSONGeometry {
   type: string
   coordinates: unknown
@@ -21,9 +20,7 @@ type GeoJSONInput = GeoJSONFeatureCollection | GeoJSONFeature | GeoJSONGeometry
 
 interface ImportOptions {
   geojson: GeoJSONInput
-  type?: 'pg19' | 'partner'
-  partnerId?: number
-  defaultColor?: string
+  partnerId: number
   replaceExisting?: boolean
 }
 
@@ -34,10 +31,13 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, message: 'GeoJSON данные обязательны' })
   }
 
+  if (!body.partnerId) {
+    throw createError({ statusCode: 400, message: 'Partner ID обязателен' })
+  }
+
   const geojson = body.geojson
   let features: GeoJSONFeature[] = []
 
-  // Support both FeatureCollection and single Feature
   if (geojson.type === 'FeatureCollection') {
     features = geojson.features || []
   }
@@ -57,59 +57,29 @@ export default defineEventHandler(async (event) => {
 
   const supabase = serverSupabaseServiceRole(event)
 
-  // Optional: delete existing zones before import
+  // Удалить существующие зоны партнёра если нужно
   if (body.replaceExisting) {
-    let deleteQuery = supabase.from('coverage_zones').delete()
-
-    if (body.type) {
-      deleteQuery = deleteQuery.eq('type', body.type)
-    }
-    if (body.partnerId) {
-      deleteQuery = deleteQuery.eq('partner_id', body.partnerId)
-    }
-
-    // Delete all matching (need at least one condition)
-    if (!body.type && !body.partnerId) {
-      // Delete all zones
-      deleteQuery = deleteQuery.neq('id', 0)
-    }
-
-    await deleteQuery
+    await supabase
+      .from('partner_coverage_zones')
+      .delete()
+      .eq('partner_id', body.partnerId)
   }
 
-  // Determine default color based on type
-  const defaultColor = body.defaultColor || (body.type === 'partner' ? '#E91E8C' : '#F7941D')
-
-  // Prepare zones for insert
+  // Подготовить зоны для вставки
   const zones = features.map((feature, index) => {
     const props = feature.properties || {}
-    const zoneType = body.type || props.type || 'pg19'
 
     return {
-      name: props.name || `Зона ${index + 1}`,
-      description: props.description || null,
-      type: zoneType,
-      partner_id: zoneType === 'partner' ? (body.partnerId || props.partnerId || null) : null,
+      name: (props.name as string) || `Зона ${index + 1}`,
+      description: (props.description as string) || null,
+      partner_id: body.partnerId,
       geometry: feature.geometry,
-      color: props.color || defaultColor,
-      fill_opacity: props.fillOpacity ?? 0.3,
-      stroke_width: props.strokeWidth ?? 2,
-      is_active: props.isActive ?? true,
-      sort_order: props.sortOrder ?? index,
+      active: (props.isActive as boolean) ?? true,
     }
   })
 
-  // Validate partner zones have partner_id
-  const invalidPartnerZones = zones.filter(z => z.type === 'partner' && !z.partner_id)
-  if (invalidPartnerZones.length > 0) {
-    throw createError({
-      statusCode: 400,
-      message: `Для партнёрских зон требуется partner_id. Не указан для: ${invalidPartnerZones.map(z => z.name).join(', ')}`,
-    })
-  }
-
   const { data, error } = await supabase
-    .from('coverage_zones')
+    .from('partner_coverage_zones')
     .insert(zones)
     .select('id, name')
 

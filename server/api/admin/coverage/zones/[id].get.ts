@@ -10,8 +10,8 @@ export default defineEventHandler(async (event) => {
   const supabase = serverSupabaseServiceRole(event)
 
   const { data, error } = await supabase
-    .from('coverage_zones')
-    .select(`*, partner:partners(id, name, slug)`)
+    .from('partner_coverage_zones')
+    .select(`*, partner:partners(id, organization_name, color)`)
     .eq('id', id)
     .single()
 
@@ -24,15 +24,17 @@ export default defineEventHandler(async (event) => {
       id: data.id,
       name: data.name,
       description: data.description,
-      type: data.type,
       partnerId: data.partner_id,
-      partner: data.partner,
+      partner: data.partner
+        ? {
+            id: data.partner.id,
+            name: data.partner.organization_name,
+            color: data.partner.color,
+          }
+        : null,
       geometry: data.geometry,
-      color: data.color,
-      fillOpacity: data.fill_opacity,
-      strokeWidth: data.stroke_width,
-      isActive: data.is_active,
-      sortOrder: data.sort_order,
+      color: data.partner?.color || '#E91E8C',
+      isActive: data.active,
       createdAt: data.created_at,
       updatedAt: data.updated_at,
     },

@@ -1,23 +1,5 @@
 import { serverSupabaseServiceRole } from '#supabase/server'
 
-// Типы для coverage zones
-interface CoverageZoneRow {
-  id: number
-  name: string
-  description: string | null
-  geometry: unknown
-  type: string
-  partner_id: number | null
-  color: string
-  fill_opacity: number
-  stroke_width: number
-  is_active: boolean
-  sort_order: number
-  created_at: string
-  updated_at: string
-  partner: { id: number, organization_name: string } | null
-}
-
 interface PartnerCoverageZoneRow {
   id: number
   name: string
@@ -32,18 +14,13 @@ interface PartnerCoverageZoneRow {
 
 interface ZoneResponse {
   id: number
-  source: 'coverage_zones' | 'partner_coverage_zones'
   name: string
   description: string | null
-  type: string
   partnerId: number | null
   partner: { id: number, name: string } | null
   geometry: unknown
   color: string
-  fillOpacity: number
-  strokeWidth: number
   isActive: boolean
-  sortOrder: number
   createdAt: string
   updatedAt: string
 }
@@ -52,99 +29,41 @@ export default defineEventHandler(async (event) => {
   const query = getQuery(event)
   const supabase = serverSupabaseServiceRole(event)
 
-  const zones: ZoneResponse[] = []
+  let dbQuery = supabase
+    .from('partner_coverage_zones')
+    .select(`*, partner:partners(id, organization_name, color)`)
+    .order('created_at', { ascending: true })
 
-  // Fetch from coverage_zones (ПЖ19 zones)
-  if (query.type !== 'partner') {
-    let pg19Query = supabase
-      .from('coverage_zones')
-      .select(`*, partner:partners(id, organization_name)`)
-      .order('sort_order', { ascending: true })
-
-    if (query.type === 'pg19') {
-      pg19Query = pg19Query.eq('type', 'pg19')
-    }
-
-    if (query.active === 'true') {
-      pg19Query = pg19Query.eq('is_active', true)
-    }
-    else if (query.active === 'false') {
-      pg19Query = pg19Query.eq('is_active', false)
-    }
-
-    if (query.partnerId) {
-      pg19Query = pg19Query.eq('partner_id', query.partnerId)
-    }
-
-    const { data: pg19Data, error: pg19Error } = await pg19Query
-
-    if (pg19Error) {
-      console.error('Failed to fetch coverage_zones:', pg19Error)
-    }
-    else {
-      zones.push(...(pg19Data || []).map((item: CoverageZoneRow) => ({
-        id: item.id,
-        source: 'coverage_zones',
-        name: item.name,
-        description: item.description,
-        type: item.type,
-        partnerId: item.partner_id,
-        partner: item.partner ? { id: item.partner.id, name: item.partner.organization_name } : null,
-        geometry: item.geometry,
-        color: item.color,
-        fillOpacity: item.fill_opacity,
-        strokeWidth: item.stroke_width,
-        isActive: item.is_active,
-        sortOrder: item.sort_order,
-        createdAt: item.created_at,
-        updatedAt: item.updated_at,
-      })))
-    }
+  if (query.active === 'true') {
+    dbQuery = dbQuery.eq('active', true)
+  }
+  else if (query.active === 'false') {
+    dbQuery = dbQuery.eq('active', false)
   }
 
-  // Fetch from partner_coverage_zones (партнёрские зоны)
-  if (query.type !== 'pg19') {
-    let partnerQuery = supabase
-      .from('partner_coverage_zones')
-      .select(`*, partner:partners(id, organization_name, color)`)
-      .order('created_at', { ascending: true })
-
-    if (query.active === 'true') {
-      partnerQuery = partnerQuery.eq('active', true)
-    }
-    else if (query.active === 'false') {
-      partnerQuery = partnerQuery.eq('active', false)
-    }
-
-    if (query.partnerId) {
-      partnerQuery = partnerQuery.eq('partner_id', query.partnerId)
-    }
-
-    const { data: partnerData, error: partnerError } = await partnerQuery
-
-    if (partnerError) {
-      console.error('Failed to fetch partner_coverage_zones:', partnerError)
-    }
-    else {
-      zones.push(...(partnerData || []).map((item: PartnerCoverageZoneRow) => ({
-        id: item.id,
-        source: 'partner_coverage_zones',
-        name: item.name,
-        description: item.description,
-        type: 'partner' as const,
-        partnerId: item.partner_id,
-        partner: item.partner ? { id: item.partner.id, name: item.partner.organization_name } : null,
-        geometry: item.geometry,
-        color: item.partner?.color || '#E91E8C',
-        fillOpacity: 0.3,
-        strokeWidth: 2,
-        isActive: item.active,
-        sortOrder: 0,
-        createdAt: item.created_at,
-        updatedAt: item.updated_at,
-      })))
-    }
+  if (query.partnerId) {
+    dbQuery = dbQuery.eq('partner_id', query.partnerId)
   }
+
+  const { data, error } = await dbQuery
+
+  if (error) {
+    console.error('Failed to fetch partner_coverage_zones:', error)
+    throw createError({ statusCode: 500, message: 'Ошибка при загрузке зон покрытия' })
+  }
+
+  const zones: ZoneResponse[] = (data || []).map((item: PartnerCoverageZoneRow) => ({
+    id: item.id,
+    name: item.name,
+    description: item.description,
+    partnerId: item.partner_id,
+    partner: item.partner ? { id: item.partner.id, name: item.partner.organization_name } : null,
+    geometry: item.geometry,
+    color: item.partner?.color || '#E91E8C',
+    isActive: item.active,
+    createdAt: item.created_at,
+    updatedAt: item.updated_at,
+  }))
 
   return { zones }
 })

@@ -75,20 +75,13 @@ export default withNuxt(
 
       // Всегда const если не переназначается
       'prefer-const': 'error',
-    },
-  },
-)
-  // Переопределяем TypeScript правила через встроенный конфиг nuxt/typescript
-  .override('nuxt/typescript/rules', {
-    rules: {
-      // Разрешаем _ префикс для intentionally unused переменных
-      '@typescript-eslint/no-unused-vars': ['error', {
-        argsIgnorePattern: '^_',
-        varsIgnorePattern: '^_',
-      }],
-      // any как warning — постепенно будем исправлять
-      '@typescript-eslint/no-explicit-any': 'warn',
+
+      // ═══════════════════════════════════════════════════════════════════════
+      // TypeScript правила
+      // ═══════════════════════════════════════════════════════════════════════
+
       // Пустые интерфейсы — часто используются для расширения
       '@typescript-eslint/no-empty-object-type': 'off',
     },
-  })
+  },
+)
