@@ -185,8 +185,6 @@ async function initMap() {
     import('ol/proj'),
   ])
 
-  await import('ol/ol.css')
-
   const vectorSource = new VectorSource()
 
   const styleFunction = (feature: Feature<Geometry> | RenderFeature, isHovered = false) => {
@@ -454,6 +452,13 @@ function isZoneHidden(zoneId: number) {
 // Watch for zone changes
 watch(visibleZonesForMap, updateZones, { deep: true })
 
+// Watch for mapContainer ref becoming available (after ClientOnly hydration)
+watch(mapContainer, (newVal) => {
+  if (newVal && !map) {
+    initMap()
+  }
+})
+
 onMounted(() => {
   const saved = localStorage.getItem('coverage-hidden-zones')
   if (saved) {
@@ -468,7 +473,6 @@ onMounted(() => {
 
   fetchZones()
   fetchPartners()
-  initMap()
 })
 
 onUnmounted(() => {
