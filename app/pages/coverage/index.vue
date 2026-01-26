@@ -286,7 +286,7 @@ async function initMap() {
     target: mapContainer.value,
     layers: [new TileLayer({ source: new OSM() }), vectorLayer],
     overlays: [popupOverlay],
-    view: new View({ center: fromLonLat([39.7, 47.23]), zoom: 10 }),
+    view: new View({ center: fromLonLat([38.897, 47.236]), zoom: 12 }),
   })
 
   map.on('click', (evt) => {
