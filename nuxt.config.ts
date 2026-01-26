@@ -7,6 +7,7 @@ export default defineNuxtConfig({
     '@nuxtjs/color-mode',
     '@nuxtjs/supabase',
     '@nuxt/eslint',
+    'nuxt-charts',
   ],
 
   // Компоненты: pathPrefix: false — регистрация по имени файла
