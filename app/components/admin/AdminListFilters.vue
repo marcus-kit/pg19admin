@@ -29,6 +29,12 @@ const props = withDefaults(defineProps<Props>(), {
 const searchQuery = defineModel<string>('search', { default: '' })
 const filterValues = defineModel<Record<string, unknown>>('values', { default: () => ({}) })
 
+// Локальное состояние для UiSearchCommand
+const localFilters = ref<Record<string, string | string[]>>({})
+
+// Флаг для предотвращения бесконечного цикла watchers
+let isSyncing = false
+
 // Иконки для групп фильтров
 const groupIcons: Record<string, string> = {
   status: 'heroicons:signal',
@@ -87,41 +93,63 @@ function getGroupLabel(filter: FilterConfig): string {
   return labels[filter.key] || filter.key
 }
 
-// Адаптер: filterValues ↔ UiSearchCommand filters
-const searchFilters = computed({
-  get() {
-    const result: Record<string, string | string[]> = {}
+// Синхронизация: filterValues → localFilters
+function syncFromParent() {
+  if (isSyncing) return
+  isSyncing = true
 
-    for (const filter of props.filters) {
-      const value = filterValues.value[filter.key]
+  const result: Record<string, string | string[]> = {}
 
-      if (filter.type === 'checkbox') {
-        // Checkbox: true → 'true', false → 'all'
-        result[filter.key] = value ? 'true' : 'all'
-      }
-      else {
-        // Buttons/Select: просто копируем
-        result[filter.key] = (value as string) || 'all'
-      }
+  for (const filter of props.filters) {
+    const value = filterValues.value[filter.key]
+
+    if (filter.type === 'checkbox') {
+      result[filter.key] = value ? 'true' : 'all'
     }
-
-    return result
-  },
-  set(newFilters: Record<string, string | string[]>) {
-    for (const filter of props.filters) {
-      const value = newFilters[filter.key]
-
-      if (filter.type === 'checkbox') {
-        // 'true' → true, иначе false
-        filterValues.value[filter.key] = value === 'true'
-      }
-      else {
-        // Buttons/Select: 'all' или конкретное значение
-        filterValues.value[filter.key] = value || 'all'
-      }
+    else {
+      result[filter.key] = (value as string) || 'all'
     }
-  },
-})
+  }
+
+  localFilters.value = result
+  nextTick(() => {
+    isSyncing = false
+  })
+}
+
+// Синхронизация: localFilters → filterValues
+function syncToParent() {
+  if (isSyncing) return
+  isSyncing = true
+
+  const newValues = { ...filterValues.value }
+
+  for (const filter of props.filters) {
+    const value = localFilters.value[filter.key]
+
+    if (filter.type === 'checkbox') {
+      newValues[filter.key] = value === 'true'
+    }
+    else {
+      newValues[filter.key] = value || 'all'
+    }
+  }
+
+  filterValues.value = newValues
+  nextTick(() => {
+    isSyncing = false
+  })
+}
+
+// Watch localFilters для синхронизации с родителем
+watch(localFilters, syncToParent, { deep: true })
+
+// Watch filterValues для синхронизации с localFilters
+watch(
+  () => filterValues.value,
+  syncFromParent,
+  { deep: true },
+)
 
 // Инициализация значений по умолчанию
 onMounted(() => {
@@ -130,6 +158,7 @@ onMounted(() => {
       filterValues.value[filter.key] = filter.defaultValue
     }
   })
+  syncFromParent()
 })
 </script>
 
@@ -137,7 +166,7 @@ onMounted(() => {
   <UiSearchCommand
     v-if="showSearch || filterGroups.length > 0"
     v-model:search="searchQuery"
-    v-model:filters="searchFilters"
+    v-model:filters="localFilters"
     :placeholder="searchPlaceholder"
     :filter-groups="filterGroups"
     :results-count="resultsCount"
