@@ -31,6 +31,22 @@ const {
   responseKey: 'accounts',
   initialFilters: { status: 'all', contractStatus: 'all' },
 })
+
+const { formatBalance, formatDateShort } = useFormatters()
+
+const columns = [
+  { key: 'contractNumber', label: 'Договор' },
+  { key: 'user', label: 'Пользователь' },
+  { key: 'addressFull', label: 'Адрес' },
+  { key: 'balance', label: 'Баланс', sortable: true },
+  { key: 'status', label: 'Статус' },
+  { key: 'contractStatus', label: 'Договор' },
+  { key: 'createdAt', label: 'Создан', sortable: true },
+]
+
+const goToAccount = (account: Account) => {
+  router.push(`/accounts/${account.id}`)
+}
 </script>
 
 <template>
@@ -96,74 +112,59 @@ const {
     <UiLoading v-if="loading" />
 
     <!-- Accounts Table -->
-    <div v-else class="overflow-x-auto">
-      <table class="w-full">
-        <thead>
-          <tr class="border-b border-[var(--glass-border)]">
-            <th class="text-left py-3 px-4 text-sm font-medium text-[var(--text-muted)]">Договор</th>
-            <th class="text-left py-3 px-4 text-sm font-medium text-[var(--text-muted)]">Пользователь</th>
-            <th class="text-left py-3 px-4 text-sm font-medium text-[var(--text-muted)]">Адрес</th>
-            <th class="text-left py-3 px-4 text-sm font-medium text-[var(--text-muted)]">Баланс</th>
-            <th class="text-left py-3 px-4 text-sm font-medium text-[var(--text-muted)]">Статус</th>
-            <th class="text-left py-3 px-4 text-sm font-medium text-[var(--text-muted)]">Договор</th>
-            <th class="text-left py-3 px-4 text-sm font-medium text-[var(--text-muted)]">Создан</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr
-            v-for="account in accounts"
-            :key="account.id"
-            class="border-b border-[var(--glass-border)] hover:bg-[var(--glass-bg)] cursor-pointer transition-colors"
-            @click="router.push(`/accounts/${account.id}`)"
-          >
-            <td class="py-3 px-4">
-              <span class="font-mono text-primary">{{ account.contractNumber || '—' }}</span>
-            </td>
-            <td class="py-3 px-4">
-              <template v-if="account.user">
-                <span
-                  class="text-[var(--text-primary)] hover:text-primary"
-                  @click.stop="router.push(`/users/${account.user.id}`)"
-                >
-                  {{ account.user.fullName }}
-                </span>
-              </template>
-              <template v-else>
-                <span class="text-[var(--text-muted)]">—</span>
-              </template>
-            </td>
-            <td class="py-3 px-4">
-              <span class="text-[var(--text-secondary)] max-w-xs truncate block">
-                {{ account.addressFull || '—' }}
-              </span>
-            </td>
-            <td class="py-3 px-4">
-              <span :class="account.balance >= 0 ? 'text-green-400' : 'text-red-400'">
-                {{ formatBalance(account.balance) }}
-              </span>
-            </td>
-            <td class="py-3 px-4">
-              <UiBadge :class="getStatusBadgeClass(ACCOUNT_STATUS, account.status)" size="sm">
-                {{ getStatusLabel(ACCOUNT_STATUS, account.status) }}
-              </UiBadge>
-            </td>
-            <td class="py-3 px-4">
-              <UiBadge :class="getStatusBadgeClass(CONTRACT_STATUS, account.contractStatus)" size="sm">
-                {{ getStatusLabel(CONTRACT_STATUS, account.contractStatus) }}
-              </UiBadge>
-            </td>
-            <td class="py-3 px-4 text-sm text-[var(--text-muted)]">
-              {{ formatDateShort(account.createdAt) }}
-            </td>
-          </tr>
-        </tbody>
-      </table>
+    <UiTable
+      v-else
+      :data="accounts"
+      :columns="columns"
+      empty-icon="heroicons:identification"
+      empty-text="Аккаунтов не найдено"
+      @row-click="goToAccount"
+    >
+      <template #contractNumber="{ row }">
+        <span class="font-mono text-primary">{{ row.contractNumber || '—' }}</span>
+      </template>
 
-      <!-- Empty State -->
-      <div v-if="accounts.length === 0" class="text-center py-12">
-        <Icon name="heroicons:identification" class="w-16 h-16 text-[var(--text-muted)] mx-auto mb-4" />
-        <p class="text-[var(--text-muted)]">Аккаунтов не найдено</p>
-      </div>
-    </div>
+      <template #user="{ row }">
+        <template v-if="row.user">
+          <span
+            class="text-[var(--text-primary)] hover:text-primary cursor-pointer"
+            @click.stop="router.push(`/users/${row.user.id}`)"
+          >
+            {{ row.user.fullName }}
+          </span>
+        </template>
+        <template v-else>
+          <span class="text-[var(--text-muted)]">—</span>
+        </template>
+      </template>
+
+      <template #addressFull="{ row }">
+        <span class="text-[var(--text-secondary)] max-w-xs truncate block">
+          {{ row.addressFull || '—' }}
+        </span>
+      </template>
+
+      <template #balance="{ row }">
+        <span :class="row.balance >= 0 ? 'text-green-400' : 'text-red-400'">
+          {{ formatBalance(row.balance) }}
+        </span>
+      </template>
+
+      <template #status="{ row }">
+        <UiBadge :class="getStatusBadgeClass(ACCOUNT_STATUS, row.status)" size="sm">
+          {{ getStatusLabel(ACCOUNT_STATUS, row.status) }}
+        </UiBadge>
+      </template>
+
+      <template #contractStatus="{ row }">
+        <UiBadge :class="getStatusBadgeClass(CONTRACT_STATUS, row.contractStatus)" size="sm">
+          {{ getStatusLabel(CONTRACT_STATUS, row.contractStatus) }}
+        </UiBadge>
+      </template>
+
+      <template #createdAt="{ row }">
+        <span class="text-sm text-[var(--text-muted)]">{{ formatDateShort(row.createdAt) }}</span>
+      </template>
+    </UiTable>
   </div>
 </template>
