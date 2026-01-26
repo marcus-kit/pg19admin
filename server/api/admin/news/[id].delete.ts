@@ -1,15 +1,8 @@
 import { useSupabaseAdmin } from '~~/server/utils/supabase'
+import { requireParam, throwSupabaseError } from '~~/server/utils/api-helpers'
 
 export default defineEventHandler(async (event) => {
-  const id = getRouterParam(event, 'id')
-
-  if (!id) {
-    throw createError({
-      statusCode: 400,
-      message: 'ID новости обязателен',
-    })
-  }
-
+  const id = requireParam(event, 'id', 'новости')
   const supabase = useSupabaseAdmin(event)
 
   // DELETE CASCADE автоматически удалит связанные news_attachments
@@ -18,13 +11,7 @@ export default defineEventHandler(async (event) => {
     .delete()
     .eq('id', id)
 
-  if (error) {
-    console.error('Failed to delete news:', error)
-    throw createError({
-      statusCode: 500,
-      message: 'Ошибка при удалении новости',
-    })
-  }
+  if (error) throwSupabaseError(error, 'удалении новости')
 
   return {
     success: true,

@@ -1,6 +1,6 @@
 /**
- * Centralized data mappers for snake_case → camelCase transformation
- * Eliminates duplicate mapping logic across API endpoints
+ * Централизованные мапперы данных snake_case → camelCase
+ * Исключает дублирование логики маппинга в API endpoints
  */
 
 // ==================== NEWS ====================
@@ -20,6 +20,9 @@ export interface DbNews {
   date_updated: string
 }
 
+/**
+ * Преобразует новость из БД формата в API формат
+ */
 export function mapNews(item: DbNews) {
   return {
     id: item.id,
@@ -60,6 +63,9 @@ export interface DbUser {
   updated_at: string | null
 }
 
+/**
+ * Преобразует пользователя из БД формата в API формат
+ */
 export function mapUser(user: DbUser, accountsCount?: number) {
   return {
     id: user.id,
@@ -88,6 +94,9 @@ export function mapUser(user: DbUser, accountsCount?: number) {
   }
 }
 
+/**
+ * Преобразует пользователя в краткий формат (id + fullName)
+ */
 export function mapUserShort(user: Pick<DbUser, 'id' | 'first_name' | 'last_name' | 'full_name'>) {
   return {
     id: user.id,
@@ -111,6 +120,9 @@ export interface DbAccount {
   date_updated: string
 }
 
+/**
+ * Преобразует лицевой счёт из БД формата в API формат
+ */
 export function mapAccount(
   acc: DbAccount,
   user?: { id: string, fullName: string } | null,
@@ -151,6 +163,9 @@ export interface DbTicket {
   updated_at: string
 }
 
+/**
+ * Преобразует тикет из БД формата в API формат
+ */
 export function mapTicket(
   ticket: DbTicket,
   assignedAdmin?: { id: string, fullName: string } | null,
@@ -196,6 +211,9 @@ export interface DbChat {
   closed_at: string | null
 }
 
+/**
+ * Преобразует чат из БД формата в API формат
+ */
 export function mapChat(chat: DbChat) {
   return {
     id: chat.id,
@@ -218,36 +236,6 @@ export function mapChat(chat: DbChat) {
   }
 }
 
-export interface DbChatMessage {
-  id: number
-  chat_id: number
-  sender_id: number | null
-  sender_type: string
-  sender_name: string | null
-  content: string
-  attachment_url: string | null
-  attachment_name: string | null
-  attachment_size: number | null
-  is_read: boolean
-  created_at: string
-}
-
-export function mapChatMessage(msg: DbChatMessage) {
-  return {
-    id: msg.id,
-    chatId: msg.chat_id,
-    senderId: msg.sender_id,
-    senderType: msg.sender_type,
-    senderName: msg.sender_name,
-    content: msg.content,
-    attachmentUrl: msg.attachment_url,
-    attachmentName: msg.attachment_name,
-    attachmentSize: msg.attachment_size,
-    isRead: msg.is_read,
-    createdAt: msg.created_at,
-  }
-}
-
 // ==================== REQUESTS ====================
 
 export interface DbConnectionRequest {
@@ -266,6 +254,9 @@ export interface DbConnectionRequest {
   updated_at: string
 }
 
+/**
+ * Преобразует заявку на подключение из БД формата в API формат
+ */
 export function mapConnectionRequest(req: DbConnectionRequest) {
   return {
     id: req.id,
@@ -281,147 +272,6 @@ export function mapConnectionRequest(req: DbConnectionRequest) {
     processedAt: req.processed_at,
     createdAt: req.created_at,
     updatedAt: req.updated_at,
-  }
-}
-
-export interface DbCallbackRequest {
-  id: string
-  name: string
-  phone: string
-  status: string
-  source: string | null
-  processed_by_admin_id: string | null
-  created_at: string
-}
-
-export function mapCallbackRequest(
-  req: DbCallbackRequest,
-  admin?: { id: string, fullName: string } | null,
-) {
-  return {
-    id: req.id,
-    name: req.name,
-    phone: req.phone,
-    status: req.status,
-    source: req.source,
-    processedByAdmin: admin ?? null,
-    createdAt: req.created_at,
-  }
-}
-
-// ==================== CATALOG ====================
-
-export interface DbService {
-  id: string
-  name: string
-  slug: string
-  description: string | null
-  category_id: string
-  price: number
-  features: Record<string, unknown>
-  is_active: boolean
-  sort_order: number
-  date_created: string
-  date_updated: string
-}
-
-export function mapService(
-  service: DbService,
-  categoryName?: string,
-) {
-  return {
-    id: service.id,
-    name: service.name,
-    slug: service.slug,
-    description: service.description,
-    categoryId: service.category_id,
-    categoryName: categoryName ?? '',
-    price: service.price,
-    features: service.features,
-    isActive: service.is_active,
-    sortOrder: service.sort_order,
-    createdAt: service.date_created,
-    updatedAt: service.date_updated,
-  }
-}
-
-export interface DbServiceCategory {
-  id: string
-  name: string
-  slug: string
-  description: string | null
-  icon: string | null
-  sort_order: number
-  is_active: boolean
-}
-
-export function mapServiceCategory(
-  cat: DbServiceCategory,
-  servicesCount?: number,
-) {
-  return {
-    id: cat.id,
-    name: cat.name,
-    slug: cat.slug,
-    description: cat.description,
-    icon: cat.icon,
-    sortOrder: cat.sort_order,
-    isActive: cat.is_active,
-    servicesCount: servicesCount ?? 0,
-  }
-}
-
-// ==================== ADMINS ====================
-
-export interface DbAdmin {
-  id: string
-  auth_user_id: string
-  full_name: string
-  email: string
-  role: string
-  telegram_id: number | null
-  permissions: string[]
-  is_active: boolean
-  last_login_at: string | null
-  created_at: string
-}
-
-export function mapAdmin(admin: DbAdmin) {
-  return {
-    id: admin.id,
-    authUserId: admin.auth_user_id,
-    fullName: admin.full_name,
-    email: admin.email,
-    role: admin.role,
-    telegramId: admin.telegram_id,
-    permissions: admin.permissions,
-    isActive: admin.is_active,
-    lastLoginAt: admin.last_login_at,
-    createdAt: admin.created_at,
-  }
-}
-
-// ==================== NEWS ATTACHMENTS ====================
-
-export interface DbNewsAttachment {
-  id: string
-  news_id: string
-  file_name: string
-  storage_path: string
-  file_size: number
-  mime_type: string
-  created_at: string
-}
-
-export function mapNewsAttachment(att: DbNewsAttachment) {
-  return {
-    id: att.id,
-    newsId: att.news_id,
-    fileName: att.file_name,
-    storagePath: att.storage_path,
-    fileSize: att.file_size,
-    mimeType: att.mime_type,
-    createdAt: att.created_at,
   }
 }
 
@@ -442,6 +292,9 @@ export interface DbPage {
   updated_at: string
 }
 
+/**
+ * Преобразует страницу из БД формата в API формат
+ */
 export function mapPage(page: DbPage) {
   return {
     id: page.id,
@@ -470,6 +323,9 @@ export interface DbNewsAttachmentInline {
   sort_order: number
 }
 
+/**
+ * Преобразует вложение новости из БД формата в API формат
+ */
 export function mapNewsAttachmentInline(att: DbNewsAttachmentInline) {
   return {
     id: att.id,
@@ -500,6 +356,9 @@ export interface DbServiceWithCategory {
   updated_at: string
 }
 
+/**
+ * Преобразует услугу с категорией из БД формата в API формат
+ */
 export function mapServiceWithCategory(service: DbServiceWithCategory) {
   return {
     id: service.id,
@@ -533,6 +392,9 @@ export interface DbServiceCategoryFull {
   updated_at: string
 }
 
+/**
+ * Преобразует категорию услуг из БД формата в API формат
+ */
 export function mapServiceCategoryFull(cat: DbServiceCategoryFull) {
   return {
     id: cat.id,

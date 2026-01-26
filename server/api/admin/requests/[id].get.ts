@@ -1,17 +1,8 @@
 import { useSupabaseAdmin } from '~~/server/utils/supabase'
+import { requireParam } from '~~/server/utils/api-helpers'
 
 export default defineEventHandler(async (event) => {
-  // Проверка прав
-
-  const id = getRouterParam(event, 'id')
-
-  if (!id) {
-    throw createError({
-      statusCode: 400,
-      message: 'Некорректный ID заявки',
-    })
-  }
-
+  const id = requireParam(event, 'id', 'заявки')
   const supabase = useSupabaseAdmin(event)
 
   const { data, error } = await supabase
@@ -27,7 +18,7 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  // Маппим snake_case → camelCase
+  // Маппим snake_case -> camelCase
   const request = {
     id: data.id,
     fullName: data.full_name || data.contact_name || '',

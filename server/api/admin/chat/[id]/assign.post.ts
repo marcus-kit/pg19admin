@@ -1,3 +1,4 @@
+import { requireParam, requireEntity, throwSupabaseError } from '~~/server/utils/api-helpers'
 import { getAdminFromEvent, useSupabaseAdmin } from '~~/server/utils/supabase'
 
 interface AssignBody {
@@ -6,31 +7,13 @@ interface AssignBody {
 
 export default defineEventHandler(async (event) => {
   const currentAdmin = await getAdminFromEvent(event)
-  const chatId = getRouterParam(event, 'id')
+  const chatId = requireParam(event, 'id', 'чата')
   const body = await readBody<AssignBody>(event)
-
-  if (!chatId) {
-    throw createError({
-      statusCode: 400,
-      message: 'ID чата обязателен',
-    })
-  }
 
   const supabase = useSupabaseAdmin(event)
 
   // Проверяем, что чат существует
-  const { data: chat, error: chatError } = await supabase
-    .from('chats')
-    .select('id, status, assigned_admin_id')
-    .eq('id', chatId)
-    .single()
-
-  if (chatError || !chat) {
-    throw createError({
-      statusCode: 404,
-      message: 'Чат не найден',
-    })
-  }
+  await requireEntity(supabase, 'chats', chatId, 'Чат')
 
   // Если назначаем на другого админа, проверяем что он существует
   let assignedAdminName = null
@@ -56,20 +39,19 @@ export default defineEventHandler(async (event) => {
     .update({ assigned_admin_id: body.adminId })
     .eq('id', chatId)
 
-  if (updateError) {
-    console.error('Failed to assign chat:', updateError)
-    throw createError({
-      statusCode: 500,
-      message: 'Ошибка при назначении чата',
-    })
-  }
+  if (updateError) throwSupabaseError(updateError, 'назначении чата')
 
   // Добавляем системное сообщение
-  const systemMessage = body.adminId === null
-    ? `${currentAdmin.fullName} снял назначение с чата`
-    : body.adminId === currentAdmin.id
-      ? `${currentAdmin.fullName} взял чат себе`
-      : `${currentAdmin.fullName} назначил чат на ${assignedAdminName}`
+  let systemMessage: string
+  if (body.adminId === null) {
+    systemMessage = `${currentAdmin.fullName} снял назначение с чата`
+  }
+  else if (body.adminId === currentAdmin.id) {
+    systemMessage = `${currentAdmin.fullName} взял чат себе`
+  }
+  else {
+    systemMessage = `${currentAdmin.fullName} назначил чат на ${assignedAdminName}`
+  }
 
   await supabase
     .from('chat_messages')

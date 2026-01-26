@@ -1,15 +1,8 @@
 import { useSupabaseAdmin } from '~~/server/utils/supabase'
+import { requireParam, throwSupabaseError } from '~~/server/utils/api-helpers'
 
 export default defineEventHandler(async (event) => {
-  const id = getRouterParam(event, 'id')
-
-  if (!id) {
-    throw createError({
-      statusCode: 400,
-      message: 'ID услуги обязателен',
-    })
-  }
-
+  const id = requireParam(event, 'id', 'услуги')
   const supabase = useSupabaseAdmin(event)
 
   // Проверяем, есть ли подписки на эту услугу
@@ -30,13 +23,7 @@ export default defineEventHandler(async (event) => {
     .delete()
     .eq('id', id)
 
-  if (error) {
-    console.error('Failed to delete service:', error)
-    throw createError({
-      statusCode: 500,
-      message: 'Ошибка при удалении услуги',
-    })
-  }
+  if (error) throwSupabaseError(error, 'удалении услуги')
 
   return { success: true }
 })

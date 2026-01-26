@@ -1,21 +1,14 @@
 import { useSupabaseAdmin } from '~~/server/utils/supabase'
+import { requireParam, requireEntity, throwSupabaseError } from '~~/server/utils/api-helpers'
 
 interface UpdateRequestBody {
   status?: 'new' | 'contacted' | 'approved' | 'rejected' | 'completed'
 }
 
 export default defineEventHandler(async (event) => {
-  // Проверка прав
-
-  const id = getRouterParam(event, 'id')
+  const id = requireParam(event, 'id', 'заявки')
   const body = await readBody<UpdateRequestBody>(event)
-
-  if (!id) {
-    throw createError({
-      statusCode: 400,
-      message: 'Некорректный ID заявки',
-    })
-  }
+  const supabase = useSupabaseAdmin(event)
 
   // Валидация статуса
   const validStatuses = ['new', 'contacted', 'approved', 'rejected', 'completed']
@@ -26,21 +19,8 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  const supabase = useSupabaseAdmin(event)
-
   // Проверяем существование заявки
-  const { data: existing, error: findError } = await supabase
-    .from('connection_requests')
-    .select('id')
-    .eq('id', id)
-    .single()
-
-  if (findError || !existing) {
-    throw createError({
-      statusCode: 404,
-      message: 'Заявка не найдена',
-    })
-  }
+  await requireEntity(supabase, 'connection_requests', id, 'Заявка')
 
   // Обновляем
   const updateData: {
@@ -64,13 +44,7 @@ export default defineEventHandler(async (event) => {
     .select()
     .single()
 
-  if (error) {
-    console.error('Failed to update connection request:', error)
-    throw createError({
-      statusCode: 500,
-      message: 'Ошибка при обновлении заявки',
-    })
-  }
+  if (error) throwSupabaseError(error, 'обновлении заявки')
 
   return {
     success: true,

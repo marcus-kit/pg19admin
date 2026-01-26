@@ -1,4 +1,5 @@
 import { useSupabaseAdmin } from '~~/server/utils/supabase'
+import { requireParam } from '~~/server/utils/api-helpers'
 
 // Тип для вложений новости
 interface NewsAttachmentRow {
@@ -11,17 +12,7 @@ interface NewsAttachmentRow {
 }
 
 export default defineEventHandler(async (event) => {
-  // Проверка авторизации и прав
-
-  const id = getRouterParam(event, 'id')
-
-  if (!id) {
-    throw createError({
-      statusCode: 400,
-      message: 'ID новости обязателен',
-    })
-  }
-
+  const id = requireParam(event, 'id', 'новости')
   const supabase = useSupabaseAdmin(event)
 
   // Получаем новость с вложениями

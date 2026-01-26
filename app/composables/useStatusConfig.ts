@@ -9,7 +9,6 @@ import type {
   NewsStatus,
   NewsCategory,
   UserStatus,
-  OnlineStatus,
   AccountStatus,
   ContractStatus,
   TicketStatus,
@@ -41,12 +40,6 @@ export const USER_STATUS: Record<UserStatus, StatusConfig> = {
   active: { label: 'Активен', badgeClass: 'bg-green-500/20 text-green-400' },
   suspended: { label: 'Приостановлен', badgeClass: 'bg-yellow-500/20 text-yellow-400' },
   terminated: { label: 'Удалён', badgeClass: 'bg-red-500/20 text-red-400' },
-}
-
-export const ONLINE_STATUS: Record<OnlineStatus, StatusConfig> = {
-  online: { label: 'Онлайн', badgeClass: 'bg-green-500' },
-  away: { label: 'Отошёл', badgeClass: 'bg-yellow-500' },
-  offline: { label: 'Оффлайн', badgeClass: 'bg-gray-500' },
 }
 
 export const ACCOUNT_STATUS: Record<AccountStatus, StatusConfig> = {
@@ -210,16 +203,6 @@ export function getStatusBadgeClass<T extends string>(
   return config[status as T]?.badgeClass ?? 'bg-gray-500/20 text-gray-400'
 }
 
-/**
- * Получить полный конфиг статуса (лейбл + класс)
- */
-export function getStatusConfig<T extends string>(
-  config: Record<T, StatusConfig>,
-  status: T | string,
-): StatusConfig {
-  return config[status as T] ?? { label: status, badgeClass: 'bg-gray-500/20 text-gray-400' }
-}
-
 // ==================== COMPOSABLE ====================
 
 /**
@@ -232,7 +215,6 @@ export function useStatusConfig() {
     NEWS_STATUS,
     NEWS_CATEGORY,
     USER_STATUS,
-    ONLINE_STATUS,
     ACCOUNT_STATUS,
     CONTRACT_STATUS,
     TICKET_STATUS,
@@ -258,6 +240,5 @@ export function useStatusConfig() {
     // Helpers
     getStatusLabel,
     getStatusBadgeClass,
-    getStatusConfig,
   }
 }

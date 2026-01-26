@@ -1,16 +1,10 @@
+import { requireParam, requireEntity, throwSupabaseError } from '~~/server/utils/api-helpers'
 import { useSupabaseAdmin } from '~~/server/utils/supabase'
 
 export default defineEventHandler(async (event) => {
-  const id = getRouterParam(event, 'id')
-  if (!id) {
-    throw createError({
-      statusCode: 400,
-      message: 'ID пользователя не указан',
-    })
-  }
-
+  const id = requireParam(event, 'id', 'пользователя')
   const body = await readBody(event)
-  const { status, reason: _reason } = body
+  const { status } = body
 
   if (!status || !['active', 'suspended', 'terminated'].includes(status)) {
     throw createError({
@@ -22,18 +16,7 @@ export default defineEventHandler(async (event) => {
   const supabase = useSupabaseAdmin(event)
 
   // Проверяем существование пользователя
-  const { data: existingUser, error: fetchError } = await supabase
-    .from('users')
-    .select('id, status')
-    .eq('id', id)
-    .single()
-
-  if (fetchError || !existingUser) {
-    throw createError({
-      statusCode: 404,
-      message: 'Пользователь не найден',
-    })
-  }
+  await requireEntity(supabase, 'users', id, 'Пользователь')
 
   // Обновляем статус
   const { data: updatedUser, error: updateError } = await supabase
@@ -46,13 +29,7 @@ export default defineEventHandler(async (event) => {
     .select('id, status, date_updated')
     .single()
 
-  if (updateError) {
-    console.error('Failed to update user status:', updateError)
-    throw createError({
-      statusCode: 500,
-      message: 'Ошибка при обновлении статуса',
-    })
-  }
+  if (updateError) throwSupabaseError(updateError, 'обновлении статуса')
 
   return {
     success: true,

@@ -107,21 +107,6 @@ export function formatTime(dateStr: string | null | undefined): string {
 }
 
 /**
- * Форматирование копеек в рубли (без символа валюты)
- * Вход: 150050 (копейки)
- * Выход: "1 500,50"
- * Используется когда ₽ показывается отдельно
- */
-export function formatKopeks(kopeks: number | null | undefined): string {
-  if (kopeks === null || kopeks === undefined) return '—'
-
-  return (kopeks / 100).toLocaleString('ru-RU', {
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 2,
-  })
-}
-
-/**
  * Форматирование размера файла
  */
 export function formatFileSize(bytes: number | null | undefined): string {
@@ -131,23 +116,6 @@ export function formatFileSize(bytes: number | null | undefined): string {
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} КБ`
   if (bytes < 1024 * 1024 * 1024) return `${(bytes / 1024 / 1024).toFixed(1)} МБ`
   return `${(bytes / 1024 / 1024 / 1024).toFixed(1)} ГБ`
-}
-
-/**
- * Обрезка текста с многоточием
- */
-export function truncateText(text: string | null | undefined, maxLength: number = 100): string {
-  if (!text) return ''
-  if (text.length <= maxLength) return text
-  return text.slice(0, maxLength) + '...'
-}
-
-/**
- * Форматирование номера договора
- */
-export function formatContractNumber(number: number | null | undefined): string {
-  if (number === null || number === undefined) return '—'
-  return number.toString().padStart(6, '0')
 }
 
 /**
@@ -235,10 +203,7 @@ export function useFormatters() {
     formatDate,
     formatDateShort,
     formatTime,
-    formatKopeks,
     formatFileSize,
-    truncateText,
-    formatContractNumber,
     formatBalance,
     formatPhone,
     formatPrice,

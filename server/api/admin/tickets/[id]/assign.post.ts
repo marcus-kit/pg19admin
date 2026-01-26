@@ -1,3 +1,4 @@
+import { requireParam, requireEntity, throwSupabaseError } from '~~/server/utils/api-helpers'
 import { getAdminFromEvent, useSupabaseAdmin } from '~~/server/utils/supabase'
 
 interface AssignBody {
@@ -6,31 +7,13 @@ interface AssignBody {
 
 export default defineEventHandler(async (event) => {
   const currentAdmin = await getAdminFromEvent(event)
-  const ticketId = getRouterParam(event, 'id')
+  const ticketId = requireParam(event, 'id', 'тикета')
   const body = await readBody<AssignBody>(event)
-
-  if (!ticketId) {
-    throw createError({
-      statusCode: 400,
-      message: 'ID тикета обязателен',
-    })
-  }
 
   const supabase = useSupabaseAdmin(event)
 
   // Проверяем, что тикет существует
-  const { data: ticket, error: ticketError } = await supabase
-    .from('tickets')
-    .select('id, assigned_admin_id')
-    .eq('id', ticketId)
-    .single()
-
-  if (ticketError || !ticket) {
-    throw createError({
-      statusCode: 404,
-      message: 'Тикет не найден',
-    })
-  }
+  await requireEntity(supabase, 'tickets', ticketId, 'Тикет')
 
   // Если назначаем на админа, проверяем что он существует
   let assignedAdminName = null
@@ -56,23 +39,11 @@ export default defineEventHandler(async (event) => {
     .update({ assigned_admin_id: body.adminId })
     .eq('id', ticketId)
 
-  if (updateError) {
-    console.error('Failed to assign ticket:', updateError)
-    throw createError({
-      statusCode: 500,
-      message: 'Ошибка при назначении тикета',
-    })
-  }
+  if (updateError) throwSupabaseError(updateError, 'назначении тикета')
 
   // Определяем действие для истории
-  let action = 'assigned'
-  const oldValue = null
-  let newValue = assignedAdminName
-
-  if (body.adminId === null) {
-    action = 'unassigned'
-    newValue = null
-  }
+  const action = body.adminId === null ? 'unassigned' : 'assigned'
+  const newValue = body.adminId === null ? null : assignedAdminName
 
   // Записываем в историю
   await supabase
@@ -82,7 +53,7 @@ export default defineEventHandler(async (event) => {
       admin_id: currentAdmin.id,
       admin_name: currentAdmin.fullName,
       action,
-      old_value: oldValue,
+      old_value: null,
       new_value: newValue,
     })
 

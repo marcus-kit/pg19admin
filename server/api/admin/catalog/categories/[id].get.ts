@@ -1,15 +1,8 @@
 import { useSupabaseAdmin } from '~~/server/utils/supabase'
+import { requireParam } from '~~/server/utils/api-helpers'
 
 export default defineEventHandler(async (event) => {
-  const id = getRouterParam(event, 'id')
-
-  if (!id) {
-    throw createError({
-      statusCode: 400,
-      message: 'ID категории обязателен',
-    })
-  }
-
+  const id = requireParam(event, 'id', 'категории')
   const supabase = useSupabaseAdmin(event)
 
   const { data: category, error } = await supabase

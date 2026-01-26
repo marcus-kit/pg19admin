@@ -1,29 +1,12 @@
+import { requireParam, requireEntity } from '~~/server/utils/api-helpers'
 import { useSupabaseAdmin } from '~~/server/utils/supabase'
 
 export default defineEventHandler(async (event) => {
-  const id = getRouterParam(event, 'id')
-  if (!id) {
-    throw createError({
-      statusCode: 400,
-      message: 'ID аккаунта не указан',
-    })
-  }
-
+  const id = requireParam(event, 'id', 'аккаунта')
   const supabase = useSupabaseAdmin(event)
 
   // Получаем аккаунт
-  const { data: account, error } = await supabase
-    .from('accounts')
-    .select('*')
-    .eq('id', id)
-    .single()
-
-  if (error || !account) {
-    throw createError({
-      statusCode: 404,
-      message: 'Аккаунт не найден',
-    })
-  }
+  const account = await requireEntity<Record<string, unknown>>(supabase, 'accounts', id, 'Аккаунт', '*')
 
   // Получаем данные пользователя если есть
   let user = null

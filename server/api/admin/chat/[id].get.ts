@@ -1,18 +1,12 @@
+import { requireParam, throwSupabaseError } from '~~/server/utils/api-helpers'
 import { useSupabaseAdmin } from '~~/server/utils/supabase'
 
 export default defineEventHandler(async (event) => {
-  const id = getRouterParam(event, 'id')
+  const id = requireParam(event, 'id', 'чата')
   const query = getQuery(event)
 
   const limit = Math.min(Number(query.limit) || 50, 100)
   const before = query.before as string | undefined // cursor для пагинации
-
-  if (!id) {
-    throw createError({
-      statusCode: 400,
-      message: 'ID чата обязателен',
-    })
-  }
 
   const supabase = useSupabaseAdmin(event)
 
@@ -47,13 +41,7 @@ export default defineEventHandler(async (event) => {
 
   const { data: messages, error: messagesError } = await messagesQuery
 
-  if (messagesError) {
-    console.error('Failed to fetch messages:', messagesError)
-    throw createError({
-      statusCode: 500,
-      message: 'Ошибка при загрузке сообщений',
-    })
-  }
+  if (messagesError) throwSupabaseError(messagesError, 'загрузке сообщений')
 
   return {
     chat: {
@@ -73,7 +61,7 @@ export default defineEventHandler(async (event) => {
       closedAt: chat.closed_at,
       metadata: chat.metadata,
     },
-    messages: messages.reverse().map(msg => ({
+    messages: messages!.reverse().map(msg => ({
       id: msg.id,
       chatId: msg.chat_id,
       senderType: msg.sender_type,
@@ -90,6 +78,6 @@ export default defineEventHandler(async (event) => {
       editedAt: msg.edited_at,
       systemAction: msg.system_action,
     })),
-    hasMore: messages.length === limit,
+    hasMore: messages!.length === limit,
   }
 })

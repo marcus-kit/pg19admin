@@ -101,7 +101,7 @@ const iconPosition = computed(() => {
         class="w-full rounded-xl text-[var(--text-primary)] bg-[var(--glass-bg)] border border-[var(--glass-border)] focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed appearance-none cursor-pointer hover:border-[var(--text-muted)]"
       >
         <!-- Placeholder опция -->
-        <option v-if="placeholder" :selected="!modelValue" value="" class="text-[var(--text-muted)]" disabled>
+        <option v-if="placeholder" :selected="!modelValue" class="text-[var(--text-muted)]" value="" disabled>
           {{ placeholder }}
         </option>
 

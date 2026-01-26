@@ -1,15 +1,8 @@
+import { requireParam } from '~~/server/utils/api-helpers'
 import { useSupabaseAdmin } from '~~/server/utils/supabase'
 
 export default defineEventHandler(async (event) => {
-  const id = getRouterParam(event, 'id')
-
-  if (!id) {
-    throw createError({
-      statusCode: 400,
-      message: 'ID тикета обязателен',
-    })
-  }
-
+  const id = requireParam(event, 'id', 'тикета')
   const supabase = useSupabaseAdmin(event)
 
   // Получаем тикет

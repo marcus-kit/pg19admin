@@ -1,3 +1,4 @@
+import { requireParam, requireEntity, throwSupabaseError } from '~~/server/utils/api-helpers'
 import { getAdminFromEvent, useSupabaseAdmin } from '~~/server/utils/supabase'
 
 interface CommentBody {
@@ -9,15 +10,8 @@ interface CommentBody {
 
 export default defineEventHandler(async (event) => {
   const admin = await getAdminFromEvent(event)
-  const ticketId = getRouterParam(event, 'id')
+  const ticketId = requireParam(event, 'id', 'тикета')
   const body = await readBody<CommentBody>(event)
-
-  if (!ticketId) {
-    throw createError({
-      statusCode: 400,
-      message: 'ID тикета обязателен',
-    })
-  }
 
   if (!body.content?.trim()) {
     throw createError({
@@ -29,18 +23,13 @@ export default defineEventHandler(async (event) => {
   const supabase = useSupabaseAdmin(event)
 
   // Проверяем, что тикет существует и не закрыт
-  const { data: ticket, error: ticketError } = await supabase
-    .from('tickets')
-    .select('id, status')
-    .eq('id', ticketId)
-    .single()
-
-  if (ticketError || !ticket) {
-    throw createError({
-      statusCode: 404,
-      message: 'Тикет не найден',
-    })
-  }
+  const ticket = await requireEntity<{ id: string, status: string }>(
+    supabase,
+    'tickets',
+    ticketId,
+    'Тикет',
+    'id, status',
+  )
 
   if (ticket.status === 'closed') {
     throw createError({
@@ -65,13 +54,7 @@ export default defineEventHandler(async (event) => {
     .select()
     .single()
 
-  if (commentError) {
-    console.error('Failed to create comment:', commentError)
-    throw createError({
-      statusCode: 500,
-      message: 'Ошибка при добавлении комментария',
-    })
-  }
+  if (commentError) throwSupabaseError(commentError, 'добавлении комментария')
 
   // Если тикет был "new", переводим в "open"
   if (ticket.status === 'new') {

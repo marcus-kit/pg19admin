@@ -118,10 +118,7 @@ function getSortIcon(column: TableColumn) {
             <th
               v-for="col in columns"
               :key="col.key"
-              :class="[
-                col.headerClass,
-                col.sortable && 'sortable',
-              ]"
+              :class="[col.headerClass, col.sortable && 'sortable']"
               @click="handleSort(col)"
             >
               <span class="inline-flex items-center gap-1">

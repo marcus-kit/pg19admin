@@ -1,3 +1,4 @@
+import { requireParam, requireEntity, throwSupabaseError } from '~~/server/utils/api-helpers'
 import { getAdminFromEvent, useSupabaseAdmin } from '~~/server/utils/supabase'
 
 interface PriorityBody {
@@ -8,15 +9,8 @@ const VALID_PRIORITIES = ['low', 'normal', 'high', 'urgent']
 
 export default defineEventHandler(async (event) => {
   const admin = await getAdminFromEvent(event)
-  const ticketId = getRouterParam(event, 'id')
+  const ticketId = requireParam(event, 'id', 'тикета')
   const body = await readBody<PriorityBody>(event)
-
-  if (!ticketId) {
-    throw createError({
-      statusCode: 400,
-      message: 'ID тикета обязателен',
-    })
-  }
 
   if (!body.priority || !VALID_PRIORITIES.includes(body.priority)) {
     throw createError({
@@ -28,18 +22,13 @@ export default defineEventHandler(async (event) => {
   const supabase = useSupabaseAdmin(event)
 
   // Получаем текущий тикет
-  const { data: ticket, error: ticketError } = await supabase
-    .from('tickets')
-    .select('id, priority')
-    .eq('id', ticketId)
-    .single()
-
-  if (ticketError || !ticket) {
-    throw createError({
-      statusCode: 404,
-      message: 'Тикет не найден',
-    })
-  }
+  const ticket = await requireEntity<{ id: string, priority: string }>(
+    supabase,
+    'tickets',
+    ticketId,
+    'Тикет',
+    'id, priority',
+  )
 
   if (ticket.priority === body.priority) {
     return { success: true, message: 'Приоритет не изменился' }
@@ -51,13 +40,7 @@ export default defineEventHandler(async (event) => {
     .update({ priority: body.priority })
     .eq('id', ticketId)
 
-  if (updateError) {
-    console.error('Failed to update ticket priority:', updateError)
-    throw createError({
-      statusCode: 500,
-      message: 'Ошибка при обновлении приоритета',
-    })
-  }
+  if (updateError) throwSupabaseError(updateError, 'обновлении приоритета')
 
   // Записываем в историю
   await supabase

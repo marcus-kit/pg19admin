@@ -45,14 +45,34 @@ export function useToast() {
     toasts.value = []
   }
 
+  /** Показать уведомление об успехе */
+  function success(message: string, duration?: number) {
+    show('success', message, duration)
+  }
+
+  /** Показать уведомление об ошибке (по умолчанию 8 секунд) */
+  function error(message: string, duration?: number) {
+    show('error', message, duration ?? 8000)
+  }
+
+  /** Показать предупреждение */
+  function warning(message: string, duration?: number) {
+    show('warning', message, duration)
+  }
+
+  /** Показать информационное уведомление */
+  function info(message: string, duration?: number) {
+    show('info', message, duration)
+  }
+
   return {
     toasts: readonly(toasts),
     show,
     remove,
     clear,
-    success: (message: string, duration?: number) => show('success', message, duration),
-    error: (message: string, duration?: number) => show('error', message, duration ?? 8000),
-    warning: (message: string, duration?: number) => show('warning', message, duration),
-    info: (message: string, duration?: number) => show('info', message, duration),
+    success,
+    error,
+    warning,
+    info,
   }
 }

@@ -1,16 +1,10 @@
+import { requireParam, requireEntity, throwSupabaseError } from '~~/server/utils/api-helpers'
 import { useSupabaseAdmin } from '~~/server/utils/supabase'
 
 export default defineEventHandler(async (event) => {
-  const id = getRouterParam(event, 'id')
-  if (!id) {
-    throw createError({
-      statusCode: 400,
-      message: 'ID аккаунта не указан',
-    })
-  }
-
+  const id = requireParam(event, 'id', 'аккаунта')
   const body = await readBody(event)
-  const { status, reason: _reason } = body
+  const { status } = body
 
   if (!status || !['active', 'blocked', 'closed'].includes(status)) {
     throw createError({
@@ -22,18 +16,13 @@ export default defineEventHandler(async (event) => {
   const supabase = useSupabaseAdmin(event)
 
   // Проверяем существование аккаунта
-  const { data: existingAccount, error: fetchError } = await supabase
-    .from('accounts')
-    .select('id, status')
-    .eq('id', id)
-    .single()
-
-  if (fetchError || !existingAccount) {
-    throw createError({
-      statusCode: 404,
-      message: 'Аккаунт не найден',
-    })
-  }
+  const existingAccount = await requireEntity<{ id: string, status: string }>(
+    supabase,
+    'accounts',
+    id,
+    'Аккаунт',
+    'id, status',
+  )
 
   // Обновляем статус
   const updateData: {
@@ -61,13 +50,7 @@ export default defineEventHandler(async (event) => {
     .select('id, status, blocked_at, date_updated')
     .single()
 
-  if (updateError) {
-    console.error('Failed to update account status:', updateError)
-    throw createError({
-      statusCode: 500,
-      message: 'Ошибка при обновлении статуса',
-    })
-  }
+  if (updateError) throwSupabaseError(updateError, 'обновлении статуса')
 
   return {
     success: true,

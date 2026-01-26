@@ -1,4 +1,5 @@
 import { useSupabaseAdmin } from '~~/server/utils/supabase'
+import { requireParam, throwSupabaseError } from '~~/server/utils/api-helpers'
 
 interface UpdateCategoryData {
   name?: string
@@ -10,16 +11,8 @@ interface UpdateCategoryData {
 }
 
 export default defineEventHandler(async (event) => {
-  const id = getRouterParam(event, 'id')
+  const id = requireParam(event, 'id', 'категории')
   const body = await readBody<UpdateCategoryData>(event)
-
-  if (!id) {
-    throw createError({
-      statusCode: 400,
-      message: 'ID категории обязателен',
-    })
-  }
-
   const supabase = useSupabaseAdmin(event)
 
   const dbData: Record<string, unknown> = {}
@@ -70,13 +63,7 @@ export default defineEventHandler(async (event) => {
     .select()
     .single()
 
-  if (error) {
-    console.error('Failed to update category:', error)
-    throw createError({
-      statusCode: 500,
-      message: 'Ошибка при обновлении категории',
-    })
-  }
+  if (error) throwSupabaseError(error, 'обновлении категории')
 
   return {
     success: true,

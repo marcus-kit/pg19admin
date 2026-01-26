@@ -1,3 +1,4 @@
+import { requireParam, requireEntity, throwSupabaseError } from '~~/server/utils/api-helpers'
 import { getAdminFromEvent, useSupabaseAdmin } from '~~/server/utils/supabase'
 
 interface StatusBody {
@@ -8,15 +9,8 @@ const VALID_STATUSES = ['new', 'open', 'pending', 'resolved', 'closed']
 
 export default defineEventHandler(async (event) => {
   const admin = await getAdminFromEvent(event)
-  const ticketId = getRouterParam(event, 'id')
+  const ticketId = requireParam(event, 'id', 'тикета')
   const body = await readBody<StatusBody>(event)
-
-  if (!ticketId) {
-    throw createError({
-      statusCode: 400,
-      message: 'ID тикета обязателен',
-    })
-  }
 
   if (!body.status || !VALID_STATUSES.includes(body.status)) {
     throw createError({
@@ -25,26 +19,16 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  // TODO: Проверка прав на закрытие
-  // if (body.status === 'closed' && !admin.permissions.canCloseTickets) {
-  //   throw createError({ statusCode: 403, message: 'Нет прав на закрытие тикетов' })
-  // }
-
   const supabase = useSupabaseAdmin(event)
 
   // Получаем текущий тикет
-  const { data: ticket, error: ticketError } = await supabase
-    .from('tickets')
-    .select('id, status')
-    .eq('id', ticketId)
-    .single()
-
-  if (ticketError || !ticket) {
-    throw createError({
-      statusCode: 404,
-      message: 'Тикет не найден',
-    })
-  }
+  const ticket = await requireEntity<{ id: string, status: string }>(
+    supabase,
+    'tickets',
+    ticketId,
+    'Тикет',
+    'id, status',
+  )
 
   if (ticket.status === body.status) {
     return { success: true, message: 'Статус не изменился' }
@@ -53,7 +37,7 @@ export default defineEventHandler(async (event) => {
   // Обновляем статус
   const updateData: Record<string, unknown> = { status: body.status }
 
-  if (body.status === 'resolved' && !ticket.resolved_at) {
+  if (body.status === 'resolved') {
     updateData.resolved_at = new Date().toISOString()
   }
 
@@ -66,13 +50,7 @@ export default defineEventHandler(async (event) => {
     .update(updateData)
     .eq('id', ticketId)
 
-  if (updateError) {
-    console.error('Failed to update ticket status:', updateError)
-    throw createError({
-      statusCode: 500,
-      message: 'Ошибка при обновлении статуса',
-    })
-  }
+  if (updateError) throwSupabaseError(updateError, 'обновлении статуса')
 
   // Записываем в историю
   await supabase

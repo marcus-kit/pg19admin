@@ -1,31 +1,20 @@
+import { requireParam, requireEntity, throwSupabaseError } from '~~/server/utils/api-helpers'
 import { getAdminFromEvent, useSupabaseAdmin } from '~~/server/utils/supabase'
 
 export default defineEventHandler(async (event) => {
   const admin = await getAdminFromEvent(event)
-  const chatId = getRouterParam(event, 'id')
-
-  if (!chatId) {
-    throw createError({
-      statusCode: 400,
-      message: 'ID чата обязателен',
-    })
-  }
+  const chatId = requireParam(event, 'id', 'чата')
 
   const supabase = useSupabaseAdmin(event)
 
   // Проверяем, что чат существует
-  const { data: chat, error: chatError } = await supabase
-    .from('chats')
-    .select('id, status')
-    .eq('id', chatId)
-    .single()
-
-  if (chatError || !chat) {
-    throw createError({
-      statusCode: 404,
-      message: 'Чат не найден',
-    })
-  }
+  const chat = await requireEntity<{ id: string, status: string }>(
+    supabase,
+    'chats',
+    chatId,
+    'Чат',
+    'id, status',
+  )
 
   if (chat.status === 'closed') {
     throw createError({
@@ -43,13 +32,7 @@ export default defineEventHandler(async (event) => {
     })
     .eq('id', chatId)
 
-  if (updateError) {
-    console.error('Failed to close chat:', updateError)
-    throw createError({
-      statusCode: 500,
-      message: 'Ошибка при закрытии чата',
-    })
-  }
+  if (updateError) throwSupabaseError(updateError, 'закрытии чата')
 
   // Добавляем системное сообщение (sender_id = null, т.к. FK на users)
   await supabase

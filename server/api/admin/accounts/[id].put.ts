@@ -1,30 +1,13 @@
+import { requireParam, requireEntity, throwSupabaseError } from '~~/server/utils/api-helpers'
 import { useSupabaseAdmin } from '~~/server/utils/supabase'
 
 export default defineEventHandler(async (event) => {
-  const id = getRouterParam(event, 'id')
-  if (!id) {
-    throw createError({
-      statusCode: 400,
-      message: 'ID аккаунта не указан',
-    })
-  }
-
+  const id = requireParam(event, 'id', 'аккаунта')
   const body = await readBody(event)
   const supabase = useSupabaseAdmin(event)
 
   // Проверяем существование аккаунта
-  const { data: existingAccount, error: fetchError } = await supabase
-    .from('accounts')
-    .select('id')
-    .eq('id', id)
-    .single()
-
-  if (fetchError || !existingAccount) {
-    throw createError({
-      statusCode: 404,
-      message: 'Аккаунт не найден',
-    })
-  }
+  await requireEntity(supabase, 'accounts', id, 'Аккаунт')
 
   // Собираем поля для обновления
   const updateData: {
@@ -80,13 +63,7 @@ export default defineEventHandler(async (event) => {
     .select()
     .single()
 
-  if (updateError) {
-    console.error('Failed to update account:', updateError)
-    throw createError({
-      statusCode: 500,
-      message: 'Ошибка при обновлении аккаунта',
-    })
-  }
+  if (updateError) throwSupabaseError(updateError, 'обновлении аккаунта')
 
   return {
     success: true,

@@ -51,11 +51,6 @@ async function fetchConnectionRequests() {
   }
 }
 
-// Переход на страницу заявки
-function goToRequest(id: string) {
-  navigateTo(`/requests/${id}`)
-}
-
 // ==================== ЗАЯВКИ НА ОБРАТНЫЙ ЗВОНОК ====================
 const callbackLoading = ref(true) // Загрузка списка
 const callbackRequests = ref<CallbackRequest[]>([]) // Список заявок

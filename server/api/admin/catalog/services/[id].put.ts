@@ -1,4 +1,5 @@
 import { useSupabaseAdmin } from '~~/server/utils/supabase'
+import { requireParam, throwSupabaseError } from '~~/server/utils/api-helpers'
 
 interface UpdateServiceData {
   name?: string
@@ -14,16 +15,8 @@ interface UpdateServiceData {
 }
 
 export default defineEventHandler(async (event) => {
-  const id = getRouterParam(event, 'id')
+  const id = requireParam(event, 'id', 'услуги')
   const body = await readBody<UpdateServiceData>(event)
-
-  if (!id) {
-    throw createError({
-      statusCode: 400,
-      message: 'ID услуги обязателен',
-    })
-  }
-
   const supabase = useSupabaseAdmin(event)
 
   const dbData: Record<string, unknown> = {}
@@ -53,13 +46,7 @@ export default defineEventHandler(async (event) => {
     .select()
     .single()
 
-  if (error) {
-    console.error('Failed to update service:', error)
-    throw createError({
-      statusCode: 500,
-      message: 'Ошибка при обновлении услуги',
-    })
-  }
+  if (error) throwSupabaseError(error, 'обновлении услуги')
 
   return {
     success: true,

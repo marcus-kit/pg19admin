@@ -1,14 +1,8 @@
+import { requireParam, throwSupabaseError } from '~~/server/utils/api-helpers'
 import { useSupabaseAdmin } from '~~/server/utils/supabase'
 
 export default defineEventHandler(async (event) => {
-  const chatId = getRouterParam(event, 'id')
-
-  if (!chatId) {
-    throw createError({
-      statusCode: 400,
-      message: 'ID чата обязателен',
-    })
-  }
+  const chatId = requireParam(event, 'id', 'чата')
 
   const supabase = useSupabaseAdmin(event)
 
@@ -18,13 +12,7 @@ export default defineEventHandler(async (event) => {
     p_reader_type: 'admin',
   })
 
-  if (error) {
-    console.error('Failed to mark messages as read:', error)
-    throw createError({
-      statusCode: 500,
-      message: 'Ошибка при пометке сообщений',
-    })
-  }
+  if (error) throwSupabaseError(error, 'пометке сообщений')
 
   return { success: true }
 })

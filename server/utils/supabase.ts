@@ -1,5 +1,6 @@
-import { serverSupabaseServiceRole, serverSupabaseUser } from '#supabase/server'
 import type { H3Event } from 'h3'
+
+import { serverSupabaseServiceRole, serverSupabaseUser } from '#supabase/server'
 
 /**
  * Данные текущего администратора
@@ -24,8 +25,8 @@ interface AdminRecord {
 }
 
 /**
- * Returns Supabase client for admin server operations.
- * Uses service_role key for full database access.
+ * Возвращает Supabase клиент для серверных операций администратора.
+ * Использует service_role ключ для полного доступа к БД.
  *
  * @example
  * ```ts

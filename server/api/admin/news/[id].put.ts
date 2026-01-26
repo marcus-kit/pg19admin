@@ -1,20 +1,13 @@
 import { useSupabaseAdmin } from '~~/server/utils/supabase'
+import { requireParam, throwSupabaseError } from '~~/server/utils/api-helpers'
 import type { UpdateNewsData } from '~~/types/admin'
 
 export default defineEventHandler(async (event) => {
-  const id = getRouterParam(event, 'id')
+  const id = requireParam(event, 'id', 'новости')
   const body = await readBody<UpdateNewsData>(event)
-
-  if (!id) {
-    throw createError({
-      statusCode: 400,
-      message: 'ID новости обязателен',
-    })
-  }
-
   const supabase = useSupabaseAdmin(event)
 
-  // Маппинг camelCase → snake_case
+  // Маппинг camelCase -> snake_case
   const dbData: Record<string, unknown> = {}
 
   if (body.title !== undefined) dbData.title = body.title
@@ -45,13 +38,7 @@ export default defineEventHandler(async (event) => {
     .select()
     .single()
 
-  if (error) {
-    console.error('Failed to update news:', error)
-    throw createError({
-      statusCode: 500,
-      message: 'Ошибка при обновлении новости',
-    })
-  }
+  if (error) throwSupabaseError(error, 'обновлении новости')
 
   return {
     success: true,

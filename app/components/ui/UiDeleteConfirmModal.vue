@@ -124,16 +124,16 @@ onUnmounted(() => {
             <div class="flex gap-3">
               <UiButton
                 @click="handleClose"
-                variant="secondary"
                 class="flex-1"
+                variant="secondary"
               >
                 Отмена
               </UiButton>
               <UiButton
                 :disabled="!isValid"
                 @click="handleConfirm"
-                variant="danger"
                 class="flex-1"
+                variant="danger"
               >
                 <Icon name="heroicons:trash" class="w-4 h-4 mr-2" />
                 Удалить
