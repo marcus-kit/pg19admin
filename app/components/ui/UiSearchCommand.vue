@@ -343,7 +343,7 @@ onUnmounted(() => {
 }
 
 .search-input-wrapper.is-focused {
-  background: var(--text-muted);
+  /* без изменения цвета */
 }
 
 .search-input-inner {
