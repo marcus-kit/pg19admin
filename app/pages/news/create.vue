@@ -1,6 +1,4 @@
 <script setup lang="ts">
-const toast = useToast()
-
 definePageMeta({
   middleware: 'admin',
 })
@@ -8,6 +6,7 @@ definePageMeta({
 useHead({ title: 'Создать новость — Админ-панель' })
 
 const router = useRouter()
+const toast = useToast()
 
 const form = reactive({
   title: '',
@@ -66,7 +65,6 @@ const saveNews = async () => {
     router.push(`/news/${response.news.id}/edit`)
   }
   catch (err: unknown) {
-    console.error('Failed to create news:', err)
     toast.error('Не удалось создать новость')
     const message = err instanceof Error ? err.message : 'Ошибка при создании новости'
     error.value = message
@@ -155,7 +153,7 @@ const cancel = () => {
         <label class="block text-sm font-medium text-[var(--text-primary)] mb-2">
           Контент *
         </label>
-        <AdminNewsEditor v-model="form.content" />
+        <NewsEditor v-model="form.content" />
       </div>
 
       <!-- Attachments hint -->

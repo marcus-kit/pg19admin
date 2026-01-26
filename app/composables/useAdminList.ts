@@ -126,8 +126,7 @@ export function useAdminList<
         total.value = items.value.length
       }
     }
-    catch (error) {
-      console.error(`Failed to fetch ${responseKey}:`, error)
+    catch {
       toast.error('Не удалось загрузить данные')
       items.value = []
       total.value = 0
@@ -167,8 +166,7 @@ export function useAdminList<
       await fetchItems()
       return true
     }
-    catch (error) {
-      console.error(`Failed to delete ${responseKey} item:`, error)
+    catch {
       toast.error('Ошибка при удалении')
       return false
     }

@@ -14,7 +14,6 @@ export default defineNuxtConfig({
   components: [
     { path: '~/components', pathPrefix: false },
   ],
-  devtools: { enabled: true },
 
   // SEO и мета
   app: {
@@ -57,7 +56,11 @@ export default defineNuxtConfig({
   // Отключаем features которые не нужны
   features: {
     devLogs: false,
-    appManifest: false,
+  },
+
+  // Экспериментальные фичи
+  experimental: {
+    appManifest: false, // Отключаем manifest.json (не PWA)
   },
   compatibilityDate: '2026-01-22',
 

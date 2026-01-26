@@ -21,7 +21,7 @@ export interface SortState {
 }
 
 interface Props {
-  data: any[]
+  data: Record<string, unknown>[]
   columns: TableColumn[]
   rowKey?: string
   clickable?: boolean
@@ -42,7 +42,7 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 const emit = defineEmits<{
-  'row-click': [row: any]
+  'row-click': [row: Record<string, unknown>]
   'update:sort': [sort: SortState]
 }>()
 
@@ -81,15 +81,15 @@ const sortedData = computed(() => {
     const aVal = a[key]
     const bVal = b[key]
 
-    if (aVal == null) return 1
-    if (bVal == null) return -1
+    if (aVal === null || aVal === undefined) return 1
+    if (bVal === null || bVal === undefined) return -1
     if (aVal < bVal) return -1 * dir
     if (aVal > bVal) return 1 * dir
     return 0
   })
 })
 
-const handleRowClick = (row: any) => {
+const handleRowClick = (row: Record<string, unknown>) => {
   emit('row-click', row)
 }
 
@@ -126,8 +126,8 @@ const getSortIcon = (column: TableColumn) => {
                 <Icon
                   v-if="getSortIcon(col)"
                   :name="getSortIcon(col)!"
-                  class="w-4 h-4"
                   :class="currentSort.key === col.key ? 'text-primary' : 'opacity-50'"
+                  class="w-4 h-4"
                 />
               </span>
             </th>

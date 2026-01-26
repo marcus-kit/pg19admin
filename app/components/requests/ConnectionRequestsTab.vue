@@ -141,8 +141,8 @@ const localOnlyInCoverage = computed({
 
       <UiEmptyState
         v-if="requests.length === 0"
-        icon="heroicons:clipboard-document-list"
         :title="statusFilter === 'all' ? 'Заявок на подключение пока нет' : 'Нет заявок с таким статусом'"
+        icon="heroicons:clipboard-document-list"
       />
     </div>
   </div>

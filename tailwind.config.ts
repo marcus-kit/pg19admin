@@ -1,12 +1,9 @@
-import type { Config } from 'tailwindcss'
-
 export default {
+  // Content — только app/, там всё (components, pages, layouts)
   content: [
     './app/**/*.{vue,js,ts}',
-    './components/**/*.{vue,js,ts}',
-    './layouts/**/*.{vue,js,ts}',
-    './pages/**/*.{vue,js,ts}',
   ],
+
   // Safelist для классов, используемых в computed properties
   safelist: [
     'bg-gradient-to-r',
@@ -26,8 +23,10 @@ export default {
     'focus:ring-red-500',
     'focus:ring-primary/20',
   ],
+
   theme: {
     extend: {
+      // Цветовая палитра бренда
       colors: {
         primary: {
           DEFAULT: '#F7941D',
@@ -82,71 +81,12 @@ export default {
           900: '#001121',
         },
       },
+
+      // Шрифт
       fontFamily: {
         sans: ['Outfit', 'system-ui', 'sans-serif'],
         display: ['Outfit', 'system-ui', 'sans-serif'],
       },
-      animation: {
-        'fade-in-up': 'fadeInUp 0.6s ease-out forwards',
-        'fade-in': 'fadeIn 0.5s ease-out forwards',
-        'float': 'float 6s ease-in-out infinite',
-        'pulse-glow': 'pulseGlow 2s ease-in-out infinite',
-        'gradient-shift': 'gradientShift 8s ease infinite',
-        'slide-in-left': 'slideInLeft 0.5s ease-out forwards',
-        'slide-in-right': 'slideInRight 0.5s ease-out forwards',
-        'scale-in': 'scaleIn 0.4s ease-out forwards',
-        'bounce-subtle': 'bounceSubtle 2s ease-in-out infinite',
-      },
-      keyframes: {
-        fadeInUp: {
-          '0%': { opacity: '0', transform: 'translateY(20px)' },
-          '100%': { opacity: '1', transform: 'translateY(0)' },
-        },
-        fadeIn: {
-          '0%': { opacity: '0' },
-          '100%': { opacity: '1' },
-        },
-        float: {
-          '0%, 100%': { transform: 'translateY(0)' },
-          '50%': { transform: 'translateY(-10px)' },
-        },
-        pulseGlow: {
-          '0%, 100%': { boxShadow: '0 0 20px rgba(247, 148, 29, 0.3)' },
-          '50%': { boxShadow: '0 0 40px rgba(247, 148, 29, 0.6)' },
-        },
-        gradientShift: {
-          '0%': { backgroundPosition: '0% 50%' },
-          '50%': { backgroundPosition: '100% 50%' },
-          '100%': { backgroundPosition: '0% 50%' },
-        },
-        slideInLeft: {
-          '0%': { opacity: '0', transform: 'translateX(-30px)' },
-          '100%': { opacity: '1', transform: 'translateX(0)' },
-        },
-        slideInRight: {
-          '0%': { opacity: '0', transform: 'translateX(30px)' },
-          '100%': { opacity: '1', transform: 'translateX(0)' },
-        },
-        scaleIn: {
-          '0%': { opacity: '0', transform: 'scale(0.9)' },
-          '100%': { opacity: '1', transform: 'scale(1)' },
-        },
-        bounceSubtle: {
-          '0%, 100%': { transform: 'translateY(0)' },
-          '50%': { transform: 'translateY(-5px)' },
-        },
-      },
-      backdropBlur: {
-        xs: '2px',
-      },
-      boxShadow: {
-        'glass': '0 8px 32px rgba(0, 0, 0, 0.12), inset 0 0 0 1px rgba(255, 255, 255, 0.05)',
-        'glass-hover': '0 20px 40px rgba(247, 148, 29, 0.15), 0 0 60px rgba(247, 148, 29, 0.1)',
-        'glow-primary': '0 0 30px rgba(247, 148, 29, 0.4)',
-        'glow-secondary': '0 0 30px rgba(233, 30, 140, 0.4)',
-        'glow-accent': '0 0 30px rgba(0, 166, 81, 0.4)',
-      },
     },
   },
-  plugins: [],
-} satisfies Config
+}

@@ -137,8 +137,8 @@ const handleStatusUpdate = (callback: CallbackRequest, status: string) => {
 
       <UiEmptyState
         v-if="requests.length === 0"
-        icon="heroicons:phone-x-mark"
         :title="statusFilter === 'all' ? 'Заявок на звонок пока нет' : 'Нет заявок с таким статусом'"
+        icon="heroicons:phone-x-mark"
       />
     </div>
   </div>

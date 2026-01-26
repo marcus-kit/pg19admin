@@ -74,36 +74,38 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <Teleport to="body">
-    <Transition
-      enter-active-class="transition-opacity duration-200"
-      leave-active-class="transition-opacity duration-200"
-      enter-from-class="opacity-0"
-      leave-to-class="opacity-0"
-    >
-      <div
-        v-if="modelValue"
-        class="fixed inset-0 z-50 flex items-center justify-center p-4"
-        style="background-color: var(--modal-backdrop, rgba(0, 0, 0, 0.5));"
-        @click.self="handleBackdropClick"
+  <ClientOnly>
+    <Teleport to="body">
+      <Transition
+        enter-active-class="transition-opacity duration-200"
+        leave-active-class="transition-opacity duration-200"
+        enter-from-class="opacity-0"
+        leave-to-class="opacity-0"
       >
-        <!-- Контент модалки -->
-        <Transition
-          enter-active-class="transition-all duration-200"
-          leave-active-class="transition-all duration-200"
-          enter-from-class="opacity-0 scale-95"
-          leave-to-class="opacity-0 scale-95"
+        <div
+          v-if="modelValue"
+          class="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style="background-color: var(--modal-backdrop, rgba(0, 0, 0, 0.5));"
+          @click.self="handleBackdropClick"
         >
-          <div
-            v-if="modelValue"
-            :class="sizeClasses[size]"
-            class="w-full rounded-2xl"
-            style="background: var(--bg-surface); border: 1px solid var(--glass-border);"
+          <!-- Контент модалки -->
+          <Transition
+            enter-active-class="transition-all duration-200"
+            leave-active-class="transition-all duration-200"
+            enter-from-class="opacity-0 scale-95"
+            leave-to-class="opacity-0 scale-95"
           >
-            <slot />
-          </div>
-        </Transition>
-      </div>
-    </Transition>
-  </Teleport>
+            <div
+              v-if="modelValue"
+              :class="sizeClasses[size]"
+              class="w-full rounded-2xl"
+              style="background: var(--bg-surface); border: 1px solid var(--glass-border);"
+            >
+              <slot />
+            </div>
+          </Transition>
+        </div>
+      </Transition>
+    </Teleport>
+  </ClientOnly>
 </template>

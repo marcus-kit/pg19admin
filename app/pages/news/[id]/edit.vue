@@ -2,8 +2,6 @@
 import type { NewsAttachment, NewsCategory, NewsStatus } from '~/types/admin'
 import { getErrorMessage } from '~/composables/useFormatters'
 
-const toast = useToast()
-
 definePageMeta({
   middleware: 'admin',
 })
@@ -12,6 +10,7 @@ useHead({ title: 'Редактировать новость — Админ-па�
 
 const router = useRouter()
 const route = useRoute()
+const toast = useToast()
 
 const newsId = computed(() => route.params.id as string)
 
@@ -74,7 +73,6 @@ const fetchNews = async () => {
     attachments.value = news.attachments || []
   }
   catch (err: unknown) {
-    console.error('Failed to fetch news:', err)
     toast.error('Не удалось загрузить новость')
     error.value = getErrorMessage(err) || 'Ошибка при загрузке новости'
   }
@@ -116,7 +114,6 @@ const saveNews = async () => {
     router.push('/news')
   }
   catch (err: unknown) {
-    console.error('Failed to update news:', err)
     toast.error('Не удалось сохранить новость')
     error.value = getErrorMessage(err) || 'Ошибка при обновлении новости'
   }
@@ -212,11 +209,11 @@ onMounted(() => {
         <label class="block text-sm font-medium text-[var(--text-primary)] mb-2">
           Контент *
         </label>
-        <AdminNewsEditor v-model="form.content" />
+        <NewsEditor v-model="form.content" />
       </div>
 
       <!-- Attachments -->
-      <AdminNewsAttachments
+      <NewsAttachments
         :news-id="newsId"
         :attachments="attachments"
         @update="attachments = $event"

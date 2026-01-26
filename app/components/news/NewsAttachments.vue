@@ -1,6 +1,4 @@
 <script setup lang="ts">
-const toast = useToast()
-
 interface Attachment {
   id: string
   fileName: string
@@ -16,6 +14,8 @@ const props = defineProps<{
 const emit = defineEmits<{
   update: [attachments: Attachment[]]
 }>()
+
+const toast = useToast()
 
 const uploading = ref(false)
 const deleting = ref<string | null>(null)
@@ -79,8 +79,7 @@ const uploadFiles = async (files: File[]) => {
         toast.success(`Файл "${file.name}" загружен`)
       }
     }
-    catch (error) {
-      console.error('Error uploading file:', error)
+    catch {
       toast.error(`Не удалось загрузить "${file.name}"`)
     }
   }
@@ -101,8 +100,7 @@ const deleteAttachment = async (attachment: Attachment) => {
     localAttachments.value = localAttachments.value.filter(a => a.id !== attachment.id)
     toast.success('Файл удалён')
   }
-  catch (error) {
-    console.error('Error deleting attachment:', error)
+  catch {
     toast.error('Не удалось удалить файл')
   }
   finally {

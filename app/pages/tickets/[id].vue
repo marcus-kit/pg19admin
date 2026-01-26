@@ -31,7 +31,6 @@ const fetchTicket = async () => {
     history.value = data.history
   }
   catch (error: unknown) {
-    console.error('Failed to fetch ticket:', error)
     toast.error('Не удалось загрузить тикет')
     if (getErrorStatusCode(error) === 404) {
       router.push('/tickets')
@@ -58,8 +57,7 @@ const handleAddComment = async (content: string, isInternal: boolean) => {
       ticket.value.status = 'open'
     }
   }
-  catch (error: unknown) {
-    console.error('Failed to add comment:', error)
+  catch {
     toast.error('Ошибка при добавлении комментария')
   }
   finally {
@@ -80,8 +78,7 @@ const handleUpdateStatus = async (newStatus: string) => {
     ticket.value.status = newStatus as Ticket['status']
     await fetchTicket()
   }
-  catch (error: unknown) {
-    console.error('Failed to update status:', error)
+  catch {
     toast.error('Ошибка при обновлении статуса')
   }
   finally {
@@ -101,8 +98,7 @@ const handleUpdatePriority = async (newPriority: string) => {
 
     ticket.value.priority = newPriority as Ticket['priority']
   }
-  catch (error: unknown) {
-    console.error('Failed to update priority:', error)
+  catch {
     toast.error('Ошибка при обновлении приоритета')
   }
   finally {
@@ -122,8 +118,7 @@ const handleAssignToMe = async () => {
 
     await fetchTicket()
   }
-  catch (error: unknown) {
-    console.error('Failed to assign ticket:', error)
+  catch {
     toast.error('Ошибка при назначении тикета')
   }
   finally {
@@ -153,7 +148,7 @@ onMounted(() => {
 
     <template v-else-if="ticket">
       <!-- Header -->
-      <TicketsTicketDetailHeader
+      <TicketDetailHeader
         :ticket="ticket"
         :saving="saving"
         @back="router.push('/tickets')"
@@ -175,7 +170,7 @@ onMounted(() => {
           </UiCard>
 
           <!-- Comments -->
-          <TicketsTicketComments
+          <TicketComments
             :comments="comments"
             :disabled="ticket.status === 'closed'"
             :saving="saving"
@@ -184,7 +179,7 @@ onMounted(() => {
         </div>
 
         <!-- Sidebar -->
-        <TicketsTicketSidebar
+        <TicketSidebar
           :ticket="ticket"
           :history="history"
           :saving="saving"

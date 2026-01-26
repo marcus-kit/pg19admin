@@ -2,6 +2,19 @@
 
 Административная панель ПЖ19 — управление контентом, пользователями, чатами поддержки, тикетами и AI-ботом.
 
+## Структура
+
+```
+app/
+  components/   # Vue компоненты (ui/, chat/, tickets/, news/, coverage/)
+  pages/        # Роуты (file-based routing)
+  composables/  # useX() функции
+  types/        # TypeScript типы
+server/
+  api/          # API endpoints
+  utils/        # Серверные утилиты
+```
+
 ## Стек
 
 | Технология | Версия |
@@ -35,16 +48,6 @@ git add -A && git commit -m "message" && git push
 9. **Supabase Auth** — используй встроенный auth, НЕ кастомный auth_sessions
 10. **Vue attributes order** — динамические `:attr` перед статическими `attr` (ESLint vue/attributes-order)
 
-## Конвенции
-
-### Именование компонентов: folder = prefix
-
-```
-components/ui/UiButton.vue      → <UiButton />
-components/chat/ChatInput.vue   → <ChatInput />
-components/tickets/TicketSidebar.vue → <TicketSidebar />
-```
-
 ## Environment Variables
 
 **Server-only** (Dokploy → Environment):
@@ -76,11 +79,52 @@ SUPABASE_KEY=eyJ...
 
 | Модуль | Библиотека |
 |--------|------------|
-| Dashboard | chart.js |
 | Chat | Supabase Realtime |
 | Coverage Map | OpenLayers |
 | News Editor | TipTap |
 | AI Bot | OpenAI API |
 
 ## Code Style
-Следуй правилам из файла CODE-STYLE.md
+
+### Именование файлов
+| Тип | Формат | Пример |
+|-----|--------|--------|
+| Компоненты | PascalCase.vue (мин 2 слова) | UserCard.vue |
+| Composables | useCamelCase.ts | useAuth.ts |
+| Утилиты/Типы | camelCase.ts | formatDate.ts |
+
+### Префиксы компонентов (folder = prefix)
+| Папка | Префикс | Примеры |
+|-------|---------|---------|
+| ui/ | Ui | UiButton, UiCard, UiTable |
+| chat/ | Chat | ChatInput, ChatMessageBubble |
+| tickets/ | Ticket | TicketSidebar, TicketComments |
+| news/ | News | NewsEditor, NewsAttachments |
+| coverage/ | Coverage | CoverageMap, CoverageImportExport |
+
+### Порядок секций в script setup
+```
+1. import type { ... }        // Типы
+2. definePageMeta()           // Макросы
+3. defineProps / defineEmits  // API компонента
+4. useX() composables         // useRoute, useToast
+5. ref() / reactive()         // Состояние
+6. computed()                 // Вычисляемые
+7. function handlers()        // Функции
+8. watch()                    // Наблюдатели
+9. onMounted/onUnmounted      // Lifecycle
+```
+
+### Порядок атрибутов в template
+`v-if → v-for → :key → ref → v-model → :props → @events → class`
+
+### ESLint (автоматически)
+- 2 пробела, одинарные кавычки, без `;`, trailing commas
+- `pnpm lint:fix` исправляет автоматически
+
+### Обязательно
+- **Комментарии на русском** — всегда
+- **Guard clauses** — ранний return вместо вложенных if
+- **Деструктуризация** — `const { name } = user` вместо `user.name`
+- **JSDoc** — для экспортируемых функций
+- **Константы** — `USER_ROLE.ADMIN`, не `'admin'`

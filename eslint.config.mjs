@@ -9,12 +9,6 @@ const serverGlobals = {
   getQuery: 'readonly',
   readBody: 'readonly',
   createError: 'readonly',
-  setResponseStatus: 'readonly',
-  getHeader: 'readonly',
-  getCookie: 'readonly',
-  setCookie: 'readonly',
-  deleteCookie: 'readonly',
-  sendRedirect: 'readonly',
 
   // Supabase server
   serverSupabaseClient: 'readonly',
