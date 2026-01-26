@@ -12,6 +12,7 @@ const router = useRouter()
 const chatId = computed(() => route.params.id as string)
 const toast = useToast()
 const user = useSupabaseUser()
+const { formatFileSize } = useFormatters()
 
 useHead({ title: 'Чат — Админ-панель' })
 
@@ -20,6 +21,15 @@ const sending = ref(false)
 const chat = ref<Chat | null>(null)
 const messages = ref<ChatMessage[]>([])
 const messagesContainer = ref<HTMLElement | null>(null)
+
+// ChatInput state
+const newMessage = ref('')
+const fileInput = ref<HTMLInputElement | null>(null)
+const pendingFile = ref<File | null>(null)
+const pendingPreview = ref<string | null>(null)
+
+const ACCEPT_FILES = 'image/jpeg,image/png,image/gif,image/webp,.pdf,.doc,.docx,.xls,.xlsx'
+const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
 
 // Supabase Realtime
 const supabase = useSupabaseClient()
@@ -162,6 +172,16 @@ const formatDate = (dateStr: string) => {
   })
 }
 
+const formatTime = (dateStr: string): string => {
+  return new Date(dateStr).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })
+}
+
+const isImageAttachment = (message: ChatMessage): boolean => {
+  if (!message.attachmentUrl) return false
+  return /\.(jpg|jpeg|png|gif|webp)$/i.test(message.attachmentUrl)
+    || (message.attachmentName ? /\.(jpg|jpeg|png|gif|webp)$/i.test(message.attachmentName) : false)
+}
+
 // Группируем сообщения по дате
 const groupedMessages = computed(() => {
   const groups: { date: string, messages: ChatMessage[] }[] = []
@@ -178,6 +198,55 @@ const groupedMessages = computed(() => {
 
   return groups
 })
+
+// ChatInput methods
+const openFileDialog = () => {
+  fileInput.value?.click()
+}
+
+const handleFileSelect = (event: Event) => {
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0]
+  if (!file) return
+
+  input.value = ''
+
+  if (file.size > MAX_FILE_SIZE) {
+    alert('Размер файла не должен превышать 10 МБ')
+    return
+  }
+
+  pendingFile.value = file
+
+  if (file.type.startsWith('image/')) {
+    pendingPreview.value = URL.createObjectURL(file)
+  }
+  else {
+    pendingPreview.value = null
+  }
+}
+
+const removePendingFile = () => {
+  pendingFile.value = null
+  if (pendingPreview.value) {
+    URL.revokeObjectURL(pendingPreview.value)
+    pendingPreview.value = null
+  }
+}
+
+const handleSubmit = () => {
+  if ((!newMessage.value.trim() && !pendingFile.value)) return
+
+  handleSendMessage(newMessage.value.trim(), pendingFile.value)
+  newMessage.value = ''
+  removePendingFile()
+}
+
+const handleTextareaInput = (e: Event) => {
+  const target = e.target as HTMLTextAreaElement
+  target.style.height = 'auto'
+  target.style.height = Math.min(target.scrollHeight, 120) + 'px'
+}
 
 // Подписка на Realtime
 const setupRealtime = () => {
@@ -240,19 +309,64 @@ onUnmounted(() => {
   if (subscription) {
     subscription.unsubscribe()
   }
+  if (pendingPreview.value) {
+    URL.revokeObjectURL(pendingPreview.value)
+  }
 })
 </script>
 
 <template>
   <div class="flex flex-col h-[calc(100vh-120px)]">
-    <!-- Header -->
-    <ChatDetailHeader
-      v-if="chat"
-      :chat="chat"
-      @back="router.push('/chat')"
-      @assign-to-me="handleAssignToMe"
-      @close="handleClose"
-    />
+    <!-- Header (бывший ChatDetailHeader) -->
+    <div v-if="chat" class="flex items-center justify-between gap-4 pb-2 border-b border-[var(--glass-border)]">
+      <div class="flex items-center gap-3">
+        <UiButton variant="ghost" size="sm" @click="router.push('/chat')">
+          <Icon name="heroicons:arrow-left" class="w-5 h-5" />
+        </UiButton>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-lg font-semibold text-[var(--text-primary)]">
+              {{ chat.userName || chat.guestName || `Чат #${chat.id}` }}
+            </h1>
+            <UiBadge v-if="chat.guestName && !chat.userId" class="bg-purple-500/20 text-purple-400" size="sm">
+              Гость
+            </UiBadge>
+          </div>
+          <div class="flex items-center gap-2 text-xs text-[var(--text-muted)]">
+            <span v-if="chat.guestContact">
+              {{ chat.guestContact }}
+            </span>
+            <span v-if="chat.userTelegramId">
+              Telegram: {{ chat.userTelegramId }}
+            </span>
+            <span v-if="chat.assignedAdmin">
+              · {{ chat.assignedAdmin.fullName }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex gap-2">
+        <UiButton
+          v-if="!chat.assignedAdmin && chat.status !== 'closed'"
+          variant="secondary"
+          size="sm"
+          @click="handleAssignToMe"
+        >
+          <Icon name="heroicons:hand-raised" class="w-4 h-4" />
+          Взять себе
+        </UiButton>
+        <UiButton
+          v-if="chat.status !== 'closed'"
+          variant="ghost"
+          size="sm"
+          @click="handleClose"
+        >
+          <Icon name="heroicons:x-circle" class="w-4 h-4 text-red-400" />
+          Закрыть
+        </UiButton>
+      </div>
+    </div>
 
     <!-- Loading -->
     <UiLoading v-if="loading" class="flex-1" />
@@ -273,13 +387,113 @@ onUnmounted(() => {
           <div class="flex-1 h-px bg-[var(--glass-border)]"></div>
         </div>
 
-        <!-- Messages for this date -->
+        <!-- Messages for this date (бывший ChatMessageBubble) -->
         <div class="space-y-1.5">
-          <ChatMessageBubble
+          <div
             v-for="msg in group.messages"
             :key="msg.id"
-            :message="msg"
-          />
+            :class="[
+              'flex',
+              msg.senderType === 'admin' || msg.senderType === 'bot'
+                ? 'justify-end'
+                : msg.senderType === 'system'
+                  ? 'justify-center'
+                  : 'justify-start',
+            ]"
+          >
+            <!-- System Message -->
+            <div
+              v-if="msg.senderType === 'system'"
+              class="px-3 py-1 text-xs text-[var(--text-muted)] bg-[var(--glass-bg)] rounded-full"
+            >
+              {{ msg.content }}
+            </div>
+
+            <!-- Bot Message -->
+            <div
+              v-else-if="msg.senderType === 'bot'"
+              class="max-w-[70%] rounded-2xl px-4 py-2 glass-card rounded-br-md border-l-2 border-[#8B5CF6]/50"
+            >
+              <div class="flex items-center gap-1.5 mb-1">
+                <Icon name="heroicons:cpu-chip" class="w-3.5 h-3.5 text-[#8B5CF6]" />
+                <span class="text-xs font-medium text-[#8B5CF6]">{{ msg.senderName || 'AI Ассистент' }}</span>
+              </div>
+              <p v-if="msg.content" class="whitespace-pre-wrap break-words text-[var(--text-primary)]">
+                {{ msg.content }}
+              </p>
+              <template v-if="msg.attachmentUrl">
+                <a v-if="isImageAttachment(msg)" :href="msg.attachmentUrl" target="_blank" class="block mt-2">
+                  <img :src="msg.attachmentUrl" :alt="msg.attachmentName || 'Изображение'" class="max-w-full max-h-48 rounded-lg hover:opacity-90 transition-opacity" />
+                </a>
+                <a v-else :href="msg.attachmentUrl" target="_blank" class="mt-2 flex items-center gap-2 p-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors">
+                  <Icon name="heroicons:document" class="w-5 h-5 text-[#8B5CF6]" />
+                  <div class="flex-1 min-w-0">
+                    <p class="text-sm truncate">{{ msg.attachmentName }}</p>
+                    <p class="text-xs text-[var(--text-muted)]">{{ formatFileSize(msg.attachmentSize) }}</p>
+                  </div>
+                  <Icon name="heroicons:arrow-down-tray" class="w-4 h-4 text-[var(--text-muted)]" />
+                </a>
+              </template>
+              <div class="text-xs mt-1 text-[var(--text-muted)]">
+                {{ formatTime(msg.createdAt) }}
+              </div>
+            </div>
+
+            <!-- Admin Message -->
+            <div
+              v-else-if="msg.senderType === 'admin'"
+              class="max-w-[70%] rounded-2xl px-4 py-2 glass-card rounded-br-md border-l-2 border-primary/50"
+            >
+              <p v-if="msg.content" class="whitespace-pre-wrap break-words text-[var(--text-primary)]">
+                {{ msg.content }}
+              </p>
+              <template v-if="msg.attachmentUrl">
+                <a v-if="isImageAttachment(msg)" :href="msg.attachmentUrl" target="_blank" class="block mt-2">
+                  <img :src="msg.attachmentUrl" :alt="msg.attachmentName || 'Изображение'" class="max-w-full max-h-48 rounded-lg hover:opacity-90 transition-opacity" />
+                </a>
+                <a v-else :href="msg.attachmentUrl" target="_blank" class="mt-2 flex items-center gap-2 p-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors">
+                  <Icon name="heroicons:document" class="w-5 h-5 text-primary" />
+                  <div class="flex-1 min-w-0">
+                    <p class="text-sm truncate">{{ msg.attachmentName }}</p>
+                    <p class="text-xs text-[var(--text-muted)]">{{ formatFileSize(msg.attachmentSize) }}</p>
+                  </div>
+                  <Icon name="heroicons:arrow-down-tray" class="w-4 h-4 text-[var(--text-muted)]" />
+                </a>
+              </template>
+              <div class="text-xs mt-1 text-[var(--text-muted)]">
+                {{ formatTime(msg.createdAt) }}
+                <span v-if="msg.senderName" class="ml-1 text-primary">
+                  · {{ msg.senderName }}
+                </span>
+              </div>
+            </div>
+
+            <!-- User Message -->
+            <div
+              v-else
+              class="max-w-[70%] rounded-2xl px-4 py-2 glass-card rounded-bl-md"
+            >
+              <p v-if="msg.content" class="whitespace-pre-wrap break-words">
+                {{ msg.content }}
+              </p>
+              <template v-if="msg.attachmentUrl">
+                <a v-if="isImageAttachment(msg)" :href="msg.attachmentUrl" target="_blank" class="block mt-2">
+                  <img :src="msg.attachmentUrl" :alt="msg.attachmentName || 'Изображение'" class="max-w-full max-h-48 rounded-lg hover:opacity-90 transition-opacity" />
+                </a>
+                <a v-else :href="msg.attachmentUrl" target="_blank" class="mt-2 flex items-center gap-2 p-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors">
+                  <Icon name="heroicons:document" class="w-5 h-5 text-accent" />
+                  <div class="flex-1 min-w-0">
+                    <p class="text-sm truncate">{{ msg.attachmentName }}</p>
+                    <p class="text-xs text-[var(--text-muted)]">{{ formatFileSize(msg.attachmentSize) }}</p>
+                  </div>
+                  <Icon name="heroicons:arrow-down-tray" class="w-4 h-4 text-[var(--text-muted)]" />
+                </a>
+              </template>
+              <div class="text-xs mt-1 text-[var(--text-muted)]">
+                {{ formatTime(msg.createdAt) }}
+              </div>
+            </div>
+          </div>
         </div>
       </template>
 
@@ -289,12 +503,71 @@ onUnmounted(() => {
       </div>
     </div>
 
-    <!-- Input -->
-    <ChatInput
-      v-if="chat?.status !== 'closed'"
-      :sending="sending"
-      @send="handleSendMessage"
-    />
+    <!-- Input (бывший ChatInput) -->
+    <div v-if="chat?.status !== 'closed'" class="pt-2 border-t border-[var(--glass-border)]">
+      <!-- Pending file preview -->
+      <div v-if="pendingFile" class="mb-2 p-2 rounded-lg bg-white/5 flex items-center gap-2">
+        <img
+          v-if="pendingPreview"
+          :src="pendingPreview"
+          class="w-12 h-12 rounded object-cover flex-shrink-0"
+        />
+        <div v-else class="w-12 h-12 rounded bg-primary/10 flex items-center justify-center flex-shrink-0">
+          <Icon name="heroicons:document" class="w-6 h-6 text-primary" />
+        </div>
+        <div class="flex-1 min-w-0">
+          <p class="text-sm truncate text-[var(--text-primary)]">{{ pendingFile.name }}</p>
+          <p class="text-xs text-[var(--text-muted)]">{{ formatFileSize(pendingFile.size) }}</p>
+        </div>
+        <button
+          class="p-1.5 rounded-lg hover:bg-white/10 transition-colors flex-shrink-0"
+          title="Удалить"
+          @click="removePendingFile"
+        >
+          <Icon name="heroicons:x-mark" class="w-4 h-4 text-[var(--text-muted)]" />
+        </button>
+      </div>
+
+      <!-- Hidden file input -->
+      <input
+        ref="fileInput"
+        :accept="ACCEPT_FILES"
+        type="file"
+        class="hidden"
+        @change="handleFileSelect"
+      />
+
+      <form class="flex gap-2" @submit.prevent="handleSubmit">
+        <!-- Attach button -->
+        <UiButton
+          :disabled="sending"
+          type="button"
+          variant="ghost"
+          title="Прикрепить файл"
+          @click="openFileDialog"
+        >
+          <Icon name="heroicons:paper-clip" class="w-5 h-5" />
+        </UiButton>
+
+        <textarea
+          v-model="newMessage"
+          :disabled="sending"
+          placeholder="Введите сообщение..."
+          rows="1"
+          class="flex-1 px-3 py-2 glass-card rounded-lg text-[var(--text-primary)] border border-[var(--glass-border)] focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all bg-[var(--glass-bg)] resize-none min-h-[40px] max-h-[120px]"
+          @keydown.enter.exact.prevent="handleSubmit"
+          @input="handleTextareaInput"
+        />
+
+        <UiButton
+          :loading="sending"
+          :disabled="(!newMessage.trim() && !pendingFile) || sending"
+          type="submit"
+        >
+          <Icon name="heroicons:paper-airplane" class="w-5 h-5" />
+        </UiButton>
+      </form>
+    </div>
 
     <!-- Closed Chat Notice -->
     <div

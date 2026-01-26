@@ -1,5 +1,14 @@
 <script setup lang="ts">
 import type { ConnectionRequest, CallbackRequest } from '~/types/admin'
+import {
+  CONNECTION_REQUEST_STATUS,
+  CONNECTION_STATUS_OPTIONS,
+  CALLBACK_REQUEST_STATUS,
+  CALLBACK_STATUS_OPTIONS,
+  REQUEST_SOURCE,
+  getStatusLabel,
+  getStatusBadgeClass,
+} from '~/composables/useStatusConfig'
 
 definePageMeta({
   middleware: 'admin',
@@ -8,6 +17,7 @@ definePageMeta({
 useHead({ title: 'Заявки — Админ-панель' })
 
 const toast = useToast()
+const { formatPhone, formatDateTime } = useFormatters()
 
 // Tab state
 const activeTab = ref<'connection' | 'callback'>('connection')
@@ -39,6 +49,10 @@ const fetchConnectionRequests = async () => {
   finally {
     connectionLoading.value = false
   }
+}
+
+const goToRequest = (id: string) => {
+  navigateTo(`/requests/${id}`)
 }
 
 // ==================== CALLBACK REQUESTS ====================
@@ -166,22 +180,222 @@ watch(activeTab, (newTab) => {
       </button>
     </div>
 
-    <!-- CONNECTION TAB -->
-    <ConnectionRequestsTab
-      v-show="activeTab === 'connection'"
-      v-model:status-filter="connectionStatusFilter"
-      v-model:only-in-coverage="onlyInCoverage"
-      :requests="connectionRequests"
-      :loading="connectionLoading"
-    />
+    <!-- CONNECTION TAB (бывший ConnectionRequestsTab) -->
+    <div v-show="activeTab === 'connection'">
+      <!-- Filters -->
+      <div class="flex flex-wrap gap-4 mb-6">
+        <div class="flex gap-2 flex-wrap">
+          <UiButton
+            v-for="opt in CONNECTION_STATUS_OPTIONS"
+            :key="opt.value"
+            :class="{ 'bg-primary/20': connectionStatusFilter === opt.value }"
+            variant="ghost"
+            size="sm"
+            @click="connectionStatusFilter = opt.value"
+          >
+            {{ opt.label }}
+          </UiButton>
+        </div>
 
-    <!-- CALLBACK TAB -->
-    <CallbackRequestsTab
-      v-show="activeTab === 'callback'"
-      v-model:status-filter="callbackStatusFilter"
-      :requests="callbackRequests"
-      :loading="callbackLoading"
-      @update-status="updateCallbackStatus"
-    />
+        <div class="flex items-center gap-2 ml-auto">
+          <input
+            id="onlyInCoverage"
+            v-model="onlyInCoverage"
+            type="checkbox"
+            class="w-4 h-4 rounded border-[var(--glass-border)] bg-[var(--glass-bg)] text-primary focus:ring-primary"
+          />
+          <label for="onlyInCoverage" class="text-sm text-[var(--text-secondary)] cursor-pointer">
+            В зоне покрытия
+          </label>
+        </div>
+      </div>
+
+      <!-- Loading -->
+      <UiLoading v-if="connectionLoading" />
+
+      <!-- Requests List -->
+      <div v-else class="space-y-3">
+        <UiCard
+          v-for="request in connectionRequests"
+          :key="request.id"
+          :hover="true"
+          padding="sm"
+          class="cursor-pointer"
+          @click="goToRequest(request.id)"
+        >
+          <div class="flex items-start justify-between gap-4">
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2 mb-2 flex-wrap">
+                <span class="font-medium text-[var(--text-primary)]">
+                  {{ request.fullName }}
+                </span>
+                <span class="text-sm text-[var(--text-muted)]">
+                  {{ formatPhone(request.phone) }}
+                </span>
+              </div>
+
+              <div class="flex items-center gap-2 mb-2 flex-wrap">
+                <UiBadge :class="getStatusBadgeClass(CONNECTION_REQUEST_STATUS, request.status)" size="sm">
+                  {{ getStatusLabel(CONNECTION_REQUEST_STATUS, request.status) }}
+                </UiBadge>
+                <UiBadge
+                  v-if="request.inCoverageZone"
+                  class="bg-green-500/20 text-green-400"
+                  size="sm"
+                >
+                  <Icon name="heroicons:check" class="w-3 h-3 mr-1" />
+                  В зоне
+                </UiBadge>
+                <UiBadge
+                  v-else
+                  class="bg-orange-500/20 text-orange-400"
+                  size="sm"
+                >
+                  <Icon name="heroicons:exclamation-triangle" class="w-3 h-3 mr-1" />
+                  Вне зоны
+                </UiBadge>
+              </div>
+
+              <p class="text-sm text-[var(--text-secondary)] truncate mb-2">
+                {{ request.addressText }}
+              </p>
+
+              <div class="flex items-center gap-3 text-xs text-[var(--text-muted)]">
+                <span class="flex items-center gap-1">
+                  <Icon name="heroicons:globe-alt" class="w-3 h-3" />
+                  {{ getStatusLabel(REQUEST_SOURCE, request.source) }}
+                </span>
+                <span>
+                  {{ formatDateTime(request.createdAt) }}
+                </span>
+              </div>
+            </div>
+
+            <div class="shrink-0 flex items-center">
+              <Icon
+                name="heroicons:chevron-right"
+                class="w-5 h-5 text-[var(--text-muted)]"
+              />
+            </div>
+          </div>
+        </UiCard>
+
+        <UiEmptyState
+          v-if="connectionRequests.length === 0"
+          :title="connectionStatusFilter === 'all' ? 'Заявок на подключение пока нет' : 'Нет заявок с таким статусом'"
+          icon="heroicons:clipboard-document-list"
+        />
+      </div>
+    </div>
+
+    <!-- CALLBACK TAB (бывший CallbackRequestsTab) -->
+    <div v-show="activeTab === 'callback'">
+      <!-- Filters -->
+      <div class="flex flex-wrap gap-4 mb-6">
+        <div class="flex gap-2 flex-wrap">
+          <UiButton
+            v-for="opt in CALLBACK_STATUS_OPTIONS"
+            :key="opt.value"
+            :class="{ 'bg-primary/20': callbackStatusFilter === opt.value }"
+            variant="ghost"
+            size="sm"
+            @click="callbackStatusFilter = opt.value"
+          >
+            {{ opt.label }}
+          </UiButton>
+        </div>
+      </div>
+
+      <!-- Loading -->
+      <UiLoading v-if="callbackLoading" />
+
+      <!-- Requests List -->
+      <div v-else class="space-y-3">
+        <UiCard
+          v-for="callback in callbackRequests"
+          :key="callback.id"
+          padding="sm"
+        >
+          <div class="flex items-start justify-between gap-4">
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2 mb-2 flex-wrap">
+                <span class="font-medium text-[var(--text-primary)]">
+                  {{ callback.name }}
+                </span>
+                <a
+                  :href="`tel:${callback.phone}`"
+                  class="text-sm text-primary hover:underline"
+                  @click.stop
+                >
+                  {{ formatPhone(callback.phone) }}
+                </a>
+              </div>
+
+              <div class="flex items-center gap-2 mb-2 flex-wrap">
+                <UiBadge :class="getStatusBadgeClass(CALLBACK_REQUEST_STATUS, callback.status)" size="sm">
+                  {{ getStatusLabel(CALLBACK_REQUEST_STATUS, callback.status) }}
+                </UiBadge>
+              </div>
+
+              <div class="flex items-center gap-3 text-xs text-[var(--text-muted)]">
+                <span class="flex items-center gap-1">
+                  <Icon name="heroicons:globe-alt" class="w-3 h-3" />
+                  {{ callback.source ? getStatusLabel(REQUEST_SOURCE, callback.source) : 'Неизвестно' }}
+                </span>
+                <span>
+                  {{ formatDateTime(callback.createdAt) }}
+                </span>
+                <span v-if="callback.processedByAdmin" class="flex items-center gap-1">
+                  <Icon name="heroicons:user" class="w-3 h-3" />
+                  {{ callback.processedByAdmin.fullName }}
+                </span>
+              </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="shrink-0 flex items-center gap-2">
+              <!-- Call button -->
+              <a
+                :href="`tel:${callback.phone}`"
+                class="p-2 rounded-lg bg-green-500/20 hover:bg-green-500/30 transition-colors"
+                title="Позвонить"
+                @click.stop
+              >
+                <Icon name="heroicons:phone" class="w-4 h-4 text-green-400" />
+              </a>
+
+              <!-- Status dropdown -->
+              <div class="relative group">
+                <button
+                  class="p-2 rounded-lg hover:bg-[var(--glass-bg)] transition-colors"
+                  title="Изменить статус"
+                >
+                  <Icon name="heroicons:ellipsis-vertical" class="w-4 h-4 text-[var(--text-muted)]" />
+                </button>
+                <div
+                  class="absolute right-0 top-full mt-1 w-40 py-1 rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10"
+                  style="background: var(--bg-surface); border: 1px solid var(--glass-border);"
+                >
+                  <button
+                    v-for="opt in CALLBACK_STATUS_OPTIONS.filter(o => o.value !== 'all' && o.value !== callback.status)"
+                    :key="opt.value"
+                    class="w-full px-3 py-2 text-left text-sm text-[var(--text-primary)] hover:bg-[var(--glass-bg)] transition-colors"
+                    @click="updateCallbackStatus(callback, opt.value)"
+                  >
+                    {{ opt.label }}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </UiCard>
+
+        <UiEmptyState
+          v-if="callbackRequests.length === 0"
+          :title="callbackStatusFilter === 'all' ? 'Заявок на звонок пока нет' : 'Нет заявок с таким статусом'"
+          icon="heroicons:phone-x-mark"
+        />
+      </div>
+    </div>
   </div>
 </template>

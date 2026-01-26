@@ -1,4 +1,13 @@
 <script setup lang="ts">
+import type OLMap from 'ol/Map'
+import type VectorLayer from 'ol/layer/Vector'
+import type Overlay from 'ol/Overlay'
+import type Feature from 'ol/Feature'
+import type { Geometry } from 'ol/geom'
+import type RenderFeature from 'ol/render/Feature'
+import type { StyleLike } from 'ol/style/Style'
+import type VectorSource from 'ol/source/Vector'
+
 definePageMeta({
   middleware: 'admin',
 })
@@ -47,6 +56,34 @@ const hiddenZoneIds = ref<Set<number>>(new Set())
 const partners = ref<Partner[]>([])
 const loadingPartners = ref(false)
 
+// CoverageMap state
+let map: OLMap | null = null
+let vectorLayer: VectorLayer<VectorSource<Feature<Geometry>>> | null = null
+let popupOverlay: Overlay | null = null
+let hoveredFeatureId: number | null = null
+
+const mapContainer = ref<HTMLDivElement | null>(null)
+const popupContainer = ref<HTMLDivElement | null>(null)
+const popupContent = ref('')
+
+// CoverageImportExport state
+const fileInput = ref<HTMLInputElement | null>(null)
+const replaceExisting = ref(false)
+const importing = ref(false)
+const importError = ref('')
+const importOwner = ref<string>('pg19')
+const exportPartnerId = ref<string>('all')
+
+const importOwnerOptions = computed(() => [
+  { value: 'pg19', label: 'ПЖ19' },
+  ...partners.value.map(p => ({ value: p.id, label: p.name })),
+])
+
+const exportPartnerOptions = computed(() => [
+  { value: 'all', label: 'Все зоны' },
+  ...partners.value.map(p => ({ value: p.id, label: p.name })),
+])
+
 const fetchPartners = async () => {
   loadingPartners.value = true
   try {
@@ -64,7 +101,6 @@ const fetchPartners = async () => {
 
 const selectPartner = (partnerId: string) => {
   if (selectedPartnerId.value === partnerId) {
-    // Повторный клик — сбросить выбор
     selectedPartnerId.value = null
   }
   else {
@@ -74,11 +110,9 @@ const selectPartner = (partnerId: string) => {
 
 const filteredZones = computed(() => {
   return zones.value.filter((zone) => {
-    // Фильтр по конкретному партнёру
     if (selectedPartnerId.value) {
       if (zone.partnerId !== selectedPartnerId.value) return false
     }
-    // Фильтр по активности
     if (showOnlyActive.value && !zone.isActive) {
       return false
     }
@@ -86,7 +120,6 @@ const filteredZones = computed(() => {
   })
 })
 
-// Зоны для отображения на карте (исключая скрытые)
 const visibleZonesForMap = computed(() => {
   return filteredZones.value.filter(zone => !hiddenZoneIds.value.has(zone.id))
 })
@@ -110,15 +143,222 @@ const handleZoneClick = (zone: CoverageZone) => {
   selectedZone.value = zone
 }
 
-const handleImport = async (data: { geojson: unknown, type: string, partnerId?: string, replaceExisting: boolean }) => {
+// CoverageMap helpers
+const escapeHtml = (text: string): string => {
+  const div = document.createElement('div')
+  div.textContent = text
+  return div.innerHTML
+}
+
+const hexToRgba = (hex: string, alpha: number): string => {
+  const r = parseInt(hex.slice(1, 3), 16)
+  const g = parseInt(hex.slice(3, 5), 16)
+  const b = parseInt(hex.slice(5, 7), 16)
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`
+}
+
+const initMap = async () => {
+  if (!mapContainer.value || map) return
+
+  const [
+    { default: Map },
+    { default: View },
+    { default: TileLayer },
+    { default: VectorLayer },
+    { default: VectorSource },
+    { default: OSM },
+    { Style, Fill, Stroke },
+    { default: Overlay },
+    { fromLonLat },
+  ] = await Promise.all([
+    import('ol/Map'),
+    import('ol/View'),
+    import('ol/layer/Tile'),
+    import('ol/layer/Vector'),
+    import('ol/source/Vector'),
+    import('ol/source/OSM'),
+    import('ol/style'),
+    import('ol/Overlay'),
+    import('ol/proj'),
+  ])
+
+  await import('ol/ol.css')
+
+  const vectorSource = new VectorSource()
+
+  const styleFunction = (feature: Feature<Geometry> | RenderFeature, isHovered = false) => {
+    const zone = feature.get('zone') as CoverageZone
+    const strokeWidth = isHovered ? zone.strokeWidth + 2 : zone.strokeWidth
+    const fillOpacity = isHovered ? Math.min(zone.fillOpacity + 0.2, 0.8) : zone.fillOpacity
+
+    return new Style({
+      fill: new Fill({
+        color: hexToRgba(zone.color, fillOpacity),
+      }),
+      stroke: new Stroke({
+        color: zone.color,
+        width: strokeWidth,
+      }),
+    })
+  }
+
+  vectorLayer = new VectorLayer({
+    source: vectorSource,
+    style: ((feature: Feature<Geometry> | RenderFeature) => styleFunction(feature, feature.getId() === hoveredFeatureId)) as StyleLike,
+  })
+
+  popupOverlay = new Overlay({
+    element: popupContainer.value!,
+    autoPan: true,
+    autoPanAnimation: { duration: 250 },
+  })
+
+  map = new Map({
+    target: mapContainer.value,
+    layers: [
+      new TileLayer({ source: new OSM() }),
+      vectorLayer,
+    ],
+    overlays: [popupOverlay],
+    view: new View({
+      center: fromLonLat([37.6173, 55.7558]),
+      zoom: 10,
+    }),
+  })
+
+  map.on('click', (evt) => {
+    const feature = map!.forEachFeatureAtPixel(evt.pixel, f => f)
+
+    if (feature) {
+      const zone = feature.get('zone') as CoverageZone
+      const coordinate = evt.coordinate
+
+      const typeLabel = zone.type === 'pg19' ? 'ПЖ19' : (zone.partner?.name || 'Партнёр')
+      const typeBg = zone.type === 'pg19'
+        ? 'background: rgba(247, 148, 29, 0.2); color: #F7941D;'
+        : 'background: rgba(233, 30, 140, 0.2); color: #E91E8C;'
+      const statusBg = zone.isActive
+        ? 'background: rgba(34, 197, 94, 0.2); color: #22C55E;'
+        : 'background: rgba(107, 114, 128, 0.2); color: #9CA3AF;'
+
+      const safeName = escapeHtml(zone.name)
+      const safeDescription = zone.description ? escapeHtml(zone.description) : ''
+      const safeTypeLabel = escapeHtml(typeLabel)
+
+      popupContent.value = `
+        <h4 style="font-weight: 600; font-size: 14px; margin: 0 0 8px 0; color: #1f2937;">${safeName}</h4>
+        ${safeDescription ? `<p style="font-size: 12px; color: #6b7280; margin: 0 0 8px 0;">${safeDescription}</p>` : ''}
+        <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+          <span style="padding: 2px 8px; border-radius: 9999px; font-size: 11px; ${typeBg}">${safeTypeLabel}</span>
+          <span style="padding: 2px 8px; border-radius: 9999px; font-size: 11px; ${statusBg}">${zone.isActive ? 'Активна' : 'Неактивна'}</span>
+        </div>
+      `
+
+      popupOverlay.setPosition(coordinate)
+      handleZoneClick(zone)
+    }
+    else {
+      popupOverlay.setPosition(undefined)
+    }
+  })
+
+  map.on('pointermove', (evt) => {
+    if (evt.dragging) return
+
+    const feature = map!.forEachFeatureAtPixel(evt.pixel, f => f)
+    const newHoveredId = feature ? feature.getId() : null
+
+    if (newHoveredId !== hoveredFeatureId) {
+      hoveredFeatureId = newHoveredId
+      vectorLayer!.changed()
+      map!.getTargetElement().style.cursor = feature ? 'pointer' : ''
+    }
+  })
+
+  updateZones()
+}
+
+const updateZones = async () => {
+  if (!map || !vectorLayer) return
+
+  const { default: GeoJSONFormat } = await import('ol/format/GeoJSON')
+
+  const vectorSource = vectorLayer.getSource()
+  vectorSource!.clear()
+
+  if (visibleZonesForMap.value.length === 0) return
+
+  const featureCollection = {
+    type: 'FeatureCollection',
+    features: visibleZonesForMap.value.map(zone => ({
+      type: 'Feature',
+      id: zone.id,
+      geometry: zone.geometry,
+      properties: { zone },
+    })),
+  }
+
+  const geoJsonFormat = new GeoJSONFormat({
+    featureProjection: 'EPSG:3857',
+  })
+
+  const features = geoJsonFormat.readFeatures(featureCollection)
+
+  features.forEach((feature, index) => {
+    feature.setId(visibleZonesForMap.value[index].id)
+    feature.set('zone', visibleZonesForMap.value[index])
+  })
+
+  vectorSource!.addFeatures(features)
+
+  const extent = vectorSource!.getExtent()
+  if (extent && extent[0] !== Infinity) {
+    map!.getView().fit(extent, { padding: [50, 50, 50, 50], duration: 500 })
+  }
+}
+
+const closePopup = () => {
+  if (popupOverlay) {
+    popupOverlay.setPosition(undefined)
+  }
+}
+
+// Import/Export handlers
+const triggerFileInput = () => {
+  fileInput.value?.click()
+}
+
+const handleFileSelect = async (event: Event) => {
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0]
+
+  if (!file) return
+
+  if (!file.name.endsWith('.geojson') && !file.name.endsWith('.json')) {
+    importError.value = 'Поддерживаются только .geojson и .json файлы'
+    return
+  }
+
+  importing.value = true
+  importError.value = ''
+
   try {
+    const text = await file.text()
+    const geojson = JSON.parse(text)
+
+    if (!geojson.type) {
+      throw new Error('Невалидный GeoJSON: отсутствует type')
+    }
+
+    const isPg19 = importOwner.value === 'pg19'
+
     const result = await $fetch<{ success: boolean, imported: number }>('/api/admin/coverage/import', {
       method: 'POST',
       body: {
-        geojson: data.geojson,
-        type: data.type,
-        partnerId: data.partnerId,
-        replaceExisting: data.replaceExisting,
+        geojson,
+        type: isPg19 ? 'pg19' : 'partner',
+        partnerId: isPg19 ? undefined : importOwner.value,
+        replaceExisting: replaceExisting.value,
       },
     })
 
@@ -127,26 +367,38 @@ const handleImport = async (data: { geojson: unknown, type: string, partnerId?: 
       await fetchZones()
     }
   }
-  catch (error: unknown) {
-    console.error('Failed to import zones:', error)
-    const message = error instanceof Error ? error.message : 'Не удалось импортировать зоны'
+  catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Не удалось импортировать зоны'
+    importError.value = message
     toast.error(message)
+  }
+  finally {
+    importing.value = false
+    if (fileInput.value) {
+      fileInput.value.value = ''
+    }
   }
 }
 
-const handleExport = (query?: string) => {
-  // Open export URL in new tab (will trigger download)
-  const url = query ? `/api/admin/coverage/export?${query}` : '/api/admin/coverage/export'
+const handleExport = () => {
+  const params = new URLSearchParams()
+  if (exportPartnerId.value !== 'all') {
+    params.set('partnerId', exportPartnerId.value)
+  }
+  const url = params.toString() ? `/api/admin/coverage/export?${params.toString()}` : '/api/admin/coverage/export'
   window.open(url, '_blank')
 }
 
-// Открытие модалки удаления
+const clearImportError = () => {
+  importError.value = ''
+}
+
+// Zone management
 const openDeleteModal = (zone: CoverageZone) => {
   zoneToDelete.value = zone
   showDeleteModal.value = true
 }
 
-// Подтверждение удаления
 const confirmDelete = async () => {
   if (!zoneToDelete.value) return
 
@@ -168,7 +420,6 @@ const confirmDelete = async () => {
   }
 }
 
-// Toggle visibility (client-side only, сохраняется в localStorage)
 const toggleZoneVisibility = (zone: CoverageZone) => {
   const newHidden = new Set(hiddenZoneIds.value)
   if (newHidden.has(zone.id)) {
@@ -178,15 +429,15 @@ const toggleZoneVisibility = (zone: CoverageZone) => {
     newHidden.add(zone.id)
   }
   hiddenZoneIds.value = newHidden
-  // Сохранить в localStorage
   localStorage.setItem('coverage-hidden-zones', JSON.stringify([...newHidden]))
 }
 
-// Проверка, скрыта ли зона
 const isZoneHidden = (zoneId: number) => hiddenZoneIds.value.has(zoneId)
 
+// Watch for zone changes
+watch(visibleZonesForMap, updateZones, { deep: true })
+
 onMounted(() => {
-  // Загрузить скрытые зоны из localStorage
   const saved = localStorage.getItem('coverage-hidden-zones')
   if (saved) {
     try {
@@ -200,6 +451,14 @@ onMounted(() => {
 
   fetchZones()
   fetchPartners()
+  initMap()
+})
+
+onUnmounted(() => {
+  if (map) {
+    map.setTarget(undefined)
+    map = null
+  }
 })
 </script>
 
@@ -225,7 +484,6 @@ onMounted(() => {
           <div class="flex flex-wrap gap-3 items-center">
             <span class="text-sm text-[var(--text-secondary)]">Партнёр:</span>
 
-            <!-- Кнопка "Все" -->
             <UiButton
               :class="{ 'bg-white/10': !selectedPartnerId }"
               variant="ghost"
@@ -235,7 +493,6 @@ onMounted(() => {
               Все
             </UiButton>
 
-            <!-- Кнопки партнёров -->
             <UiButton
               v-for="partner in partners"
               :key="partner.id"
@@ -263,15 +520,22 @@ onMounted(() => {
           </div>
         </UiCard>
 
-        <!-- Map Component -->
+        <!-- Map (бывший CoverageMap) -->
         <ClientOnly>
-          <CoverageMap
-            :zones="visibleZonesForMap"
-            :center="[55.7558, 37.6173]"
-            :zoom="10"
-            height="500px"
-            @zone-click="handleZoneClick"
-          />
+          <div class="relative">
+            <div
+              ref="mapContainer"
+              style="height: 500px"
+              class="rounded-xl overflow-hidden border border-[var(--glass-border)]"
+            />
+
+            <!-- Popup overlay -->
+            <div ref="popupContainer" class="ol-popup">
+              <button class="ol-popup-closer" @click="closePopup">&times;</button>
+              <!-- eslint-disable-next-line vue/no-v-html -->
+              <div class="ol-popup-content" v-html="popupContent" />
+            </div>
+          </div>
           <template #fallback>
             <div class="h-[500px] flex items-center justify-center glass-card rounded-xl">
               <Icon name="heroicons:arrow-path" class="w-8 h-8 animate-spin text-primary" />
@@ -279,13 +543,96 @@ onMounted(() => {
           </template>
         </ClientOnly>
 
-        <!-- Import/Export (под картой) -->
-        <CoverageImportExport
-          :loading="loading"
-          :partners="partners"
-          @import="handleImport"
-          @export="handleExport"
-        />
+        <!-- Import/Export (бывший CoverageImportExport) -->
+        <UiCard>
+          <div class="space-y-4">
+            <h3 class="text-lg font-semibold text-[var(--text-primary)]">
+              Импорт / Экспорт
+            </h3>
+
+            <div
+              v-if="importError"
+              class="p-3 bg-red-500/20 border border-red-500/30 rounded-lg text-red-400 text-sm flex items-center justify-between"
+            >
+              <span>{{ importError }}</span>
+              <button class="ml-2 hover:text-red-300" @click="clearImportError">
+                <Icon name="heroicons:x-mark" class="w-4 h-4" />
+              </button>
+            </div>
+
+            <div class="space-y-3">
+              <label class="block text-sm font-medium text-[var(--text-secondary)]">
+                Импорт GeoJSON
+              </label>
+
+              <div class="space-y-3">
+                <UiSelect
+                  v-model="importOwner"
+                  :options="importOwnerOptions"
+                  :placeholder="undefined"
+                  size="sm"
+                />
+
+                <label class="flex items-center gap-2 text-sm text-[var(--text-secondary)] cursor-pointer">
+                  <input
+                    v-model="replaceExisting"
+                    type="checkbox"
+                    class="w-4 h-4 rounded border-[var(--glass-border)] bg-[var(--glass-bg)] text-primary focus:ring-primary"
+                  />
+                  Заменить существующие
+                </label>
+              </div>
+
+              <input
+                ref="fileInput"
+                type="file"
+                accept=".geojson,.json"
+                class="hidden"
+                @change="handleFileSelect"
+              />
+
+              <UiButton
+                :loading="importing"
+                :disabled="loading || importing"
+                variant="secondary"
+                class="w-full"
+                @click="triggerFileInput"
+              >
+                <Icon name="heroicons:arrow-up-tray" class="w-4 h-4" />
+                Загрузить GeoJSON
+              </UiButton>
+
+              <p class="text-xs text-[var(--text-muted)]">
+                Поддерживаются форматы: FeatureCollection, Feature, Polygon
+              </p>
+            </div>
+
+            <hr class="border-[var(--glass-border)]" />
+
+            <div class="space-y-3">
+              <label class="block text-sm font-medium text-[var(--text-secondary)]">
+                Экспорт зон
+              </label>
+
+              <UiSelect
+                v-model="exportPartnerId"
+                :options="exportPartnerOptions"
+                :placeholder="undefined"
+                size="sm"
+              />
+
+              <UiButton
+                :disabled="loading"
+                variant="ghost"
+                class="w-full"
+                @click="handleExport"
+              >
+                <Icon name="heroicons:arrow-down-tray" class="w-4 h-4" />
+                Скачать GeoJSON
+              </UiButton>
+            </div>
+          </div>
+        </UiCard>
       </div>
 
       <!-- Sidebar (1/3 width) -->
@@ -456,3 +803,74 @@ onMounted(() => {
     />
   </div>
 </template>
+
+<style>
+@import 'ol/ol.css';
+
+.ol-popup {
+  position: absolute;
+  background-color: white;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2);
+  padding: 12px 16px;
+  border-radius: 12px;
+  min-width: 180px;
+  bottom: 12px;
+  left: -90px;
+}
+
+.ol-popup:after,
+.ol-popup:before {
+  top: 100%;
+  border: solid transparent;
+  content: " ";
+  height: 0;
+  width: 0;
+  position: absolute;
+  pointer-events: none;
+}
+
+.ol-popup:after {
+  border-top-color: white;
+  border-width: 10px;
+  left: 90px;
+  margin-left: -10px;
+}
+
+.ol-popup:before {
+  border-top-color: rgba(0, 0, 0, 0.1);
+  border-width: 11px;
+  left: 90px;
+  margin-left: -11px;
+}
+
+.ol-popup-closer {
+  position: absolute;
+  top: 4px;
+  right: 8px;
+  font-size: 18px;
+  font-weight: bold;
+  color: #9ca3af;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+}
+
+.ol-popup-closer:hover {
+  color: #6b7280;
+}
+
+.ol-popup-content {
+  padding-right: 16px;
+}
+
+.ol-control button {
+  background-color: rgba(255, 255, 255, 0.9);
+}
+
+.ol-control button:hover,
+.ol-control button:focus {
+  background-color: rgba(255, 255, 255, 1);
+}
+</style>

@@ -3,7 +3,6 @@
    =============================================================================
    Система тем (light/dark) через CSS-переменные
    Glass-морфизм для карточек и UI
-   Admin-специфичные стили (sidebar, tables, forms)
    ============================================================================= */
 
 /* -----------------------------------------------------------------------------
@@ -50,11 +49,9 @@
 }
 
 /* -----------------------------------------------------------------------------
-   Tailwind directives
+   Tailwind CSS v4
    ----------------------------------------------------------------------------- */
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
 /* -----------------------------------------------------------------------------
    CSS-переменные: Светлая тема (по умолчанию)
@@ -79,17 +76,6 @@
   --glass-hover-bg: rgba(255, 255, 255, 0.95);
   --glass-hover-border: rgba(247, 148, 29, 0.3);
 
-  /* Шапка */
-  --header-bg: rgba(255, 255, 255, 0.9);
-  --header-blur-bg: rgba(255, 255, 255, 0.95);
-  --header-border: rgba(0, 0, 0, 0.08);
-
-  /* Sidebar (админ-специфично) */
-  --sidebar-bg: rgba(255, 255, 255, 0.9);
-  --sidebar-border: rgba(0, 0, 0, 0.08);
-  --sidebar-item-hover: rgba(247, 148, 29, 0.1);
-  --sidebar-item-active: rgba(247, 148, 29, 0.15);
-
   /* Mesh-градиенты (фоновые пятна) */
   --mesh-primary: rgba(247, 148, 29, 0.12);
   --mesh-secondary: rgba(233, 30, 140, 0.08);
@@ -101,9 +87,6 @@
   --btn-secondary-border: rgba(0, 0, 0, 0.2);
   --btn-secondary-text: #374151;
   --btn-secondary-hover-bg: rgba(247, 148, 29, 0.1);
-
-  /* TipTap toolbar background */
-  --table-header-bg: rgba(0, 0, 0, 0.02);
 }
 
 /* -----------------------------------------------------------------------------
@@ -129,17 +112,6 @@
   --glass-hover-bg: rgba(255, 255, 255, 0.06);
   --glass-hover-border: rgba(247, 148, 29, 0.3);
 
-  /* Шапка */
-  --header-bg: rgba(17, 24, 39, 0.95);
-  --header-blur-bg: rgba(17, 24, 39, 0.98);
-  --header-border: rgba(255, 255, 255, 0.05);
-
-  /* Sidebar */
-  --sidebar-bg: rgba(17, 24, 39, 0.95);
-  --sidebar-border: rgba(255, 255, 255, 0.05);
-  --sidebar-item-hover: rgba(247, 148, 29, 0.1);
-  --sidebar-item-active: rgba(247, 148, 29, 0.15);
-
   /* Mesh-градиенты */
   --mesh-primary: rgba(247, 148, 29, 0.15);
   --mesh-secondary: rgba(233, 30, 140, 0.12);
@@ -151,9 +123,6 @@
   --btn-secondary-border: rgba(255, 255, 255, 0.2);
   --btn-secondary-text: #ffffff;
   --btn-secondary-hover-bg: rgba(247, 148, 29, 0.1);
-
-  /* TipTap toolbar background */
-  --table-header-bg: rgba(255, 255, 255, 0.02);
 }
 
 /* -----------------------------------------------------------------------------
@@ -200,36 +169,6 @@ html {
   -webkit-backdrop-filter: blur(20px);
   border: 1px solid var(--glass-border);
   box-shadow: 0 8px 32px var(--glass-shadow);
-}
-
-/* -----------------------------------------------------------------------------
-   Admin Sidebar — боковая панель навигации
-   ----------------------------------------------------------------------------- */
-.admin-sidebar {
-  background: var(--sidebar-bg);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-right: 1px solid var(--sidebar-border);
-}
-
-.admin-sidebar-item {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.75rem 1rem;
-  border-radius: 0.75rem;
-  color: var(--text-secondary);
-  transition: all 0.2s ease;
-}
-
-.admin-sidebar-item:hover {
-  background: var(--sidebar-item-hover);
-  color: var(--text-primary);
-}
-
-.admin-sidebar-item.active {
-  background: var(--sidebar-item-active);
-  color: #F7941D;
 }
 
 /* -----------------------------------------------------------------------------
@@ -288,190 +227,6 @@ html {
 }
 
 /* -----------------------------------------------------------------------------
-   Icon Container — контейнер иконок в карточках Dashboard
-   ----------------------------------------------------------------------------- */
-.icon-container {
-  width: 60px;
-  height: 60px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 16px;
-  background: linear-gradient(135deg, rgba(247, 148, 29, 0.2) 0%, rgba(233, 30, 140, 0.1) 100%);
-  transition: all 0.3s ease;
-}
-
-.glass-card:hover .icon-container {
-  background: linear-gradient(135deg, rgba(247, 148, 29, 0.3) 0%, rgba(233, 30, 140, 0.2) 100%);
-  transform: scale(1.05);
-}
-
-/* Меньший вариант для stat-карточек */
-.icon-container-sm {
-  width: 48px;
-  height: 48px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 12px;
-  background: linear-gradient(135deg, rgba(247, 148, 29, 0.2) 0%, rgba(233, 30, 140, 0.1) 100%);
-}
-
-/* -----------------------------------------------------------------------------
-   Header — стили шапки админки
-   ----------------------------------------------------------------------------- */
-.header-transparent {
-  background: var(--header-bg);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--header-border);
-}
-
-.header-blur {
-  background: var(--header-blur-bg);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-bottom: 1px solid var(--header-border);
-  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
-}
-
-/* -----------------------------------------------------------------------------
-   Theme Toggle — кнопка переключения темы
-   ----------------------------------------------------------------------------- */
-.theme-toggle {
-  width: 40px;
-  height: 40px;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
-  color: var(--text-secondary);
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.theme-toggle:hover {
-  background: var(--glass-hover-bg);
-  color: #F7941D;
-  border-color: rgba(247, 148, 29, 0.3);
-}
-
-/* -----------------------------------------------------------------------------
-   Status Badges — статус-бейджи для таблиц
-   ----------------------------------------------------------------------------- */
-.status-badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.25rem 0.75rem;
-  border-radius: 9999px;
-  font-size: 0.75rem;
-  font-weight: 500;
-}
-
-.status-badge-success {
-  background: rgba(34, 197, 94, 0.1);
-  color: #22c55e;
-}
-
-.status-badge-warning {
-  background: rgba(245, 158, 11, 0.1);
-  color: #f59e0b;
-}
-
-.status-badge-danger {
-  background: rgba(239, 68, 68, 0.1);
-  color: #ef4444;
-}
-
-.status-badge-info {
-  background: rgba(59, 130, 246, 0.1);
-  color: #3b82f6;
-}
-
-.status-badge-muted {
-  background: rgba(107, 114, 128, 0.1);
-  color: #6b7280;
-}
-
-/* -----------------------------------------------------------------------------
-   TipTap Editor — стили редактора новостей
-   ----------------------------------------------------------------------------- */
-.tiptap-editor {
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
-  border-radius: 0.75rem;
-  overflow: hidden;
-}
-
-.tiptap-editor .ProseMirror {
-  padding: 1rem;
-  min-height: 300px;
-  outline: none;
-}
-
-.tiptap-editor .ProseMirror p {
-  margin: 0 0 0.75rem;
-}
-
-.tiptap-editor .ProseMirror h1,
-.tiptap-editor .ProseMirror h2,
-.tiptap-editor .ProseMirror h3 {
-  margin: 1.5rem 0 0.75rem;
-  font-weight: 600;
-}
-
-.tiptap-editor .ProseMirror ul,
-.tiptap-editor .ProseMirror ol {
-  padding-left: 1.5rem;
-  margin: 0.75rem 0;
-}
-
-.tiptap-editor .ProseMirror a {
-  color: #F7941D;
-  text-decoration: underline;
-}
-
-.tiptap-editor .ProseMirror img {
-  max-width: 100%;
-  height: auto;
-  border-radius: 0.5rem;
-  margin: 1rem 0;
-}
-
-/* Toolbar редактора */
-.tiptap-toolbar {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.25rem;
-  padding: 0.75rem;
-  border-bottom: 1px solid var(--glass-border);
-  background: var(--table-header-bg);
-}
-
-.tiptap-toolbar button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  border-radius: 0.5rem;
-  color: var(--text-secondary);
-  transition: all 0.2s ease;
-}
-
-.tiptap-toolbar button:hover {
-  background: var(--sidebar-item-hover);
-  color: var(--text-primary);
-}
-
-.tiptap-toolbar button.active {
-  background: var(--sidebar-item-active);
-  color: #F7941D;
-}
-
-/* -----------------------------------------------------------------------------
    Глобальные переходы для плавной смены темы
    ----------------------------------------------------------------------------- */
 *, *::before, *::after {
@@ -499,23 +254,4 @@ html {
 
 ::-webkit-scrollbar-thumb:hover {
   background: var(--text-muted);
-}
-
-/* -----------------------------------------------------------------------------
-   OpenLayers Map — стили карты покрытия
-   ----------------------------------------------------------------------------- */
-.ol-map {
-  border-radius: 0.75rem;
-  overflow: hidden;
-}
-
-.ol-map .ol-control {
-  background: var(--glass-bg);
-  backdrop-filter: blur(12px);
-  border: 1px solid var(--glass-border);
-  border-radius: 0.5rem;
-}
-
-.ol-map .ol-control button {
-  color: var(--text-primary);
 }
