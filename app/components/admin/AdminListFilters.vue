@@ -43,52 +43,55 @@ const checkboxFilters = computed(() => props.filters.filter(f => f.type === 'che
 
 <template>
   <div class="admin-list-filters">
-    <!-- Кнопки статуса (первыми) -->
-    <div
-      v-for="filter in buttonFilters"
-      :key="filter.key"
-      class="filter-buttons"
-    >
-      <UiButton
-        v-for="opt in filter.options"
-        :key="opt.value"
-        :class="{ 'bg-primary/20': filterValues[filter.key] === opt.value }"
-        @click="filterValues[filter.key] = opt.value"
-        variant="ghost"
-        size="sm"
+    <!-- Левая часть: все фильтры -->
+    <div class="filters-group">
+      <!-- Кнопки статуса (первыми) -->
+      <div
+        v-for="filter in buttonFilters"
+        :key="filter.key"
+        class="filter-buttons"
       >
-        {{ opt.label }}
-      </UiButton>
+        <UiButton
+          v-for="opt in filter.options"
+          :key="opt.value"
+          :class="{ 'bg-primary/20': filterValues[filter.key] === opt.value }"
+          @click="filterValues[filter.key] = opt.value"
+          variant="ghost"
+          size="sm"
+        >
+          {{ opt.label }}
+        </UiButton>
+      </div>
+
+      <!-- Select фильтры -->
+      <UiSelect
+        v-for="filter in selectFilters"
+        :key="filter.key"
+        :model-value="filterValues[filter.key] as string"
+        :options="filter.options"
+        :placeholder="filter.placeholder"
+        @update:model-value="filterValues[filter.key] = $event"
+        size="sm"
+        class="w-40"
+      />
+
+      <!-- Checkbox фильтры -->
+      <label
+        v-for="filter in checkboxFilters"
+        :key="filter.key"
+        class="filter-checkbox"
+      >
+        <input
+          v-model="filterValues[filter.key]"
+          type="checkbox"
+          class="filter-checkbox-input"
+        >
+        <span class="filter-checkbox-label">{{ filter.label }}</span>
+      </label>
     </div>
 
-    <!-- Select фильтры -->
-    <UiSelect
-      v-for="filter in selectFilters"
-      :key="filter.key"
-      :model-value="filterValues[filter.key] as string"
-      :options="filter.options"
-      :placeholder="filter.placeholder"
-      @update:model-value="filterValues[filter.key] = $event"
-      size="sm"
-      class="w-40"
-    />
-
-    <!-- Checkbox фильтры -->
-    <label
-      v-for="filter in checkboxFilters"
-      :key="filter.key"
-      class="filter-checkbox"
-    >
-      <input
-        v-model="filterValues[filter.key]"
-        type="checkbox"
-        class="filter-checkbox-input"
-      >
-      <span class="filter-checkbox-label">{{ filter.label }}</span>
-    </label>
-
-    <!-- Поиск (справа) -->
-    <div v-if="showSearch" class="ml-auto">
+    <!-- Правая часть: поиск (всегда справа) -->
+    <div v-if="showSearch" class="search-wrapper">
       <UiInput
         v-model="searchQuery"
         :placeholder="searchPlaceholder"
@@ -105,17 +108,27 @@ const checkboxFilters = computed(() => props.filters.filter(f => f.type === 'che
 
 <style scoped>
 .admin-list-filters {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 1rem;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.filters-group {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
+  gap: 0.75rem;
 }
 
 .filter-buttons {
   display: flex;
   gap: 0.25rem;
-  flex-wrap: wrap;
+}
+
+.search-wrapper {
+  flex-shrink: 0;
 }
 
 .filter-checkbox {
