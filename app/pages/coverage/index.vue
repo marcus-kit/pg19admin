@@ -402,217 +402,231 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div>
-    <!-- Header -->
-    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
-      <div>
-        <h1 class="text-3xl font-bold text-[var(--text-primary)]">
-          Карта покрытия
-        </h1>
-        <p class="text-[var(--text-muted)] mt-1">
-          Управление зонами обслуживания ПЖ19 и партнёров
-        </p>
+  <div class="coverage-page">
+    <!-- Hero -->
+    <header class="coverage-page__hero">
+      <div class="coverage-page__hero-bg" aria-hidden="true" />
+      <div class="coverage-page__hero-inner">
+        <div class="flex items-center gap-3 mb-2">
+          <div class="coverage-page__hero-icon">
+            <Icon name="heroicons:map-pin" class="w-7 h-7 text-primary" />
+          </div>
+          <div>
+            <h1 class="coverage-page__hero-title">Карта покрытия</h1>
+            <p class="coverage-page__hero-subtitle">Управление зонами обслуживания ПЖ19 и партнёров</p>
+          </div>
+        </div>
+        <div class="coverage-page__stats">
+          <span class="coverage-page__stat"><strong>{{ zones.length }}</strong> зон</span>
+          <span class="coverage-page__stat"><strong>{{ partners.length }}</strong> партнёров</span>
+        </div>
       </div>
+    </header>
 
-      <UiButton @click="showZonesDrawer = true" variant="secondary">
-        <Icon name="heroicons:queue-list" class="w-4 h-4" />
-        Список зон ({{ filteredZones.length }})
-      </UiButton>
+    <!-- Toolbar -->
+    <div class="coverage-page__toolbar">
+      <div class="coverage-page__bar-row">
+        <div class="coverage-page__filters">
+          <span class="coverage-page__filter-label">Партнёр:</span>
+          <button
+            type="button"
+            class="coverage-page__filter-btn"
+            :class="{ 'coverage-page__filter-btn--active': !selectedPartnerId }"
+            @click="selectedPartnerId = null"
+          >
+            Все
+          </button>
+          <button
+            v-for="partner in partners"
+            :key="partner.id"
+            type="button"
+            class="coverage-page__filter-btn"
+            :class="{ 'coverage-page__filter-btn--active': selectedPartnerId === partner.id }"
+            :style="selectedPartnerId === partner.id ? { '--partner-color': partner.color } : {}"
+            @click="selectPartner(partner.id)"
+          >
+            <span
+              :style="{ backgroundColor: partner.color }"
+              class="coverage-page__filter-dot"
+            />
+            {{ partner.name }}
+          </button>
+        </div>
+        <div class="coverage-page__actions">
+          <label class="coverage-page__toggle-wrap">
+            <input v-model="showOnlyActive" type="checkbox" class="coverage-page__toggle-input">
+            <span class="coverage-page__toggle-label">Только активные</span>
+          </label>
+          <button
+            type="button"
+            class="coverage-page__btn coverage-page__btn--secondary"
+            @click="showZonesDrawer = true"
+          >
+            <Icon name="heroicons:queue-list" class="w-4 h-4" />
+            <span>Список зон ({{ filteredZones.length }})</span>
+          </button>
+        </div>
+      </div>
     </div>
 
-    <div class="space-y-4">
-      <!-- Map (full width) -->
-      <div class="space-y-4">
-        <!-- Filters -->
-        <UiCard padding="sm">
-          <div class="flex flex-wrap gap-3 items-center">
-            <span class="text-sm text-[var(--text-secondary)]">Партнёр:</span>
+    <!-- Map block -->
+    <div class="coverage-page__map-wrap glass-card glass-card-static">
+      <ClientOnly>
+        <div class="coverage-page__map-inner">
+          <div
+            ref="mapContainer"
+            class="coverage-page__map"
+          />
 
-            <UiButton
-              :class="{ 'bg-white/10': !selectedPartnerId }"
-              @click="selectedPartnerId = null"
-              variant="ghost"
-              size="sm"
-            >
-              Все
-            </UiButton>
-
-            <UiButton
-              v-for="partner in partners"
-              :key="partner.id"
-              :class="{ 'ring-2 ring-offset-1 ring-offset-transparent': selectedPartnerId === partner.id }"
-              :style="selectedPartnerId === partner.id ? { ringColor: partner.color } : {}"
-              @click="selectPartner(partner.id)"
-              variant="ghost"
-              size="sm"
-            >
-              <span
-                :style="{ backgroundColor: partner.color }"
-                class="w-3 h-3 rounded-full mr-2"
-              />
-              {{ partner.name }}
-            </UiButton>
-
-            <UiToggle v-model="showOnlyActive" label="Только активные" size="sm" class="ml-auto" />
-          </div>
-        </UiCard>
-
-        <!-- Map -->
-        <ClientOnly>
-          <div class="relative">
-            <div
-              ref="mapContainer"
-              class="rounded-xl overflow-hidden border border-[var(--glass-border)]"
-              style="height: calc(66vh - 2rem)"
-            />
-
-            <!-- Popup overlay -->
-            <div ref="popupContainer" class="ol-popup">
-              <button @click="closePopup" class="ol-popup-closer">
-                &times;
-              </button>
-              <!-- eslint-disable-next-line vue/no-v-html -->
-              <div class="ol-popup-content" v-html="popupContent" />
-            </div>
-          </div>
-          <template #fallback>
-            <div class="h-[500px] flex items-center justify-center glass-card rounded-xl">
-              <Icon name="heroicons:arrow-path" class="w-8 h-8 animate-spin text-primary" />
-            </div>
-          </template>
-        </ClientOnly>
-
-        <!-- Import/Export -->
-        <UiCard class="space-y-4">
-          <h3 class="text-lg font-semibold text-[var(--text-primary)]">Импорт / Экспорт</h3>
-
-          <div v-if="importError" class="p-3 bg-red-500/20 border border-red-500/30 rounded-lg text-red-400 text-sm flex items-center justify-between">
-            <span>{{ importError }}</span>
-            <button @click="importError = ''" class="ml-2 hover:text-red-300">
-              <Icon name="heroicons:x-mark" class="w-4 h-4" />
+          <!-- Popup overlay -->
+          <div ref="popupContainer" class="ol-popup">
+            <button @click="closePopup" class="ol-popup-closer" type="button">
+              &times;
             </button>
+            <!-- eslint-disable-next-line vue/no-v-html -->
+            <div class="ol-popup-content" v-html="popupContent" />
           </div>
-
-          <div class="space-y-3">
-            <label class="text-sm font-medium text-[var(--text-secondary)]">Импорт GeoJSON</label>
-            <UiSelect v-model="importOwner" :options="importOwnerOptions" size="sm" />
-            <UiToggle v-model="replaceExisting" label="Заменить существующие" size="sm" />
-            <input ref="fileInput" @change="handleFileSelect" type="file" accept=".geojson,.json" class="hidden">
-            <UiButton :loading="importing" :disabled="loading || importing" @click="fileInput?.click()" variant="secondary" class="w-full">
-              <Icon name="heroicons:arrow-up-tray" class="w-4 h-4" />
-              Загрузить GeoJSON
-            </UiButton>
-            <p class="text-xs text-[var(--text-muted)]">Форматы: FeatureCollection, Feature, Polygon</p>
+        </div>
+        <template #fallback>
+          <div class="coverage-page__map-fallback">
+            <Icon name="heroicons:arrow-path" class="w-8 h-8 animate-spin text-primary" />
           </div>
+        </template>
+      </ClientOnly>
+    </div>
 
-          <hr class="border-[var(--glass-border)]">
+    <!-- Import/Export block -->
+    <div class="coverage-page__block glass-card glass-card-static">
+      <h2 class="coverage-page__block-title">Импорт / Экспорт</h2>
 
-          <div class="space-y-3">
-            <label class="text-sm font-medium text-[var(--text-secondary)]">Экспорт зон</label>
-            <UiSelect v-model="exportPartnerId" :options="exportPartnerOptions" size="sm" />
-            <UiButton :disabled="loading" @click="handleExport" variant="ghost" class="w-full">
-              <Icon name="heroicons:arrow-down-tray" class="w-4 h-4" />
-              Скачать GeoJSON
-            </UiButton>
-          </div>
-        </UiCard>
+      <div v-if="importError" class="coverage-page__error" role="alert">
+        <span>{{ importError }}</span>
+        <button type="button" class="coverage-page__error-close" aria-label="Закрыть" @click="importError = ''">
+          <Icon name="heroicons:x-mark" class="w-4 h-4" />
+        </button>
+      </div>
+
+      <div class="coverage-page__import-section">
+        <label class="coverage-page__label">Импорт GeoJSON</label>
+        <UiSelect v-model="importOwner" :options="importOwnerOptions" size="sm" />
+        <label class="coverage-page__toggle-wrap">
+          <input v-model="replaceExisting" type="checkbox" class="coverage-page__toggle-input">
+          <span class="coverage-page__toggle-label">Заменить существующие</span>
+        </label>
+        <input ref="fileInput" type="file" accept=".geojson,.json" class="hidden" @change="handleFileSelect">
+        <UiButton :loading="importing" :disabled="loading || importing" @click="fileInput?.click()" variant="secondary" class="coverage-page__upload-btn">
+          <Icon name="heroicons:arrow-up-tray" class="w-4 h-4" />
+          Загрузить GeoJSON
+        </UiButton>
+        <p class="coverage-page__hint">Форматы: FeatureCollection, Feature, Polygon</p>
+      </div>
+
+      <hr class="coverage-page__divider">
+
+      <div class="coverage-page__export-section">
+        <label class="coverage-page__label">Экспорт зон</label>
+        <UiSelect v-model="exportPartnerId" :options="exportPartnerOptions" size="sm" />
+        <UiButton :disabled="loading" variant="secondary" class="coverage-page__download-btn" @click="handleExport">
+          <Icon name="heroicons:arrow-down-tray" class="w-4 h-4" />
+          Скачать GeoJSON
+        </UiButton>
       </div>
     </div>
 
     <!-- Zones Drawer -->
     <ClientOnly>
       <Teleport to="body">
-        <!-- Backdrop -->
         <Transition name="fade">
           <div
             v-if="showZonesDrawer"
+            class="coverage-page__drawer-backdrop"
+            aria-hidden="true"
             @click="showZonesDrawer = false"
-            class="fixed inset-0 bg-black/50 z-40"
           />
         </Transition>
 
-        <!-- Drawer Panel -->
         <Transition name="slide-right">
           <div
             v-if="showZonesDrawer"
-            class="fixed right-0 top-0 h-full w-full max-w-md glass-card border-l border-[var(--glass-border)] z-50 overflow-y-auto shadow-xl"
+            class="coverage-page__drawer"
+            role="dialog"
+            aria-label="Список зон покрытия"
           >
-            <!-- Header -->
-            <div class="sticky top-0 z-10 bg-[var(--glass-bg)]/95 backdrop-blur-sm border-b border-[var(--glass-border)] p-4 flex items-center justify-between">
-              <h2 class="text-lg font-semibold text-[var(--text-primary)]">
-                Зоны покрытия ({{ filteredZones.length }})
-              </h2>
-              <button @click="showZonesDrawer = false" class="p-2 hover:bg-white/10 rounded-lg text-[var(--text-muted)]">
+            <div class="coverage-page__drawer-header">
+              <h2 class="coverage-page__drawer-title">Зоны покрытия ({{ filteredZones.length }})</h2>
+              <button type="button" class="coverage-page__drawer-close" aria-label="Закрыть" @click="showZonesDrawer = false">
                 <Icon name="heroicons:x-mark" class="w-5 h-5" />
               </button>
             </div>
 
-            <!-- Content: фон для списка -->
-            <div class="p-4 min-h-full bg-[var(--glass-bg)]">
-              <!-- Zone List -->
+            <div class="coverage-page__drawer-body">
               <UiLoading v-if="loading" size="sm" />
 
-              <div v-else class="space-y-2 rounded-xl p-4 bg-[var(--bg-primary)]/80 border border-[var(--glass-border)]">
+              <div v-else class="coverage-page__drawer-list">
                 <div
                   v-for="zone in filteredZones"
                   :key="zone.id"
-                  :class="{ 'ring-2 ring-primary': selectedZone?.id === zone.id, 'opacity-50': hiddenZoneIds.has(zone.id) }"
+                  class="coverage-page__zone-card"
+                  :class="{
+                    'coverage-page__zone-card--selected': selectedZone?.id === zone.id,
+                    'coverage-page__zone-card--hidden': hiddenZoneIds.has(zone.id),
+                  }"
                   @click="selectedZone = selectedZone?.id === zone.id ? null : zone"
-                  class="p-3 rounded-lg border border-[var(--glass-border)] hover:bg-[var(--glass-bg)] transition-colors cursor-pointer"
                 >
-                  <div class="flex items-start justify-between gap-2">
-                    <div class="flex-1 min-w-0">
-                      <div class="flex items-center gap-2 mb-1">
-                        <span :style="{ backgroundColor: zone.color }" class="w-3 h-3 rounded-full flex-shrink-0" />
-                        <span class="font-medium text-sm text-[var(--text-primary)] truncate">{{ zone.name }}</span>
+                  <div class="coverage-page__zone-card-top">
+                    <div class="coverage-page__zone-card-main">
+                      <div class="coverage-page__zone-card-head">
+                        <span :style="{ backgroundColor: zone.color }" class="coverage-page__zone-dot" />
+                        <span class="coverage-page__zone-name">{{ zone.name }}</span>
                       </div>
-                      <div class="flex gap-1 flex-wrap">
+                      <div class="coverage-page__zone-badges">
                         <UiBadge variant="info" size="sm">{{ zone.partner?.name || 'Партнёр' }}</UiBadge>
                         <UiBadge v-if="!zone.isActive" variant="neutral" size="sm">Неактивна</UiBadge>
                         <UiBadge v-if="hiddenZoneIds.has(zone.id)" variant="neutral" size="sm">Скрыта</UiBadge>
                       </div>
                     </div>
-                    <div class="flex gap-1 flex-shrink-0">
-                      <button :title="hiddenZoneIds.has(zone.id) ? 'Показать' : 'Скрыть'" @click.stop="toggleZoneVisibility(zone)" class="p-1 hover:bg-[var(--glass-bg)] rounded">
-                        <Icon :name="hiddenZoneIds.has(zone.id) ? 'heroicons:eye-slash' : 'heroicons:eye'" class="w-4 h-4 text-[var(--text-muted)]" />
+                    <div class="coverage-page__zone-actions">
+                      <button type="button" :title="hiddenZoneIds.has(zone.id) ? 'Показать' : 'Скрыть'" class="coverage-page__zone-action" @click.stop="toggleZoneVisibility(zone)">
+                        <Icon :name="hiddenZoneIds.has(zone.id) ? 'heroicons:eye-slash' : 'heroicons:eye'" class="w-4 h-4" />
                       </button>
-                      <button @click.stop="zoneToDelete = zone; showDeleteModal = true" title="Удалить" class="p-1 hover:bg-red-500/10 rounded">
-                        <Icon name="heroicons:trash" class="w-4 h-4 text-red-400" />
+                      <button type="button" title="Удалить" class="coverage-page__zone-action coverage-page__zone-action--danger" @click.stop="zoneToDelete = zone; showDeleteModal = true">
+                        <Icon name="heroicons:trash" class="w-4 h-4" />
                       </button>
                     </div>
                   </div>
 
-                  <!-- Expanded Details -->
                   <Transition name="expand">
-                    <div v-if="selectedZone?.id === zone.id" class="mt-3 pt-3 border-t border-[var(--glass-border)] text-sm space-y-2">
-                      <div v-if="zone.partner">
-                        <span class="text-[var(--text-muted)]">Партнёр:</span>
-                        <span class="ml-2 text-[var(--text-primary)]">{{ zone.partner.name }}</span>
+                    <div v-if="selectedZone?.id === zone.id" class="coverage-page__zone-details">
+                      <div v-if="zone.partner" class="coverage-page__zone-detail">
+                        <span class="coverage-page__zone-detail-label">Партнёр:</span>
+                        <span class="coverage-page__zone-detail-value">{{ zone.partner.name }}</span>
                       </div>
-                      <div v-if="zone.description">
-                        <span class="text-[var(--text-muted)]">Описание:</span>
-                        <p class="mt-1 text-[var(--text-secondary)]">{{ zone.description }}</p>
+                      <div v-if="zone.description" class="coverage-page__zone-detail">
+                        <span class="coverage-page__zone-detail-label">Описание:</span>
+                        <p class="coverage-page__zone-detail-value coverage-page__zone-detail-desc">{{ zone.description }}</p>
                       </div>
-                      <div class="flex items-center gap-2">
-                        <span class="text-[var(--text-muted)]">Цвет:</span>
-                        <span :style="{ backgroundColor: zone.color }" class="w-5 h-5 rounded" />
-                        <span class="text-[var(--text-primary)] font-mono text-xs">{{ zone.color }}</span>
+                      <div class="coverage-page__zone-detail coverage-page__zone-detail--row">
+                        <span class="coverage-page__zone-detail-label">Цвет:</span>
+                        <span :style="{ backgroundColor: zone.color }" class="coverage-page__zone-color-swatch" />
+                        <span class="coverage-page__zone-detail-value font-mono text-xs">{{ zone.color }}</span>
                       </div>
-                      <div>
-                        <span class="text-[var(--text-muted)]">Статус:</span>
-                        <UiBadge :variant="zone.isActive ? 'success' : 'neutral'" size="sm" class="ml-2">
-                          {{ zone.isActive ? 'Активна' : 'Неактивна' }}
-                        </UiBadge>
+                      <div class="coverage-page__zone-detail">
+                        <span class="coverage-page__zone-detail-label">Статус:</span>
+                        <UiBadge :variant="zone.isActive ? 'success' : 'neutral'" size="sm">{{ zone.isActive ? 'Активна' : 'Неактивна' }}</UiBadge>
                       </div>
-                      <div>
-                        <span class="text-[var(--text-muted)]">Создана:</span>
-                        <span class="ml-2 text-[var(--text-secondary)]">{{ new Date(zone.createdAt).toLocaleDateString('ru-RU') }}</span>
+                      <div class="coverage-page__zone-detail">
+                        <span class="coverage-page__zone-detail-label">Создана:</span>
+                        <span class="coverage-page__zone-detail-value">{{ new Date(zone.createdAt).toLocaleDateString('ru-RU') }}</span>
                       </div>
                     </div>
                   </Transition>
                 </div>
 
-                <UiEmptyState v-if="filteredZones.length === 0" icon="heroicons:map" title="Нет зон покрытия" description="Импортируйте GeoJSON файл" />
+                <div v-if="filteredZones.length === 0" class="coverage-page__drawer-empty">
+                  <Icon name="heroicons:map" class="coverage-page__drawer-empty-icon" />
+                  <p class="coverage-page__drawer-empty-title">Нет зон покрытия</p>
+                  <p class="coverage-page__drawer-empty-text">Импортируйте GeoJSON файл</p>
+                </div>
               </div>
             </div>
           </div>

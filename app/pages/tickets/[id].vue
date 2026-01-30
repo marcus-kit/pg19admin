@@ -2,8 +2,11 @@
 import type { Ticket, TicketComment, TicketHistoryItem } from '~/types/admin'
 import { getErrorStatusCode, formatDateTime } from '~/composables/useFormatters'
 import {
+  TICKET_STATUS,
+  TICKET_PRIORITY,
   TICKET_CATEGORY,
   getStatusLabel,
+  getStatusBadgeClass,
 } from '~/composables/useStatusConfig'
 
 definePageMeta({
@@ -15,25 +18,20 @@ const router = useRouter()
 const toast = useToast()
 const user = useSupabaseUser()
 
-useHead({ title: 'Тикет — Админ-панель' })
+const loading = ref(true)
+const saving = ref(false)
+const ticket = ref<(Ticket & { description?: string }) | null>(null)
 
-// Состояние страницы
-const loading = ref(true) // Загрузка данных
-const saving = ref(false) // Сохранение изменений
-const ticket = ref<Ticket | null>(null) // Данные тикета
-const comments = ref<TicketComment[]>([]) // Комментарии
-const history = ref<TicketHistoryItem[]>([]) // История изменений
+useHead({ title: computed(() => ticket.value ? `Тикет ${ticket.value.number} — Админ-панель` : 'Тикет — Админ-панель') })
+const comments = ref<TicketComment[]>([])
+const history = ref<TicketHistoryItem[]>([])
 
-// Состояние для комментариев
-const newComment = ref('') // Текст нового комментария
-const isInternal = ref(false) // Внутренний комментарий (скрыт от пользователя)
-
-// Состояние сайдбара
-const showHistory = ref(false) // Показать/скрыть историю
+const newComment = ref('')
+const isInternal = ref(false)
+const showHistory = ref(false)
 
 const ticketId = computed(() => route.params.id as string)
 
-// Опции статуса
 const statusOptions = [
   { value: 'new', label: 'Новый' },
   { value: 'open', label: 'В работе' },
@@ -42,7 +40,6 @@ const statusOptions = [
   { value: 'closed', label: 'Закрыт' },
 ]
 
-// Опции приоритета
 const priorityOptions = [
   { value: 'low', label: 'Низкий' },
   { value: 'normal', label: 'Обычный' },
@@ -50,23 +47,20 @@ const priorityOptions = [
   { value: 'urgent', label: 'Срочный' },
 ]
 
-// Двусторонняя привязка статуса через computed setter
 const ticketStatus = computed({
   get: () => ticket.value?.status || 'new',
   set: (value: string) => handleUpdateStatus(value),
 })
 
-// Двусторонняя привязка приоритета через computed setter
 const ticketPriority = computed({
   get: () => ticket.value?.priority || 'normal',
   set: (value: string) => handleUpdatePriority(value),
 })
 
-// Загрузка данных тикета
 async function fetchTicket() {
   loading.value = true
   try {
-    const data = await $fetch<{ ticket: Ticket, comments: TicketComment[], history: TicketHistoryItem[] }>(
+    const data = await $fetch<{ ticket: Ticket & { description?: string }, comments: TicketComment[], history: TicketHistoryItem[] }>(
       `/api/admin/tickets/${ticketId.value}`,
     )
     ticket.value = data.ticket
@@ -84,7 +78,6 @@ async function fetchTicket() {
   }
 }
 
-// Добавление комментария
 async function handleAddComment() {
   if (!newComment.value.trim() || saving.value) return
 
@@ -99,7 +92,6 @@ async function handleAddComment() {
     newComment.value = ''
     isInternal.value = false
 
-    // Автоматически меняем статус при первом комментарии
     if (ticket.value?.status === 'new') {
       ticket.value.status = 'open'
     }
@@ -112,7 +104,6 @@ async function handleAddComment() {
   }
 }
 
-// Обновление статуса тикета
 async function handleUpdateStatus(newStatus: string) {
   if (!ticket.value || saving.value) return
 
@@ -134,7 +125,6 @@ async function handleUpdateStatus(newStatus: string) {
   }
 }
 
-// Обновление приоритета тикета
 async function handleUpdatePriority(newPriority: string) {
   if (!ticket.value || saving.value) return
 
@@ -155,7 +145,6 @@ async function handleUpdatePriority(newPriority: string) {
   }
 }
 
-// Назначение тикета на текущего админа
 async function handleAssignToMe() {
   if (!user.value || saving.value) return
 
@@ -176,7 +165,6 @@ async function handleAssignToMe() {
   }
 }
 
-// Возвращает текст действия для истории
 function getActionLabel(action: string) {
   const labels: Record<string, string> = {
     status_change: 'Изменён статус',
@@ -187,115 +175,119 @@ function getActionLabel(action: string) {
   return labels[action] || action
 }
 
+function cancel() {
+  router.push('/tickets')
+}
+
 onMounted(() => {
   fetchTicket()
 })
 </script>
 
 <template>
-  <div>
-    <!-- Loading -->
-    <UiLoading v-if="loading" />
-
-    <template v-else-if="ticket">
-      <!-- Header (бывший TicketDetailHeader) -->
-      <div class="flex items-start justify-between gap-4 mb-6">
-        <div>
-          <div class="flex items-center gap-3 mb-2">
-            <UiButton @click="router.push('/tickets')" variant="ghost" size="sm">
-              <Icon name="heroicons:arrow-left" class="w-5 h-5" />
-            </UiButton>
-            <span class="font-mono text-primary">{{ ticket.number }}</span>
+  <div class="ticket-detail-page">
+    <header class="ticket-detail-page__hero">
+      <div class="ticket-detail-page__hero-bg" aria-hidden="true" />
+      <div class="ticket-detail-page__hero-inner">
+        <div class="ticket-detail-page__hero-row">
+          <button type="button" class="ticket-detail-page__back" aria-label="Назад" @click="cancel">
+            <Icon name="heroicons:arrow-left" class="w-5 h-5" />
+          </button>
+          <div class="ticket-detail-page__hero-head">
+            <div class="ticket-detail-page__hero-icon">
+              <Icon name="heroicons:ticket" class="w-7 h-7 text-primary" />
+            </div>
+            <div class="ticket-detail-page__hero-title-wrap">
+              <h1 class="ticket-detail-page__hero-title">
+                {{ ticket ? ticket.number : 'Тикет' }}
+              </h1>
+              <p class="ticket-detail-page__hero-subject">
+                {{ ticket?.subject || '—' }}
+              </p>
+            </div>
           </div>
-          <h1 class="text-2xl font-bold text-[var(--text-primary)]">
-            {{ ticket.subject }}
-          </h1>
-        </div>
-
-        <div class="flex gap-2">
-          <UiButton
-            v-if="!ticket.assignedAdmin && ticket.status !== 'closed'"
+          <button
+            v-if="ticket && !ticket.assignedAdmin && ticket.status !== 'closed'"
+            type="button"
+            class="ticket-detail-page__btn-assign"
             :disabled="saving"
             @click="handleAssignToMe"
-            variant="secondary"
-            size="sm"
           >
             <Icon name="heroicons:hand-raised" class="w-4 h-4" />
-            Взять себе
-          </UiButton>
+            <span>Взять себе</span>
+          </button>
+        </div>
+        <div v-if="ticket" class="ticket-detail-page__hero-badges">
+          <UiBadge :class="getStatusBadgeClass(TICKET_STATUS, ticket.status)" size="sm">
+            {{ getStatusLabel(TICKET_STATUS, ticket.status) }}
+          </UiBadge>
+          <UiBadge :class="getStatusBadgeClass(TICKET_PRIORITY, ticket.priority)" size="sm">
+            {{ getStatusLabel(TICKET_PRIORITY, ticket.priority) }}
+          </UiBadge>
+          <UiBadge :class="getStatusBadgeClass(TICKET_CATEGORY, ticket.category)" size="sm">
+            {{ getStatusLabel(TICKET_CATEGORY, ticket.category) }}
+          </UiBadge>
         </div>
       </div>
+    </header>
 
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <!-- Main Content -->
-        <div class="lg:col-span-2 space-y-6">
-          <!-- Description -->
-          <UiCard>
-            <template #header>
-              <div class="flex items-center justify-between">
-                <span class="font-medium text-[var(--text-primary)]">Описание</span>
-                <span class="text-xs text-[var(--text-muted)]">{{ formatDateTime(ticket.createdAt) }}</span>
-              </div>
-            </template>
-            <p class="text-[var(--text-secondary)] whitespace-pre-wrap">{{ ticket.description }}</p>
-          </UiCard>
+    <UiLoading v-if="loading" class="ticket-detail-page__loading" />
 
-          <!-- Comments (бывший TicketComments) -->
-          <UiCard>
-            <template #header>
-              <span class="font-medium text-[var(--text-primary)]">
-                Комментарии ({{ comments.length }})
-              </span>
-            </template>
+    <template v-else-if="ticket">
+      <div class="ticket-detail-page__layout">
+        <div class="ticket-detail-page__main">
+          <!-- Описание -->
+          <section class="ticket-detail-page__card glass-card glass-card-static">
+            <div class="ticket-detail-page__card-head">
+              <h2 class="ticket-detail-page__card-title">Описание</h2>
+              <span class="ticket-detail-page__card-date">{{ formatDateTime(ticket.createdAt) }}</span>
+            </div>
+            <p class="ticket-detail-page__description">{{ ticket.description || '—' }}</p>
+          </section>
 
-            <div class="space-y-4">
+          <!-- Комментарии -->
+          <section class="ticket-detail-page__card glass-card glass-card-static">
+            <h2 class="ticket-detail-page__card-title">Комментарии ({{ comments.length }})</h2>
+
+            <div class="ticket-detail-page__comments">
               <div
                 v-for="comment in comments"
                 :key="comment.id"
-                :class="[
-                  'p-4 rounded-lg',
-                  comment.authorType === 'admin'
-                    ? comment.isInternal
-                      ? 'bg-yellow-500/10 border border-yellow-500/20'
-                      : 'bg-primary/10 border border-primary/20'
-                    : 'bg-[var(--glass-bg)] border border-[var(--glass-border)]',
-                ]"
+                class="ticket-detail-page__comment"
+                :class="{
+                  'ticket-detail-page__comment--admin': comment.authorType === 'admin' && !comment.isInternal,
+                  'ticket-detail-page__comment--internal': comment.isInternal,
+                  'ticket-detail-page__comment--user': comment.authorType === 'user',
+                }"
               >
-                <div class="flex items-center justify-between mb-2">
-                  <div class="flex items-center gap-2">
-                    <span class="font-medium text-[var(--text-primary)]">
-                      {{ comment.authorName || (comment.authorType === 'user' ? 'Пользователь' : 'Система') }}
-                    </span>
-                    <UiBadge v-if="comment.isInternal" class="bg-yellow-500/20 text-yellow-400" size="sm">
-                      Внутренний
-                    </UiBadge>
-                  </div>
-                  <span class="text-xs text-[var(--text-muted)]">{{ formatDateTime(comment.createdAt) }}</span>
+                <div class="ticket-detail-page__comment-head">
+                  <span class="ticket-detail-page__comment-author">
+                    {{ comment.authorName || (comment.authorType === 'user' ? 'Пользователь' : 'Система') }}
+                  </span>
+                  <UiBadge v-if="comment.isInternal" class="ticket-detail-page__badge-internal" size="sm">
+                    Внутренний
+                  </UiBadge>
+                  <span class="ticket-detail-page__comment-date">{{ formatDateTime(comment.createdAt) }}</span>
                 </div>
-                <p class="text-[var(--text-secondary)] whitespace-pre-wrap">{{ comment.content }}</p>
+                <p class="ticket-detail-page__comment-content">{{ comment.content }}</p>
               </div>
 
-              <div v-if="comments.length === 0" class="text-center py-4 text-[var(--text-muted)]">
+              <p v-if="comments.length === 0" class="ticket-detail-page__comments-empty">
                 Комментариев пока нет
-              </div>
+              </p>
             </div>
 
-            <!-- Add Comment -->
-            <div v-if="ticket.status !== 'closed'" class="mt-6 pt-4 border-t border-[var(--glass-border)]">
+            <div v-if="ticket.status !== 'closed'" class="ticket-detail-page__add-comment">
               <textarea
                 v-model="newComment"
                 placeholder="Добавить комментарий..."
                 rows="3"
-                class="w-full px-4 py-3 glass-card rounded-lg text-[var(--text-primary)] border border-[var(--glass-border)] focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all bg-[var(--glass-bg)] resize-none mb-3"
+                class="ticket-detail-page__textarea"
               />
-              <div class="flex items-center justify-between">
-                <label class="flex items-center gap-2 cursor-pointer">
-                  <input
-                    v-model="isInternal"
-                    type="checkbox"
-                    class="w-4 h-4 rounded border-[var(--glass-border)] bg-[var(--glass-bg)] text-yellow-500 focus:ring-yellow-500"
-                  />
-                  <span class="text-sm text-[var(--text-secondary)]">Внутренний комментарий</span>
+              <div class="ticket-detail-page__add-comment-actions">
+                <label class="ticket-detail-page__checkbox-wrap">
+                  <input v-model="isInternal" type="checkbox" class="ticket-detail-page__checkbox">
+                  <span class="ticket-detail-page__checkbox-label">Внутренний комментарий</span>
                 </label>
                 <UiButton
                   :loading="saving"
@@ -306,18 +298,14 @@ onMounted(() => {
                 </UiButton>
               </div>
             </div>
-          </UiCard>
+          </section>
         </div>
 
-        <!-- Sidebar (бывший TicketSidebar) -->
-        <div class="space-y-6">
-          <!-- Status & Priority -->
-          <UiCard>
-            <template #header>
-              <span class="font-medium text-[var(--text-primary)]">Статус</span>
-            </template>
-
-            <div class="space-y-4">
+        <aside class="ticket-detail-page__sidebar">
+          <!-- Статус и приоритет -->
+          <section class="ticket-detail-page__card glass-card glass-card-static">
+            <h2 class="ticket-detail-page__card-title">Статус</h2>
+            <div class="ticket-detail-page__sidebar-fields">
               <UiSelect
                 v-model="ticketStatus"
                 :options="statusOptions"
@@ -326,7 +314,6 @@ onMounted(() => {
                 label="Статус"
                 size="sm"
               />
-
               <UiSelect
                 v-model="ticketPriority"
                 :options="priorityOptions"
@@ -335,81 +322,69 @@ onMounted(() => {
                 label="Приоритет"
                 size="sm"
               />
-
-              <div>
-                <label class="block text-xs text-[var(--text-muted)] mb-1">Категория</label>
-                <p class="text-[var(--text-primary)]">
-                  {{ getStatusLabel(TICKET_CATEGORY, ticket.category) }}
-                </p>
+              <div class="ticket-detail-page__field">
+                <span class="ticket-detail-page__field-label">Категория</span>
+                <span class="ticket-detail-page__field-value">{{ getStatusLabel(TICKET_CATEGORY, ticket.category) }}</span>
               </div>
-
-              <div>
-                <label class="block text-xs text-[var(--text-muted)] mb-1">Назначен</label>
-                <p class="text-[var(--text-primary)]">
-                  {{ ticket.assignedAdmin?.fullName || '—' }}
-                </p>
+              <div class="ticket-detail-page__field">
+                <span class="ticket-detail-page__field-label">Назначен</span>
+                <span class="ticket-detail-page__field-value">{{ ticket.assignedAdmin?.fullName || '—' }}</span>
               </div>
             </div>
-          </UiCard>
+          </section>
 
-          <!-- User Info -->
-          <UiCard>
-            <template #header>
-              <span class="font-medium text-[var(--text-primary)]">Пользователь</span>
-            </template>
-
-            <div class="space-y-3 text-sm">
-              <div v-if="ticket.userName">
-                <span class="text-[var(--text-muted)]">Имя:</span>
-                <span class="ml-2 text-[var(--text-primary)]">{{ ticket.userName }}</span>
+          <!-- Пользователь -->
+          <section class="ticket-detail-page__card glass-card glass-card-static">
+            <h2 class="ticket-detail-page__card-title">Пользователь</h2>
+            <div class="ticket-detail-page__sidebar-fields">
+              <div v-if="ticket.userName" class="ticket-detail-page__field">
+                <span class="ticket-detail-page__field-label">Имя</span>
+                <span class="ticket-detail-page__field-value">{{ ticket.userName }}</span>
               </div>
-              <div v-if="ticket.userEmail">
-                <span class="text-[var(--text-muted)]">Email:</span>
-                <a :href="`mailto:${ticket.userEmail}`" class="ml-2 text-primary hover:underline">
-                  {{ ticket.userEmail }}
-                </a>
+              <div v-if="ticket.userEmail" class="ticket-detail-page__field">
+                <span class="ticket-detail-page__field-label">Email</span>
+                <a :href="`mailto:${ticket.userEmail}`" class="ticket-detail-page__link">{{ ticket.userEmail }}</a>
               </div>
             </div>
-          </UiCard>
+          </section>
 
-          <!-- Timeline / History -->
-          <UiCard>
-            <template #header>
-              <button
-                @click="showHistory = !showHistory"
-                class="flex items-center justify-between w-full"
-              >
-                <span class="font-medium text-[var(--text-primary)]">История</span>
-                <Icon
-                  :name="showHistory ? 'heroicons:chevron-up' : 'heroicons:chevron-down'"
-                  class="w-4 h-4 text-[var(--text-muted)]"
-                />
-              </button>
-            </template>
+          <!-- История -->
+          <section class="ticket-detail-page__card glass-card glass-card-static">
+            <button
+              type="button"
+              class="ticket-detail-page__card-toggle"
+              @click="showHistory = !showHistory"
+            >
+              <span class="ticket-detail-page__card-title">История</span>
+              <Icon
+                :name="showHistory ? 'heroicons:chevron-up' : 'heroicons:chevron-down'"
+                class="ticket-detail-page__toggle-icon"
+              />
+            </button>
 
-            <div v-if="showHistory" class="space-y-3">
+            <div v-if="showHistory" class="ticket-detail-page__history">
               <div
                 v-for="item in history"
                 :key="item.id"
-                class="text-sm border-l-2 border-[var(--glass-border)] pl-3"
+                class="ticket-detail-page__history-item"
               >
-                <p class="text-[var(--text-primary)]">{{ getActionLabel(item.action) }}</p>
-                <p v-if="item.oldValue || item.newValue" class="text-xs text-[var(--text-muted)]">
+                <p class="ticket-detail-page__history-action">{{ getActionLabel(item.action) }}</p>
+                <p v-if="item.oldValue || item.newValue" class="ticket-detail-page__history-values">
                   <span v-if="item.oldValue">{{ item.oldValue }}</span>
                   <span v-if="item.oldValue && item.newValue"> → </span>
                   <span v-if="item.newValue">{{ item.newValue }}</span>
                 </p>
-                <p class="text-xs text-[var(--text-muted)]">
+                <p class="ticket-detail-page__history-meta">
                   {{ item.adminName }} · {{ formatDateTime(item.createdAt) }}
                 </p>
               </div>
 
-              <div v-if="history.length === 0" class="text-sm text-[var(--text-muted)]">
+              <p v-if="history.length === 0" class="ticket-detail-page__history-empty">
                 Нет записей
-              </div>
+              </p>
             </div>
-          </UiCard>
-        </div>
+          </section>
+        </aside>
       </div>
     </template>
   </div>
