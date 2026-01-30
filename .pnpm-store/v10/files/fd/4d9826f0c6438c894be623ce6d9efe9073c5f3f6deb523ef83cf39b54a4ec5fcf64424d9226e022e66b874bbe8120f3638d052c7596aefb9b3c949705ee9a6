@@ -1,0 +1,19 @@
+import { ComputedRef } from 'vue';
+import { BulletLegendItemInterface } from '../../types';
+export interface StackedGroupedConfig<T> {
+    data: T[];
+    categories: Record<string, BulletLegendItemInterface>;
+    stackAndGrouped: boolean;
+    xAxis?: keyof T;
+    spacing?: number;
+}
+export interface StackedGroupedResult<T> {
+    states: string[];
+    groupedByState: Record<string, string[]>;
+    colors: Record<string, string[]>;
+    bars: Record<string, ((d: any) => any)[]>;
+    colorFunctions: Record<string, (d: unknown, i: number) => string>;
+    positions: Record<string, number>;
+    chartData: T[] | any[];
+}
+export declare function useStackedGrouped<T extends {}>(config: StackedGroupedConfig<T>): ComputedRef<StackedGroupedResult<T>>;

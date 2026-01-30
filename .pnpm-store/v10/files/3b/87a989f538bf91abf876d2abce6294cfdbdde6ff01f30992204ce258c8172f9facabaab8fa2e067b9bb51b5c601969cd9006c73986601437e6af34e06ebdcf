@@ -1,0 +1,4 @@
+import f from "./GanttChart.js";
+export {
+  f as default
+};

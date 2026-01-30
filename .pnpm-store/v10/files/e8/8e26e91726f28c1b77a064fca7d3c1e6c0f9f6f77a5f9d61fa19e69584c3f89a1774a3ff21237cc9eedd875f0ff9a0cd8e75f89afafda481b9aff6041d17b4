@@ -1,0 +1,12 @@
+{
+  "name": "nuxt-charts",
+  "configKey": "nuxtCharts",
+  "compatibility": {
+    "nuxt": ">=3"
+  },
+  "version": "2.0.0",
+  "builder": {
+    "@nuxt/module-builder": "0.8.4",
+    "unbuild": "unknown"
+  }
+}

@@ -1,0 +1,33 @@
+import { GanttChartProps } from '../../types';
+export interface TimelineCategory {
+    name: string;
+    color?: string | string[];
+}
+declare const _default: <T extends Record<string, any>>(__VLS_props: NonNullable<Awaited<typeof __VLS_setup>>["props"], __VLS_ctx?: __VLS_PrettifyLocal<Pick<NonNullable<Awaited<typeof __VLS_setup>>, "attrs" | "emit" | "slots">>, __VLS_expose?: NonNullable<Awaited<typeof __VLS_setup>>["expose"], __VLS_setup?: Promise<{
+    props: __VLS_PrettifyLocal<Pick<Partial<{}> & Omit<{
+        readonly onClick?: ((event: MouseEvent, data: {
+            index: number;
+            item: T;
+        }) => any) | undefined;
+        readonly onScroll?: ((distance: number) => any) | undefined;
+        readonly onLabelHover?: ((item: T | undefined) => any) | undefined;
+    } & import('vue').VNodeProps & import('vue').AllowedComponentProps & import('vue').ComponentCustomProps, never>, "onScroll" | "onClick" | "onLabelHover"> & GanttChartProps<T> & Partial<{}>> & import('vue').PublicProps;
+    expose(exposed: import('vue').ShallowUnwrapRef<{}>): void;
+    attrs: any;
+    slots: {
+        labelTooltip?(_: {
+            values: T | undefined;
+        }): any;
+        fallback?(_: {}): any;
+    };
+    emit: ((evt: "click", event: MouseEvent, data: {
+        index: number;
+        item: T;
+    }) => void) & ((evt: "scroll", distance: number) => void) & ((evt: "labelHover", item: T | undefined) => void);
+}>) => import('vue').VNode & {
+    __ctx?: Awaited<typeof __VLS_setup>;
+};
+export default _default;
+type __VLS_PrettifyLocal<T> = {
+    [K in keyof T]: T[K];
+} & {};

@@ -1,0 +1,4 @@
+var r = /* @__PURE__ */ ((l) => (l.Half = "half", l.Full = "full", l))(r || {});
+export {
+  r as DonutType
+};

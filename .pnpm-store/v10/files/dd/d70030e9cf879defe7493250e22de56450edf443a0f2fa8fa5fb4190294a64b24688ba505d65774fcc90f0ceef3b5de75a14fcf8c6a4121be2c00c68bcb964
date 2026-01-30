@@ -1,0 +1,9 @@
+import { MarkerConfig } from './types';
+export declare function getDistributedIndices(length: number, numTicks: number): number[];
+export declare function getFirstPropertyValue(obj: unknown): undefined;
+export declare const markerShape: (type: string, size: number, strokeWidth: number, color: string, strokeColor: string) => string;
+export declare function createMarkers(markerConfig: MarkerConfig): string;
+export declare const flattenData: (data: any[], xAxis: string) => {
+    month: any;
+}[];
+export declare const dateFormatter: (date: number) => string;

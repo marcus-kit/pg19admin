@@ -1,0 +1,57 @@
+import { defineComponent as n, useSlots as a, createBlock as r, openBlock as l, mergeProps as p, createSlots as s, withCtx as y, renderSlot as c, normalizeProps as m, guardReactiveProps as d } from "vue";
+import x from "../AreaChart/AreaChart.js";
+const g = /* @__PURE__ */ n({
+  __name: "LineChart",
+  props: {
+    data: {},
+    height: {},
+    xLabel: {},
+    yLabel: {},
+    padding: {},
+    categories: {},
+    markerConfig: {},
+    xFormatter: { type: Function },
+    yFormatter: { type: Function },
+    tooltipTitleFormatter: { type: Function },
+    curveType: {},
+    lineWidth: {},
+    lineDashArray: {},
+    xNumTicks: {},
+    xExplicitTicks: {},
+    minMaxTicksOnly: { type: Boolean },
+    yNumTicks: {},
+    hideLegend: { type: Boolean },
+    hideTooltip: { type: Boolean },
+    legendPosition: {},
+    legendStyle: {},
+    xDomainLine: { type: Boolean },
+    yDomainLine: { type: Boolean },
+    xTickLine: { type: Boolean },
+    yTickLine: { type: Boolean },
+    xGridLine: { type: Boolean },
+    yGridLine: { type: Boolean },
+    hideXAxis: { type: Boolean },
+    hideYAxis: { type: Boolean },
+    crosshairConfig: {},
+    xAxisConfig: {},
+    yAxisConfig: {},
+    yDomain: {},
+    xDomain: {},
+    stacked: { type: Boolean }
+  },
+  setup(o) {
+    const t = o;
+    return a(), (e, B) => (l(), r(x, p(t, { "hide-area": !0 }), s({ _: 2 }, [
+      e.$slots.tooltip ? {
+        name: "tooltip",
+        fn: y((i) => [
+          c(e.$slots, "tooltip", m(d(i)))
+        ]),
+        key: "0"
+      } : void 0
+    ]), 1040));
+  }
+});
+export {
+  g as default
+};

@@ -1,0 +1,165 @@
+import { defineComponent as O, useSlots as S, useTemplateRef as D, ref as R, computed as g, createElementBlock as p, openBlock as l, normalizeStyle as d, createVNode as s, createCommentVNode as r, createElementVNode as w, unref as t, withCtx as K, createBlock as u, mergeProps as x, renderSlot as k } from "vue";
+import { Scatter as M, Position as E } from "@unovis/ts";
+import { VisXYContainer as G, VisTooltip as W, VisScatter as $, VisAxis as L, VisBulletLegend as j } from "@unovis/vue";
+import { LegendPosition as X } from "../../types.js";
+import Y from "../Tooltip.js";
+const _ = {
+  ref: "slotWrapper",
+  class: "hidden"
+}, Q = /* @__PURE__ */ O({
+  __name: "BubbleChart",
+  props: {
+    xAccessor: {},
+    yAccessor: {},
+    sizeAccessor: {},
+    labelPosition: {},
+    sizeRange: {},
+    opacity: {},
+    xExplicitTicks: { default: void 0 },
+    minMaxTicksOnly: { type: Boolean, default: !1 },
+    data: {},
+    hideLegend: { type: Boolean, default: !1 },
+    height: {},
+    xLabel: { default: "" },
+    yLabel: { default: "" },
+    padding: { default: () => ({ top: 5, right: 5, bottom: 5, left: 5 }) },
+    categories: {},
+    categoryKey: {},
+    xFormatter: {},
+    yFormatter: {},
+    tooltipTitleFormatter: {},
+    legendPosition: { default: X.BottomCenter },
+    legendStyle: { default: void 0 },
+    sizeOptions: {},
+    xDomainLine: { type: Boolean, default: !0 },
+    yDomainLine: { type: Boolean, default: !0 },
+    xTickLine: { type: Boolean, default: !0 },
+    yTickLine: { type: Boolean, default: !0 },
+    xGridLine: { type: Boolean, default: !1 },
+    yGridLine: { type: Boolean, default: !0 },
+    hideXAxis: { type: Boolean, default: !1 },
+    hideYAxis: { type: Boolean, default: !1 },
+    xNumTicks: { default: void 0 },
+    yNumTicks: { default: void 0 },
+    hideTooltip: { type: Boolean, default: !1 },
+    crosshairConfig: { default: () => ({
+      color: "#666"
+    }) },
+    xAxisConfig: {},
+    yAxisConfig: {}
+  },
+  emits: ["click"],
+  setup(c, { emit: h }) {
+    const e = c, T = S(), y = D("slotWrapper"), n = R(), v = e.xAccessor, b = e.yAccessor, B = e.sizeAccessor || ((i) => typeof i.comments == "number" ? i.comments : 1), A = (i) => {
+      var f, m;
+      if (!e.categories || !e.categoryKey)
+        return console.warn(
+          "BubbleChart: categories and categoryKey are required for color mapping"
+        ), "#cccccc";
+      const a = String(i[e.categoryKey]);
+      let o = (f = e.categories[a]) == null ? void 0 : f.color;
+      return Object.keys(e.categories).length === 1 && (o = (m = e.categories[e.categoryKey]) == null ? void 0 : m.color), o || (console.warn(
+        `BubbleChart: No color defined for category "${a}"`
+      ), "#cccccc");
+    }, C = h;
+    function F(i) {
+      return n.value = i, V();
+    }
+    function V(i) {
+      return typeof window > "u" ? "" : y.value ? y.value.innerHTML : "";
+    }
+    const z = {
+      [M.selectors.point]: F
+    }, P = g(() => e.legendPosition.startsWith("top")), N = g(() => e.legendPosition.includes("left") ? "flex-start" : e.legendPosition.includes("right") ? "flex-end" : "center");
+    return (i, a) => (l(), p("div", {
+      style: d({
+        display: "flex",
+        flexDirection: P.value ? "column-reverse" : "column",
+        gap: "var(--vis-legend-spacing)"
+      })
+    }, [
+      s(t(G), {
+        data: e.data,
+        height: e.height || 600,
+        padding: e.padding,
+        scaleByDomain: !0,
+        onClick: a[0] || (a[0] = (o) => C("click", o, n.value))
+      }, {
+        default: K(() => [
+          e.hideTooltip ? r("", !0) : (l(), u(t(W), {
+            key: 0,
+            triggers: z
+          })),
+          s(t($), {
+            x: t(v),
+            y: t(b),
+            color: A,
+            size: t(B),
+            labelPosition: e.labelPosition || t(E).Bottom,
+            sizeRange: e.sizeRange || [1, 20],
+            opacity: e.opacity,
+            cursor: "pointer"
+          }, null, 8, ["x", "y", "size", "labelPosition", "sizeRange", "opacity"]),
+          e.hideXAxis ? r("", !0) : (l(), u(t(L), x({
+            key: 1,
+            type: "x",
+            label: e.xLabel,
+            tickFormat: e.xFormatter,
+            gridLine: e.xGridLine,
+            domainLine: !!e.xDomainLine,
+            tickLine: e.xTickLine,
+            numTicks: e.xNumTicks,
+            tickValues: e.xExplicitTicks,
+            minMaxTicksOnly: e.minMaxTicksOnly
+          }, c.xAxisConfig), null, 16, ["label", "tickFormat", "gridLine", "domainLine", "tickLine", "numTicks", "tickValues", "minMaxTicksOnly"])),
+          e.hideYAxis ? r("", !0) : (l(), u(t(L), x({
+            key: 2,
+            type: "y",
+            label: e.yLabel,
+            tickFormat: e.yFormatter,
+            gridLine: e.yGridLine,
+            domainLine: !!e.yDomainLine,
+            tickLine: e.yTickLine,
+            numTicks: e.yNumTicks
+          }, c.yAxisConfig), null, 16, ["label", "tickFormat", "gridLine", "domainLine", "tickLine", "numTicks"]))
+        ]),
+        _: 1
+      }, 8, ["data", "height", "padding"]),
+      e.hideLegend ? r("", !0) : (l(), p("div", {
+        key: 0,
+        style: d({
+          display: "flex",
+          justifyContent: N.value
+        })
+      }, [
+        s(t(j), {
+          class: "bulletLegendOverrides",
+          style: d([
+            e.legendStyle,
+            "display: flex; gap: var(--vis-legend-spacing);"
+          ]),
+          items: Object.values(e.categories).map((o) => ({
+            ...o,
+            color: Array.isArray(o.color) ? o.color[0] : o.color
+          }))
+        }, null, 8, ["style", "items"])
+      ], 4)),
+      w("div", _, [
+        t(T).tooltip ? k(i.$slots, "tooltip", {
+          key: 0,
+          values: n.value
+        }) : n.value ? k(i.$slots, "fallback", { key: 1 }, () => [
+          s(Y, {
+            data: n.value,
+            categories: e.categories || {},
+            "title-formatter": e.tooltipTitleFormatter,
+            yFormatter: e.yFormatter
+          }, null, 8, ["data", "categories", "title-formatter", "yFormatter"])
+        ]) : r("", !0)
+      ], 512)
+    ], 4));
+  }
+});
+export {
+  Q as default
+};

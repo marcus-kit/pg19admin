@@ -1,0 +1,50 @@
+function p(t) {
+  if (t && Object.keys(t).length > 0) {
+    const e = Object.keys(t)[0];
+    return t[e];
+  }
+}
+const o = (t, e, r, n, $) => {
+  switch (t) {
+    case "circle":
+      return `<circle cx="${e / 2}" cy="${e / 2}" r="${(e - r) / 2}" stroke-width="${r}" stroke="${$}" fill="${n}" />`;
+    case "square":
+      return `<rect x="${r / 2}" y="${r / 2}" width="${e - r}" height="${e - r}" stroke-width="${r}" stroke="${$}" fill="${n}" />`;
+    case "triangle":
+      return `<polygon points="${e / 2},${r / 2} ${e - r / 2},${e - r / 2} ${r / 2},${e - r / 2}" stroke-width="${r}" stroke="${$}" fill="${n}" />`;
+    case "diamond":
+      return `<polygon points="${e / 2},${r / 2} ${e - r / 2},${e / 2} ${e / 2},${e - r / 2} ${r / 2},${e / 2}" stroke-width="${r}" stroke="${$}" fill="${n}" />`;
+    default:
+      return "";
+  }
+};
+function m(t) {
+  return Object.entries(t.config).map(([e, r]) => {
+    const n = r.type || "circle", $ = r.size || 10, c = r.strokeWidth || 2, a = r.color || "#000", l = r.strokeColor || r.color || "#000";
+    return `<marker id="${t.id}-${e}" viewBox="0 0 ${$} ${$}" refX="${$ / 2}" refY="${$ / 2}" markerWidth="${$ / 2}" markerHeight="${$ / 2}">
+        ${o(n, $, c, a, l)}
+      </marker>`;
+  }).join(`
+`);
+}
+function u(t) {
+  return t.charAt(0).toUpperCase() + t.slice(1);
+}
+const f = (t, e) => {
+  const r = Object.keys(t[0]).filter(($) => $ !== e), n = Object.keys(t[0][r[0]]);
+  return t.map(($) => ({
+    month: $.month,
+    ...r.flatMap(
+      (c) => n.map((a) => ({
+        [`${c}${u(a)}`]: $[c][a]
+      }))
+    ).reduce((c, a) => ({ ...c, ...a }), {})
+  }));
+}, y = (t) => Intl.DateTimeFormat().format(t);
+export {
+  m as createMarkers,
+  y as dateFormatter,
+  f as flattenData,
+  p as getFirstPropertyValue,
+  o as markerShape
+};

@@ -1,0 +1,242 @@
+import { defineComponent as z, useSlots as R, useTemplateRef as U, ref as H, computed as d, createElementBlock as f, openBlock as c, normalizeClass as K, normalizeStyle as p, createVNode as u, createCommentVNode as y, createElementVNode as q, unref as r, withCtx as J, createBlock as k, Fragment as T, renderList as Q, mergeProps as v, renderSlot as b } from "vue";
+import { Position as $, CurveType as h } from "@unovis/ts";
+import { createMarkers as Z } from "../../utils.js";
+import I from "../Tooltip.js";
+import { VisXYContainer as _, VisTooltip as ee, VisArea as B, VisLine as D, VisAxis as O, VisCrosshair as te, VisBulletLegend as ie } from "@unovis/vue";
+import { LegendPosition as ae } from "../../types.js";
+const ne = ["id"], oe = {
+  ref: "slotWrapper",
+  style: { display: "none" }
+}, F = 0.5, A = "#3b82f6", ye = /* @__PURE__ */ z({
+  __name: "AreaChart",
+  props: {
+    data: {},
+    height: {},
+    xLabel: {},
+    yLabel: {},
+    padding: { default: () => ({ top: 5, right: 5, bottom: 5, left: 5 }) },
+    categories: {},
+    markerConfig: {},
+    xFormatter: {},
+    yFormatter: {},
+    tooltipTitleFormatter: {},
+    curveType: {},
+    hideArea: { type: Boolean, default: !1 },
+    gradientStops: { default: () => [
+      { offset: "0%", stopOpacity: 1 },
+      { offset: "75%", stopOpacity: 0 }
+    ] },
+    lineWidth: { default: 2 },
+    lineDashArray: {},
+    xNumTicks: {},
+    xExplicitTicks: {},
+    minMaxTicksOnly: { type: Boolean },
+    yNumTicks: {},
+    hideLegend: { type: Boolean, default: !1 },
+    hideTooltip: { type: Boolean },
+    legendPosition: { default: ae.BottomCenter },
+    legendStyle: { default: void 0 },
+    xDomainLine: { type: Boolean },
+    yDomainLine: { type: Boolean },
+    xTickLine: { type: Boolean },
+    yTickLine: { type: Boolean },
+    xGridLine: { type: Boolean },
+    yGridLine: { type: Boolean },
+    hideXAxis: { type: Boolean },
+    hideYAxis: { type: Boolean },
+    crosshairConfig: { default: () => ({
+      color: "#666"
+    }) },
+    xAxisConfig: {},
+    yAxisConfig: {},
+    yDomain: {},
+    xDomain: {},
+    stacked: { type: Boolean }
+  },
+  emits: ["click"],
+  setup(e, { emit: V }) {
+    const j = V, n = e, G = R(), C = U("slotWrapper"), m = H(), g = d(() => {
+      const i = Object.values(n.categories).map(
+        (l, a) => `var(--vis-color${a})`
+      );
+      return Object.values(n.categories).map(
+        (l, a) => l.color ?? i[a]
+      );
+    }), N = d(() => {
+      var i;
+      return (i = n.markerConfig) != null && i.config ? Z(n.markerConfig) : "";
+    }), S = d(() => n.legendPosition.startsWith("top")), W = d(() => n.legendPosition.includes("left") ? "flex-start" : n.legendPosition.includes("right") ? "flex-end" : "center"), M = d(() => {
+      const i = (a, t) => {
+        var o;
+        return `
+    <linearGradient id="gradient${a}-${t}" gradientTransform="rotate(90)">
+      ${((o = n.gradientStops) == null ? void 0 : o.map(
+          (s) => `<stop offset="${s.offset}" stop-color="${t}" stop-opacity="${s.stopOpacity}" />`
+        ).join("")) ?? ""}
+      <stop offset="100%" stop-color="${t}" stop-opacity="0" />
+    </linearGradient>
+  `;
+      }, l = (a, t) => {
+        var o;
+        return `
+    <linearGradient id="gradient${a}-${t}" gradientTransform="rotate(90)">
+
+    ${((o = n.gradientStops) == null ? void 0 : o.map(
+          (s) => `
+      <stop offset="${s.offset}" style="stop-color:var(${t});stop-opacity:${s.stopOpacity}" />
+    `
+        ).join("")) ?? ""}
+    </linearGradient>
+  `;
+      };
+      return g.value.map(
+        (a, t) => a != null && a.includes("#") ? i(t, a) : l(t, a ?? A)
+      ).join("");
+    });
+    function P(i) {
+      var l;
+      return {
+        y: (a) => Number(a[i]),
+        color: ((l = n.categories[i]) == null ? void 0 : l.color) ?? A
+      };
+    }
+    const w = d(() => Object.keys(n.categories).map(
+      (i) => (l) => Number(l[i])
+    )), X = d(() => {
+      const i = Object.keys(n.categories);
+      return i.map((l, a) => (t) => {
+        let o = 0;
+        for (let s = 0; s <= a; s++)
+          o += Number(t[i[s]]) || 0;
+        return o;
+      });
+    }), L = d(() => (i, l) => g.value[l] ?? A);
+    function E(i) {
+      return typeof window > "u" ? "" : C.value ? C.value.innerHTML : "";
+    }
+    function Y(i) {
+      return m.value = i, E();
+    }
+    return (i, l) => {
+      var a;
+      return c(), f("div", {
+        style: p({
+          display: "flex",
+          flexDirection: S.value ? "column-reverse" : "column",
+          gap: "var(--vis-legend-spacing)"
+        }),
+        class: K({ "stacked-area-chart": e.stacked }),
+        id: (a = e.markerConfig) == null ? void 0 : a.id,
+        onClick: l[0] || (l[0] = (t) => j("click", t, m.value))
+      }, [
+        u(r(_), {
+          data: e.data,
+          height: e.height,
+          padding: e.padding,
+          "svg-defs": M.value + N.value,
+          "y-domain": e.yDomain,
+          "x-domain": e.xDomain
+        }, {
+          default: J(() => [
+            e.hideTooltip ? y("", !0) : (c(), k(r(ee), {
+              key: 0,
+              "horizontal-placement": r($).Right,
+              "vertical-placement": r($).Top
+            }, null, 8, ["horizontal-placement", "vertical-placement"])),
+            e.stacked ? (c(), f(T, { key: 1 }, [
+              u(r(B), {
+                x: (t, o) => o,
+                y: w.value,
+                color: L.value,
+                opacity: e.hideArea ? 0 : F,
+                "curve-type": e.curveType ?? r(h).MonotoneX
+              }, null, 8, ["x", "y", "color", "opacity", "curve-type"]),
+              u(r(D), {
+                x: (t, o) => o,
+                y: X.value,
+                color: L.value,
+                "curve-type": e.curveType ?? r(h).MonotoneX,
+                "line-width": e.lineWidth
+              }, null, 8, ["x", "y", "color", "curve-type", "line-width"])
+            ], 64)) : (c(!0), f(T, { key: 2 }, Q(Object.keys(n.categories), (t, o) => (c(), f(T, { key: t }, [
+              u(r(B), v({
+                x: (s, x) => x
+              }, { ref_for: !0 }, P(t), {
+                color: `url(#gradient${o}-${g.value[o]})`,
+                opacity: e.hideArea ? 0 : F,
+                "curve-type": e.curveType ?? r(h).MonotoneX
+              }), null, 16, ["x", "color", "opacity", "curve-type"]),
+              u(r(D), {
+                x: (s, x) => x,
+                y: (s) => s[t],
+                color: g.value[o],
+                "curve-type": e.curveType ?? r(h).MonotoneX,
+                "line-width": e.lineWidth,
+                lineDashArray: e.lineDashArray ? e.lineDashArray[o] : void 0
+              }, null, 8, ["x", "y", "color", "curve-type", "line-width", "lineDashArray"])
+            ], 64))), 128)),
+            e.hideXAxis ? y("", !0) : (c(), k(r(O), v({
+              key: 3,
+              type: "x",
+              label: e.xLabel,
+              "label-margin": 8,
+              "num-ticks": e.xNumTicks,
+              "tick-format": e.xFormatter,
+              "tick-values": e.xExplicitTicks,
+              "grid-line": e.xGridLine,
+              "domain-line": e.xDomainLine,
+              "tick-line": e.xTickLine,
+              "min-max-ticks-only": e.minMaxTicksOnly
+            }, e.xAxisConfig), null, 16, ["label", "num-ticks", "tick-format", "tick-values", "grid-line", "domain-line", "tick-line", "min-max-ticks-only"])),
+            e.hideYAxis ? y("", !0) : (c(), k(r(O), v({
+              key: 4,
+              type: "y",
+              label: e.yLabel,
+              "num-ticks": e.yNumTicks,
+              "tick-format": e.yFormatter,
+              "grid-line": e.yGridLine,
+              "domain-line": e.yDomainLine,
+              "tick-line": e.yTickLine
+            }, e.yAxisConfig), null, 16, ["label", "num-ticks", "tick-format", "grid-line", "domain-line", "tick-line"])),
+            e.hideTooltip ? y("", !0) : (c(), k(r(te), v({ key: 5 }, e.crosshairConfig, { template: Y }), null, 16))
+          ]),
+          _: 1
+        }, 8, ["data", "height", "padding", "svg-defs", "y-domain", "x-domain"]),
+        n.hideLegend ? y("", !0) : (c(), f("div", {
+          key: 0,
+          style: p({
+            display: "flex",
+            justifyContent: W.value
+          })
+        }, [
+          u(r(ie), {
+            style: p([
+              n.legendStyle,
+              "display: flex; gap: var(--vis-legend-spacing);"
+            ]),
+            items: Object.values(n.categories).map((t) => ({
+              ...t,
+              color: Array.isArray(t.color) ? t.color[0] : t.color
+            }))
+          }, null, 8, ["style", "items"])
+        ], 4)),
+        q("div", oe, [
+          r(G).tooltip ? b(i.$slots, "tooltip", {
+            key: 0,
+            values: m.value
+          }) : m.value ? b(i.$slots, "fallback", { key: 1 }, () => [
+            u(I, {
+              data: m.value,
+              categories: e.categories,
+              "title-formatter": n.tooltipTitleFormatter,
+              yFormatter: n.yFormatter
+            }, null, 8, ["data", "categories", "title-formatter", "yFormatter"])
+          ]) : y("", !0)
+        ], 512)
+      ], 14, ne);
+    };
+  }
+});
+export {
+  ye as default
+};

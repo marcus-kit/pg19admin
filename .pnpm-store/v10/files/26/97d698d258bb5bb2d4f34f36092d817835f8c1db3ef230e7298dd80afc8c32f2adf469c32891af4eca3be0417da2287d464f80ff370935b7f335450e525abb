@@ -1,0 +1,4 @@
+import f from "./Tooltip.js";
+export {
+  f as default
+};

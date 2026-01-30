@@ -1,0 +1,80 @@
+import { addComponent, addImportsSources, defineNuxtModule, createResolver } from '@nuxt/kit';
+
+const resolveComponents = (config, filePath) => {
+  const { prefix } = config;
+  const allComponents = [
+    "AreaChart",
+    "AreaStackedChart",
+    "LineChart",
+    "BarChart",
+    "DonutChart",
+    "BubbleChart",
+    "GanttChart"
+  ];
+  allComponents.forEach((component) => {
+    if (typeof component === "string") {
+      addComponent({
+        export: component,
+        name: prefix + component,
+        mode: "client",
+        filePath
+      });
+    } else if (Array.isArray(component)) {
+      addComponent({
+        export: component[0],
+        name: prefix + component[1],
+        mode: "client",
+        filePath
+      });
+    }
+  });
+};
+
+const resolveImports = (_, filePath) => {
+  const allTypes = ["BulletLegendItemInterface"];
+  addImportsSources({
+    from: filePath,
+    type: true,
+    imports: [...allTypes]
+  });
+  const allImports = ["CurveType", "LegendPosition", "Orientation", "DonutType"];
+  addImportsSources({
+    from: filePath,
+    imports: [...allImports]
+  });
+};
+
+const module = defineNuxtModule({
+  meta: {
+    name: "nuxt-charts",
+    configKey: "nuxtCharts",
+    compatibility: {
+      nuxt: ">=3"
+    }
+  },
+  defaults: {
+    prefix: "",
+    global: true,
+    autoImports: true,
+    include: []
+  },
+  moduleDependencies: {},
+  async setup(options, nuxt) {
+    nuxt.options.vite.optimizeDeps = nuxt.options.vite.optimizeDeps || {};
+    nuxt.options.vite.optimizeDeps.include = nuxt.options.vite.optimizeDeps.include || [];
+    nuxt.options.vite.optimizeDeps.include = [
+      "vue-chrts",
+      ...nuxt.options.vite.optimizeDeps.include
+    ];
+    nuxt.options.build.transpile = [
+      "vue-chrts",
+      ...nuxt.options.build.transpile
+    ];
+    const { resolve } = createResolver(import.meta.url);
+    const runtimePath = resolve("./runtime/vue-chrts");
+    resolveImports(options, runtimePath);
+    resolveComponents(options, runtimePath);
+  }
+});
+
+export { module as default };

@@ -1,0 +1,226 @@
+import { defineComponent as W, useSlots as X, useTemplateRef as H, ref as Y, computed as k, createElementBlock as p, openBlock as d, normalizeStyle as L, createVNode as b, createCommentVNode as x, createElementVNode as j, unref as a, withCtx as $, createBlock as c, Fragment as q, renderList as I, mergeProps as C, renderSlot as F } from "vue";
+import { Orientation as u, StackedBar as U, GroupedBar as J } from "@unovis/ts";
+import { useStackedGrouped as K } from "./stackedGroupedUtils.js";
+import { VisXYContainer as Q, VisXYLabels as Z, VisTooltip as _, VisStackedBar as G, VisGroupedBar as ee, VisAxis as V, VisBulletLegend as te } from "@unovis/vue";
+import ae from "../Tooltip.js";
+import { LegendPosition as ie } from "../../types.js";
+const ne = {
+  ref: "slotWrapper",
+  style: { display: "none" }
+}, ue = /* @__PURE__ */ W({
+  __name: "BarChart",
+  props: {
+    data: {},
+    stacked: { type: Boolean },
+    height: {},
+    xLabel: {},
+    yLabel: {},
+    padding: { default: () => ({
+      top: 5,
+      right: 5,
+      bottom: 5,
+      left: 5
+    }) },
+    categories: {},
+    xFormatter: {},
+    yFormatter: {},
+    tooltipTitleFormatter: {},
+    yNumTicks: {},
+    minMaxTicksOnly: { type: Boolean },
+    xNumTicks: {},
+    xExplicitTicks: {},
+    yAxis: {},
+    groupPadding: { default: 0 },
+    barPadding: { default: 0.2 },
+    radius: {},
+    hideLegend: { type: Boolean, default: !1 },
+    hideTooltip: { type: Boolean, default: !1 },
+    orientation: { default: u.Vertical },
+    legendPosition: { default: ie.BottomCenter },
+    legendStyle: { default: void 0 },
+    xDomainLine: { type: Boolean },
+    yDomainLine: { type: Boolean },
+    xTickLine: { type: Boolean },
+    yTickLine: { type: Boolean },
+    xGridLine: { type: Boolean },
+    yGridLine: { type: Boolean, default: !0 },
+    hideXAxis: { type: Boolean },
+    hideYAxis: { type: Boolean },
+    stackedGroupedSpacing: { default: 0.1 },
+    xAxisConfig: {},
+    yAxisConfig: {},
+    stackAndGrouped: { type: Boolean },
+    valueLabel: {},
+    xAxis: {}
+  },
+  emits: ["click"],
+  setup(e, { emit: S }) {
+    const O = S, t = e, D = X(), h = H("slotWrapper"), g = Y();
+    if (t.valueLabel && !t.xAxis)
+      throw new Error(
+        "BarChart: 'xAxis' prop is required when 'valueLabel' is enabled. Please provide an 'xAxis' to display value labels."
+      );
+    if (!t.yAxis || t.yAxis.length === 0)
+      throw new Error("yAxis is required");
+    const A = k(() => t.yAxis.map((i) => (l) => l[i])), B = (i, l) => {
+      var o;
+      return (o = Object.values(t.categories)[l]) == null ? void 0 : o.color;
+    }, y = k(
+      () => K({
+        data: t.data,
+        categories: t.categories,
+        stackAndGrouped: t.stackAndGrouped,
+        xAxis: t.xAxis,
+        spacing: t.stackedGroupedSpacing
+      }).value
+    ), E = k(() => t.legendPosition.startsWith("top")), N = k(() => t.legendPosition.includes("left") ? "flex-start" : t.legendPosition.includes("right") ? "flex-end" : "center");
+    function T(i) {
+      g.value = i;
+    }
+    const P = t.yAxis.map((i) => (l) => l[i]), M = P.length, w = t.data.flatMap(
+      (i, l) => P.map((o, s) => ({
+        x: l,
+        y: Number(o(i) ?? 0),
+        itemIndex: s
+      }))
+    ), z = (i) => {
+      if (t.stacked || t.stackAndGrouped) return i.x;
+      const l = M;
+      if (l <= 1) return i.x;
+      const s = 1 - (t.groupPadding ?? 0), m = s / l, f = -s / 2, n = m * i.itemIndex + m / 2, v = 1 - (t.barPadding ?? 0), R = (f + n) * v;
+      return i.x + R;
+    };
+    return (i, l) => (d(), p("div", {
+      style: L({
+        display: "flex",
+        flexDirection: E.value ? "column-reverse" : "column",
+        gap: "var(--vis-legend-spacing)"
+      }),
+      onClick: l[0] || (l[0] = (o) => O("click", o, g.value))
+    }, [
+      b(a(Q), {
+        padding: e.padding,
+        height: e.height
+      }, {
+        default: $(() => {
+          var o, s, m, f;
+          return [
+            e.valueLabel ? (d(), c(a(Z), {
+              key: 0,
+              data: a(w),
+              x: z,
+              y: (n) => {
+                var r;
+                return n.y + (((r = t.valueLabel) == null ? void 0 : r.labelSpacing) ?? 0);
+              },
+              label: (o = t.valueLabel) == null ? void 0 : o.label,
+              backgroundColor: ((s = t.valueLabel) == null ? void 0 : s.backgroundColor) ?? "transparent",
+              color: ((m = t.valueLabel) == null ? void 0 : m.color) ?? "red",
+              labelFontSize: (f = t.valueLabel) == null ? void 0 : f.labelFontSize
+            }, null, 8, ["data", "y", "label", "backgroundColor", "color", "labelFontSize"])) : x("", !0),
+            b(a(_), {
+              triggers: {
+                [a(J).selectors.bar]: (n) => {
+                  var r;
+                  return T(n), n ? (r = h.value) == null ? void 0 : r.innerHTML : "";
+                },
+                [a(U).selectors.bar]: (n) => {
+                  var r;
+                  return T(n), n ? (r = h.value) == null ? void 0 : r.innerHTML : "";
+                }
+              }
+            }, null, 8, ["triggers"]),
+            e.stackAndGrouped ? (d(!0), p(q, { key: 1 }, I(y.value.states, (n) => (d(), c(a(G), {
+              key: n,
+              data: y.value.chartData,
+              x: (r, v) => v + y.value.positions[n],
+              y: y.value.bars[n],
+              color: y.value.colorFunctions[n],
+              "rounded-corners": e.radius ?? 0,
+              "group-padding": e.groupPadding ?? 0,
+              "bar-padding": e.barPadding,
+              orientation: e.orientation ?? a(u).Vertical
+            }, null, 8, ["data", "x", "y", "color", "rounded-corners", "group-padding", "bar-padding", "orientation"]))), 128)) : e.stacked ? (d(), c(a(G), {
+              key: 3,
+              data: e.data,
+              x: (n, r) => r,
+              y: A.value,
+              color: B,
+              "rounded-corners": e.radius ?? 0,
+              "group-padding": e.groupPadding ?? 0,
+              "bar-padding": e.barPadding ?? 0.2,
+              orientation: e.orientation ?? a(u).Vertical
+            }, null, 8, ["data", "x", "y", "rounded-corners", "group-padding", "bar-padding", "orientation"])) : (d(), c(a(ee), {
+              key: 2,
+              data: e.data,
+              x: (n, r) => r,
+              y: A.value,
+              color: B,
+              "rounded-corners": e.radius ?? 0,
+              "group-padding": e.groupPadding ?? 0,
+              "bar-padding": e.barPadding ?? 0.2,
+              orientation: e.orientation ?? a(u).Vertical
+            }, null, 8, ["data", "x", "y", "rounded-corners", "group-padding", "bar-padding", "orientation"])),
+            e.hideXAxis ? x("", !0) : (d(), c(a(V), C({
+              key: 4,
+              type: "x",
+              "tick-format": e.xFormatter,
+              label: e.xLabel,
+              "grid-line": e.xGridLine,
+              "domain-line": !!e.xDomainLine,
+              "tick-line": e.xTickLine,
+              "num-ticks": e.xNumTicks,
+              "tick-values": e.xExplicitTicks,
+              minMaxTicksOnly: e.minMaxTicksOnly
+            }, e.xAxisConfig), null, 16, ["tick-format", "label", "grid-line", "domain-line", "tick-line", "num-ticks", "tick-values", "minMaxTicksOnly"])),
+            e.hideYAxis ? x("", !0) : (d(), c(a(V), C({
+              key: 5,
+              type: "y",
+              label: e.yLabel,
+              "grid-line": e.orientation !== a(u).Horizontal && e.yGridLine,
+              "domain-line": !!e.yDomainLine,
+              "tick-format": e.yFormatter,
+              "num-ticks": e.yNumTicks,
+              "tick-line": e.yTickLine
+            }, e.yAxisConfig), null, 16, ["label", "grid-line", "domain-line", "tick-format", "num-ticks", "tick-line"]))
+          ];
+        }),
+        _: 1
+      }, 8, ["padding", "height"]),
+      t.hideLegend ? x("", !0) : (d(), p("div", {
+        key: 0,
+        style: L({
+          display: "flex",
+          justifyContent: N.value
+        })
+      }, [
+        b(a(te), {
+          style: L([
+            t.legendStyle,
+            "display: flex; gap: var(--vis-legend-spacing);"
+          ]),
+          items: Object.values(t.categories).map((o) => ({
+            ...o,
+            color: Array.isArray(o.color) ? o.color[0] : o.color
+          }))
+        }, null, 8, ["style", "items"])
+      ], 4)),
+      j("div", ne, [
+        a(D).tooltip ? F(i.$slots, "tooltip", {
+          key: 0,
+          values: g.value
+        }) : g.value ? F(i.$slots, "fallback", { key: 1 }, () => [
+          b(ae, {
+            data: g.value,
+            categories: t.categories,
+            "title-formatter": t.tooltipTitleFormatter,
+            yFormatter: t.orientation === a(u).Horizontal ? t.xFormatter : t.yFormatter
+          }, null, 8, ["data", "categories", "title-formatter", "yFormatter"])
+        ]) : x("", !0)
+      ], 512)
+    ], 4));
+  }
+});
+export {
+  ue as default
+};

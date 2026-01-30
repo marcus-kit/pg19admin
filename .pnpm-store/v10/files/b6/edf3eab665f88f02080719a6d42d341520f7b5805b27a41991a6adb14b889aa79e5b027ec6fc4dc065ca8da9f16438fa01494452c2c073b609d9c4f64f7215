@@ -1,0 +1,118 @@
+import { defineComponent as B, useSlots as D, useTemplateRef as P, ref as W, computed as s, createElementBlock as p, openBlock as m, normalizeStyle as d, createVNode as a, createCommentVNode as v, createElementVNode as y, unref as r, withCtx as b, renderSlot as u } from "vue";
+import { Donut as N } from "@unovis/ts";
+import { DonutType as $ } from "./types.js";
+import j from "../Tooltip.js";
+import { VisSingleContainer as z, VisTooltip as H, VisDonut as E, VisBulletLegend as F } from "@unovis/vue";
+import { LegendPosition as O } from "../../types.js";
+const R = { style: {
+  position: "absolute",
+  top: "50%",
+  left: "50%",
+  transform: "translate(-50%, -50%)"
+} }, M = {
+  ref: "slotWrapper",
+  style: { display: "none" }
+}, K = /* @__PURE__ */ B({
+  __name: "DonutChart",
+  props: {
+    type: {},
+    data: {},
+    arcWidth: {},
+    height: {},
+    radius: {},
+    hideLegend: { type: Boolean },
+    legendPosition: { default: O.BottomCenter },
+    legendStyle: {},
+    categories: {},
+    padAngle: {},
+    tooltipTitleFormatter: {}
+  },
+  emits: ["click"],
+  setup(l, { emit: h }) {
+    const C = h, t = l, k = D(), c = P("slotWrapper"), i = W(), T = (e) => e, V = t.type === $.Half;
+    function x(e) {
+      const o = Object.values(t.categories)[e.index].name;
+      return i.value = {
+        label: o,
+        [o]: e.data
+      }, A();
+    }
+    function A() {
+      return typeof window > "u" ? "" : c.value ? c.value.innerHTML : "";
+    }
+    const L = s(() => t.legendPosition.includes("top")), S = s(() => t.legendPosition.includes("left") ? "flex-start" : t.legendPosition.includes("right") ? "flex-end" : "center"), g = (e, o = "#ccc") => e ? Array.isArray(e) ? e[0] || o : e : o, f = s(() => Object.values(t.categories)), w = (e, o) => {
+      const n = f.value[o];
+      if (n)
+        return g(n.color);
+    };
+    return (e, o) => (m(), p("div", {
+      style: d({
+        display: "flex",
+        flexDirection: L.value ? "column-reverse" : "column",
+        gap: "var(--vis-legend-spacing)"
+      }),
+      onClick: o[0] || (o[0] = (n) => C("click", n, i.value))
+    }, [
+      a(r(z), {
+        data: l.data,
+        height: l.height,
+        margin: {}
+      }, {
+        default: b(() => [
+          a(r(H), {
+            "horizontal-shift": 20,
+            "vertical-shift": 20,
+            triggers: {
+              [r(N).selectors.segment]: x
+            }
+          }, null, 8, ["triggers"]),
+          a(r(E), {
+            value: T,
+            "corner-radius": l.radius,
+            "arc-width": l.arcWidth ?? 20,
+            color: w,
+            "angle-range": V ? [-1.5707963267948966, 1.5707963267948966] : [],
+            "pad-angle": t.padAngle || 0
+          }, null, 8, ["corner-radius", "arc-width", "angle-range", "pad-angle"]),
+          y("div", R, [
+            u(e.$slots, "default")
+          ])
+        ]),
+        _: 3
+      }, 8, ["data", "height"]),
+      t.hideLegend ? v("", !0) : (m(), p("div", {
+        key: 0,
+        style: d({
+          display: "flex",
+          justifyContent: S.value
+        })
+      }, [
+        a(r(F), {
+          style: d([
+            t.legendStyle,
+            "display: flex; gap: var(--vis-legend-spacing);"
+          ]),
+          items: f.value.map((n) => ({
+            ...n,
+            color: g(n.color)
+          }))
+        }, null, 8, ["style", "items"])
+      ], 4)),
+      y("div", M, [
+        r(k).tooltip ? u(e.$slots, "tooltip", {
+          key: 0,
+          values: i.value
+        }) : i.value ? u(e.$slots, "fallback", { key: 1 }, () => [
+          a(j, {
+            data: i.value,
+            categories: t.categories,
+            "title-formatter": t.tooltipTitleFormatter
+          }, null, 8, ["data", "categories", "title-formatter"])
+        ]) : v("", !0)
+      ], 512)
+    ], 4));
+  }
+});
+export {
+  K as default
+};

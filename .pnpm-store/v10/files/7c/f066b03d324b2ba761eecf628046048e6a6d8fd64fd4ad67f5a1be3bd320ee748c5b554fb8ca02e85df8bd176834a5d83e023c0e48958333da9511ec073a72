@@ -1,0 +1,66 @@
+import { computed as u } from "vue";
+import { flattenData as i } from "../../utils.js";
+function g(t) {
+  return u(() => {
+    const r = f(t.categories), e = p(t.categories, r), o = l(e, t.categories), c = d(e), n = m(o), s = y(r, t.spacing), a = t.stackAndGrouped ? i(t.data, t.xAxis) : t.data;
+    return {
+      states: r,
+      groupedByState: e,
+      colors: o,
+      bars: c,
+      colorFunctions: n,
+      positions: s,
+      chartData: a
+    };
+  });
+}
+function f(t) {
+  const r = /* @__PURE__ */ new Set();
+  return Object.keys(t).forEach((o) => {
+    const c = o.match(/([A-Z][a-z]+)$/);
+    c && r.add(c[1]);
+  }), Array.from(r);
+}
+function p(t, r) {
+  const e = {};
+  return r.forEach((o) => {
+    e[o] = Object.keys(t).filter(
+      (c) => c.endsWith(o)
+    );
+  }), e;
+}
+function l(t, r) {
+  const e = {};
+  return Object.entries(t).forEach(([o, c]) => {
+    e[o] = c.map((n) => {
+      var a;
+      const s = (a = r[n]) == null ? void 0 : a.color;
+      return Array.isArray(s) ? s[0] ?? "#ccc" : s ?? "#ccc";
+    });
+  }), e;
+}
+function d(t) {
+  const r = {};
+  return Object.entries(t).forEach(([e, o]) => {
+    r[e] = o.map((c) => {
+      const n = c.replace(e, "").toLowerCase();
+      return (s) => s[n + e];
+    });
+  }), r;
+}
+function m(t) {
+  const r = {};
+  return Object.entries(t).forEach(([e, o]) => {
+    r[e] = (c, n) => o[n] ?? "#ccc";
+  }), r;
+}
+function y(t, r = 0.4) {
+  const e = t.length, o = {};
+  return t.forEach((c, n) => {
+    const s = (n - (e - 1) / 2) * r;
+    o[c] = s;
+  }), o;
+}
+export {
+  g as useStackedGrouped
+};

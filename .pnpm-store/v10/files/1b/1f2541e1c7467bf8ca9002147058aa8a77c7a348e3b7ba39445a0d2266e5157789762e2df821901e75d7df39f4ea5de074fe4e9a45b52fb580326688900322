@@ -1,0 +1,141 @@
+import { defineComponent as B, useSlots as V, useTemplateRef as w, ref as A, computed as c, createElementBlock as f, openBlock as p, normalizeStyle as d, createVNode as n, createCommentVNode as h, createElementVNode as F, unref as o, withCtx as H, mergeProps as P, renderSlot as y } from "vue";
+import { Timeline as x } from "@unovis/ts";
+import { dateFormatter as S } from "../../utils.js";
+import N from "../Tooltip.js";
+import { VisXYContainer as j, VisTimeline as O, VisTooltip as $, VisAxis as D, VisBulletLegend as G } from "@unovis/vue";
+import { LegendPosition as M } from "../../types.js";
+const I = /* @__PURE__ */ B({
+  __name: "GanttChart",
+  props: {
+    data: {},
+    labelWidth: { default: 220 },
+    height: {},
+    title: { default: "" },
+    categories: {},
+    x: {},
+    length: {},
+    type: {},
+    tooltipTitleFormatter: {},
+    getTooltipText: {},
+    xNumTicks: {},
+    showLabels: { type: Boolean, default: !0 },
+    hideTooltip: { type: Boolean, default: !1 },
+    crosshairConfig: {},
+    lineWidth: { default: 12 },
+    rowHeight: { default: 24 },
+    legendPosition: { default: M.TopRight },
+    legendStyle: {},
+    hideLegend: { type: Boolean },
+    xTickLine: { type: Boolean },
+    xTickFormat: {},
+    xMinMaxTicksOnly: { type: Boolean },
+    xTickValues: {},
+    xGridLine: { type: Boolean },
+    xDomainLine: { type: Boolean },
+    xAxisConfig: {},
+    yAxisConfig: {}
+  },
+  emits: ["click", "scroll", "labelHover"],
+  setup(i, { emit: T }) {
+    const e = i, s = T, k = V(), u = w("slotWrapper"), r = A(), v = c(() => e.legendPosition.startsWith("top")), b = c(() => e.legendPosition.includes("left") ? "flex-start" : e.legendPosition.includes("right") ? "flex-end" : "center");
+    x.selectors.label + "";
+    function g(l) {
+      r.value = l, s("labelHover", l);
+    }
+    function L(l, a, t) {
+      s("click", t, { index: a, item: l });
+    }
+    function C(l) {
+      s("scroll", l.deltaY);
+    }
+    const W = c(() => {
+      const l = Object.values(e.categories).map(
+        (a, t) => `var(--vis-color${t})`
+      );
+      return Object.values(e.categories).map(
+        (a, t) => a.color ?? l[t]
+      );
+    });
+    return (l, a) => (p(), f("div", {
+      style: d({
+        display: "flex",
+        flexDirection: v.value ? "column-reverse" : "column",
+        gap: "var(--vis-legend-spacing)"
+      })
+    }, [
+      n(o(j), {
+        data: e.data,
+        height: e.height,
+        onWheel: C
+      }, {
+        default: H(() => [
+          n(o(O), {
+            x: e.x,
+            length: e.length,
+            lineWidth: e.lineWidth,
+            rowHeight: e.rowHeight,
+            type: e.type,
+            color: W.value,
+            labelWidth: e.labelWidth,
+            showLabels: e.showLabels,
+            onClick: L
+          }, null, 8, ["x", "length", "lineWidth", "rowHeight", "type", "color", "labelWidth", "showLabels"]),
+          n(o($), {
+            triggers: {
+              [o(x).selectors.label]: (t) => {
+                var m;
+                return g(t), t ? (m = u.value) == null ? void 0 : m.innerHTML : "";
+              }
+            }
+          }, null, 8, ["triggers"]),
+          n(o(D), P({
+            type: "x",
+            tickFormat: i.xTickFormat || o(S),
+            numTicks: i.xNumTicks,
+            "tick-line": i.xTickLine,
+            "grid-line": i.xGridLine,
+            "domain-line": i.xDomainLine
+          }, i.xAxisConfig), null, 16, ["tickFormat", "numTicks", "tick-line", "grid-line", "domain-line"])
+        ]),
+        _: 1
+      }, 8, ["data", "height"]),
+      e.hideLegend ? h("", !0) : (p(), f("div", {
+        key: 0,
+        style: d({
+          display: "flex",
+          justifyContent: b.value
+        })
+      }, [
+        n(o(G), {
+          style: d([
+            e.legendStyle,
+            "display: flex; gap: var(--vis-legend-spacing);"
+          ]),
+          items: Object.values(e.categories).map((t) => ({
+            ...t,
+            color: Array.isArray(t.color) ? t.color[0] : t.color
+          }))
+        }, null, 8, ["style", "items"])
+      ], 4)),
+      F("div", {
+        ref_key: "slotWrapper",
+        ref: u,
+        style: { display: "none" }
+      }, [
+        o(k).labelTooltip ? y(l.$slots, "labelTooltip", {
+          key: 0,
+          values: r.value
+        }) : r.value ? y(l.$slots, "fallback", { key: 1 }, () => [
+          n(N, {
+            data: r.value,
+            "title-formatter": e.tooltipTitleFormatter,
+            categories: i.categories
+          }, null, 8, ["data", "title-formatter", "categories"])
+        ]) : h("", !0)
+      ], 512)
+    ], 4));
+  }
+});
+export {
+  I as default
+};

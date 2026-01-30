@@ -1,0 +1,28 @@
+import * as _nuxt_schema from '@nuxt/schema';
+
+interface ModuleOptions {
+    /**
+     * Prefix for component names
+     * @default ''
+     */
+    prefix?: string;
+    /**
+     * Register global components
+     * @default true
+     */
+    global?: boolean;
+    /**
+     * Use auto-imports (recommended)
+     * @default true
+     */
+    autoImports?: boolean;
+    /**
+     * Components to include (empty array means all components)
+     * @default []
+     */
+    include?: string[];
+}
+declare const _default: _nuxt_schema.NuxtModule<ModuleOptions, ModuleOptions, false>;
+
+export { _default as default };
+export type { ModuleOptions };
