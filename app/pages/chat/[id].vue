@@ -299,6 +299,18 @@ function scrollToBottom() {
   showScrollToBottom.value = false
 }
 
+/** Инициалы клиента для аватарки */
+function getChatInitials(c: Chat | null): string {
+  if (!c) return '?'
+  const name = (c.userName || c.guestName || '').trim()
+  if (!name) return '?'
+  const parts = name.split(/\s+/)
+  if (parts.length >= 2) {
+    return (parts[0]!.charAt(0) + parts[parts.length - 1]!.charAt(0)).toUpperCase().slice(0, 2)
+  }
+  return name.slice(0, 2).toUpperCase()
+}
+
 /** Метка даты для группировки сообщений (Сегодня/Вчера/дата) */
 function getDateLabel(dateStr: string): string {
   const date = new Date(dateStr)
@@ -513,32 +525,32 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="flex h-[calc(100vh-120px)] gap-4">
-    <!-- Основная область: шапка + сообщения + ввод -->
-    <div class="flex flex-1 flex-col min-w-0">
-      <!-- Header -->
-      <div
-        v-if="chat"
-        class="flex items-center justify-between gap-4 pb-2 border-b border-[var(--glass-border)] shrink-0"
-      >
-        <div class="flex items-center gap-3 min-w-0">
-          <UiButton
+  <div class="chat-detail-page">
+    <div class="chat-detail-page__main">
+      <!-- Шапка: назад + аватар + имя + статус + действия -->
+      <header v-if="chat" class="chat-detail-page__header">
+        <div class="chat-detail-page__header-bg" aria-hidden="true" />
+        <div class="chat-detail-page__header-inner">
+          <button
+            type="button"
+            class="chat-detail-page__back"
+            aria-label="К списку чатов"
             @click="router.push('/chat')"
-            variant="ghost"
-            size="sm"
-            class="shrink-0"
           >
             <Icon name="heroicons:arrow-left" class="w-5 h-5" />
-          </UiButton>
-          <div class="min-w-0">
-            <div class="flex items-center gap-2 flex-wrap">
-              <h1 class="text-lg font-semibold text-[var(--text-primary)] truncate">
-                {{ chat.userName || chat.guestName || `Чат #${chat.id}` }}
-              </h1>
+          </button>
+          <div class="chat-detail-page__header-avatar">
+            {{ getChatInitials(chat) }}
+          </div>
+          <div class="chat-detail-page__header-info">
+            <h1 class="chat-detail-page__header-title">
+              {{ chat.userName || chat.guestName || `Чат #${chat.id.slice(0, 8)}` }}
+            </h1>
+            <div class="chat-detail-page__header-meta">
               <UiBadge
                 v-if="chat.guestName && !chat.userId"
                 size="sm"
-                class="bg-purple-500/20 text-purple-400 shrink-0"
+                class="chat-detail-page__guest-badge"
               >
                 Гость
               </UiBadge>
@@ -548,90 +560,79 @@ onUnmounted(() => {
               >
                 {{ getStatusLabel(CHAT_STATUS, chat.status) }}
               </UiBadge>
-            </div>
-            <div class="flex items-center gap-2 text-xs text-[var(--text-muted)] truncate">
-              <span v-if="chat.assignedAdmin">
+              <span v-if="chat.assignedAdmin" class="chat-detail-page__header-assigned">
                 {{ chat.assignedAdmin.fullName }}
               </span>
             </div>
           </div>
+          <div class="chat-detail-page__header-actions">
+            <UiButton
+              v-if="!chat.assignedAdmin && chat.status !== 'closed'"
+              @click="handleAssignToMe"
+              variant="secondary"
+              size="sm"
+            >
+              <Icon name="heroicons:hand-raised" class="w-4 h-4" />
+              Взять себе
+            </UiButton>
+            <button
+              v-if="chat.status !== 'closed'"
+              type="button"
+              class="chat-detail-page__close-btn"
+              title="Закрыть чат"
+              @click="handleClose"
+            >
+              <Icon name="heroicons:x-circle" class="w-5 h-5 text-red-400" />
+            </button>
+          </div>
         </div>
-
-        <div class="flex gap-2 shrink-0">
-          <UiButton
-            v-if="!chat.assignedAdmin && chat.status !== 'closed'"
-            @click="handleAssignToMe"
-            variant="secondary"
-            size="sm"
-          >
-            <Icon name="heroicons:hand-raised" class="w-4 h-4" />
-            Взять себе
-          </UiButton>
-          <UiButton
-            v-if="chat.status !== 'closed'"
-            @click="handleClose"
-            variant="ghost"
-            size="sm"
-          >
-            <Icon name="heroicons:x-circle" class="w-4 h-4 text-red-400" />
-            Закрыть
-          </UiButton>
-        </div>
-      </div>
+      </header>
 
       <!-- Loading -->
-      <UiLoading v-if="loading" class="flex-1" />
+      <UiLoading v-if="loading" class="chat-detail-page__loading" />
 
-      <!-- Messages -->
+      <!-- Область сообщений -->
       <div
         v-else
         ref="messagesContainer"
-        class="flex-1 overflow-y-auto py-2 space-y-3 relative"
+        class="chat-detail-page__messages"
+        role="log"
+        aria-label="Сообщения чата"
         @scroll="onMessagesScroll"
       >
-        <!-- Индикатор подгрузки старых сообщений -->
-        <div
-          v-if="loadingMore"
-          class="flex justify-center py-2"
-        >
+        <div v-if="loadingMore" class="chat-detail-page__loading-more">
           <span class="text-xs text-[var(--text-muted)]">Загрузка...</span>
         </div>
       <template v-for="group in groupedMessages" :key="group.date">
-        <!-- Date Separator -->
-        <div class="flex items-center gap-2">
-          <div class="flex-1 h-px bg-[var(--glass-border)]" />
-          <span class="text-xs text-[var(--text-muted)] px-2">
-            {{ getDateLabel(group.date) }}
-          </span>
-          <div class="flex-1 h-px bg-[var(--glass-border)]" />
+        <div class="chat-detail-page__date-sep">
+          <span>{{ getDateLabel(group.date) }}</span>
         </div>
 
-        <!-- Messages for this date -->
-        <div class="space-y-1.5">
+        <div class="chat-detail-page__day-messages">
           <div
             v-for="msg in group.messages"
             :key="msg.id"
             :class="[
-              'flex',
+              'chat-detail-page__row',
               msg.senderType === 'admin' || msg.senderType === 'bot'
-                ? 'justify-end'
+                ? 'chat-detail-page__row--right'
                 : msg.senderType === 'system'
-                  ? 'justify-center'
-                  : 'justify-start',
+                  ? 'chat-detail-page__row--center'
+                  : 'chat-detail-page__row--left',
             ]"
           >
-            <!-- System Message -->
+            <!-- System -->
             <div
               v-if="msg.senderType === 'system'"
-              class="px-3 py-1 text-xs text-[var(--text-muted)] bg-[var(--glass-bg)] rounded-full"
+              class="chat-detail-page__bubble chat-detail-page__bubble--system"
             >
               {{ msg.content }}
             </div>
 
-            <!-- Bot Message -->
+            <!-- Bot -->
             <div
               v-else-if="msg.senderType === 'bot'"
-              class="max-w-[70%] rounded-2xl px-4 py-2 glass-card rounded-br-md border-l-2 border-[#8B5CF6]/50 group relative"
+              class="chat-detail-page__bubble chat-detail-page__bubble--bot group relative"
             >
               <div
                 v-if="msg.content || msg.attachmentName"
@@ -688,10 +689,10 @@ onUnmounted(() => {
               </div>
             </div>
 
-            <!-- Admin Message -->
+            <!-- Admin -->
             <div
               v-else-if="msg.senderType === 'admin'"
-              class="max-w-[70%] rounded-2xl px-4 py-2 glass-card rounded-br-md border-l-2 border-primary/50 group relative"
+              class="chat-detail-page__bubble chat-detail-page__bubble--admin group relative"
             >
               <div
                 v-if="msg.content || msg.attachmentName"
@@ -747,11 +748,11 @@ onUnmounted(() => {
               </div>
             </div>
 
-            <!-- User Message -->
+            <!-- User -->
             <div
               v-else
-              class="max-w-[70%] rounded-2xl px-4 py-2 glass-card rounded-bl-md group relative"
-              :class="{ 'ring-1 ring-primary/30 bg-primary/5': unreadMessageIds.has(msg.id) }"
+              class="chat-detail-page__bubble chat-detail-page__bubble--user group relative"
+              :class="{ 'chat-detail-page__bubble--unread': unreadMessageIds.has(msg.id) }"
             >
               <div
                 v-if="msg.content || msg.attachmentName"
@@ -804,20 +805,17 @@ onUnmounted(() => {
         </div>
       </template>
 
-      <!-- Empty State -->
-      <div
-        v-if="messages.length === 0"
-        class="flex-1 flex items-center justify-center"
-      >
-        <p class="text-[var(--text-muted)]">Сообщений пока нет</p>
+      <div v-if="messages.length === 0" class="chat-detail-page__empty">
+        <Icon name="heroicons:chat-bubble-left-right" class="chat-detail-page__empty-icon" />
+        <p class="chat-detail-page__empty-text">Сообщений пока нет</p>
+        <p class="chat-detail-page__empty-hint">Напишите первое сообщение или дождитесь ответа клиента</p>
       </div>
 
-      <!-- Кнопка «Вниз» при скролле вверх -->
       <Transition name="fade">
         <button
           v-show="showScrollToBottom"
           type="button"
-          class="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 px-4 py-2 rounded-full glass-card border border-[var(--glass-border)] shadow-lg hover:bg-white/10 text-sm font-medium text-[var(--text-primary)] flex items-center gap-2"
+          class="chat-detail-page__scroll-down"
           aria-label="Прокрутить вниз"
           @click="scrollToBottom()"
         >
@@ -827,15 +825,14 @@ onUnmounted(() => {
       </Transition>
     </div>
 
-    <!-- Input -->
+    <!-- Панель ввода -->
     <div
       v-if="chat?.status !== 'closed'"
-      class="pt-2 border-t border-[var(--glass-border)]"
+      class="chat-detail-page__input-area"
     >
-      <!-- Ошибка отправки: сообщение сохранено, можно повторить -->
       <div
         v-if="sendFailed"
-        class="mb-2 flex items-center justify-between gap-2 rounded-lg bg-red-500/10 border border-red-500/20 px-3 py-2 text-sm"
+        class="chat-detail-page__send-error"
       >
         <span class="text-red-400">Не удалось отправить. Сообщение сохранено.</span>
         <UiButton
@@ -849,11 +846,7 @@ onUnmounted(() => {
         </UiButton>
       </div>
 
-      <!-- Pending file preview -->
-      <div
-        v-if="pendingFile"
-        class="mb-2 p-2 rounded-lg bg-white/5 flex items-center gap-2"
-      >
+      <div v-if="pendingFile" class="chat-detail-page__pending-file">
         <img
           v-if="pendingPreview"
           :src="pendingPreview"
@@ -888,29 +881,26 @@ onUnmounted(() => {
         class="hidden"
       />
 
-      <!-- Шаблоны ответов -->
-      <div ref="templatesRef" class="relative mb-2">
-        <UiButton
+      <div ref="templatesRef" class="chat-detail-page__templates-wrap">
+        <button
           type="button"
-          variant="ghost"
-          size="sm"
-          class="text-[var(--text-muted)]"
+          class="chat-detail-page__templates-btn"
           @click.stop="templatesOpen = !templatesOpen"
         >
-          <Icon name="heroicons:document-text" class="w-4 h-4 mr-1" />
+          <Icon name="heroicons:document-text" class="w-4 h-4" />
           Шаблоны
-          <Icon :name="templatesOpen ? 'heroicons:chevron-up' : 'heroicons:chevron-down'" class="w-4 h-4 ml-1" />
-        </UiButton>
+          <Icon :name="templatesOpen ? 'heroicons:chevron-up' : 'heroicons:chevron-down'" class="w-4 h-4" />
+        </button>
         <div
           v-show="templatesOpen"
-          class="absolute bottom-full left-0 mb-1 w-72 max-h-48 overflow-y-auto rounded-lg glass-card border border-[var(--glass-border)] p-2 shadow-lg z-10"
+          class="chat-detail-page__templates-dropdown"
           @click.stop
         >
           <button
             v-for="t in CHAT_TEMPLATES"
             :key="t.id"
             type="button"
-            class="w-full text-left px-3 py-2 rounded-lg hover:bg-white/10 text-sm text-[var(--text-primary)] transition-colors"
+            class="chat-detail-page__template-item"
             @click="insertTemplate(t)"
           >
             <span class="font-medium">{{ t.label }}</span>
@@ -919,104 +909,82 @@ onUnmounted(() => {
         </div>
       </div>
 
-      <form @submit.prevent="handleSubmit" class="flex gap-2">
-        <!-- Attach button -->
-        <UiButton
-          :disabled="sending"
-          @click="openFileDialog"
+      <form @submit.prevent="handleSubmit" class="chat-detail-page__input-bar">
+        <button
           type="button"
-          variant="ghost"
+          class="chat-detail-page__input-attach"
+          :disabled="sending"
           title="Прикрепить файл"
+          @click="openFileDialog"
         >
           <Icon name="heroicons:paper-clip" class="w-5 h-5" />
-        </UiButton>
-
+        </button>
         <textarea
           ref="messageInputRef"
           v-model="newMessage"
           :disabled="sending"
+          placeholder="Сообщение..."
+          rows="1"
+          class="chat-detail-page__input-field"
           @keydown="onMessageKeydown"
           @input="handleTextareaInput"
-          placeholder="Введите сообщение..."
-          rows="1"
-          class="flex-1 px-3 py-2 glass-card rounded-lg text-[var(--text-primary)] border border-[var(--glass-border)] focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all bg-[var(--glass-bg)] resize-none min-h-[40px] max-h-[120px]"
         />
-
-        <UiButton
-          :loading="sending"
-          :disabled="(!newMessage.trim() && !pendingFile) || sending"
+        <button
           type="submit"
+          class="chat-detail-page__input-send"
+          :disabled="(!newMessage.trim() && !pendingFile) || sending"
+          :aria-busy="sending"
         >
-          <Icon name="heroicons:paper-airplane" class="w-5 h-5" />
-        </UiButton>
+          <Icon v-if="!sending" name="heroicons:paper-airplane" class="w-5 h-5" />
+          <Icon v-else name="heroicons:arrow-path" class="w-5 h-5 animate-spin" />
+        </button>
       </form>
     </div>
 
-      <!-- Closed Chat Notice -->
-      <div
-        v-else-if="chat"
-        class="pt-2 border-t border-[var(--glass-border)] text-center text-[var(--text-muted)] shrink-0"
-      >
-        <Icon name="heroicons:lock-closed" class="w-5 h-5 inline-block mr-1" />
-        Чат закрыт
-      </div>
+    <div v-else-if="chat" class="chat-detail-page__closed-notice">
+      <Icon name="heroicons:lock-closed" class="w-5 h-5" />
+      Чат закрыт
+    </div>
     </div>
 
-    <!-- Боковая панель: карточка клиента -->
-    <aside
-      v-if="chat && !loading"
-      class="w-64 shrink-0 hidden lg:block border-l border-[var(--glass-border)] pl-4 overflow-y-auto"
-    >
-      <div class="space-y-3 sticky top-0">
-        <h3 class="text-sm font-medium text-[var(--text-muted)]">
-          Карточка клиента
-        </h3>
-        <div class="rounded-lg glass-card p-3 space-y-2 text-sm">
-          <div>
-            <span class="text-[var(--text-muted)]">Имя</span>
-            <p class="font-medium text-[var(--text-primary)] truncate">
-              {{ chat.userName || chat.guestName || '—' }}
-            </p>
+    <!-- Сайдбар: карточка клиента -->
+    <aside v-if="chat && !loading" class="chat-detail-page__sidebar">
+      <div class="chat-detail-page__sidebar-card">
+        <h3 class="chat-detail-page__sidebar-title">Клиент</h3>
+        <dl class="chat-detail-page__sidebar-list">
+          <div class="chat-detail-page__sidebar-row">
+            <dt>Имя</dt>
+            <dd>{{ chat.userName || chat.guestName || '—' }}</dd>
           </div>
-          <div v-if="chat.guestContact">
-            <span class="text-[var(--text-muted)]">Контакт</span>
-            <p class="text-[var(--text-primary)] break-all">
-              {{ chat.guestContact }}
-            </p>
+          <div v-if="chat.guestContact" class="chat-detail-page__sidebar-row">
+            <dt>Контакт</dt>
+            <dd class="break-all">{{ chat.guestContact }}</dd>
           </div>
-          <div v-if="chat.userTelegramId">
-            <span class="text-[var(--text-muted)]">Telegram</span>
-            <p class="text-[var(--text-primary)]">
-              {{ chat.userTelegramId }}
-            </p>
+          <div v-if="chat.userTelegramId" class="chat-detail-page__sidebar-row">
+            <dt>Telegram</dt>
+            <dd>{{ chat.userTelegramId }}</dd>
           </div>
-          <div v-if="chat.subject">
-            <span class="text-[var(--text-muted)]">Тема</span>
-            <p class="text-[var(--text-primary)] truncate">
-              {{ chat.subject }}
-            </p>
+          <div v-if="chat.subject" class="chat-detail-page__sidebar-row">
+            <dt>Тема</dt>
+            <dd class="truncate">{{ chat.subject }}</dd>
           </div>
-          <div>
-            <span class="text-[var(--text-muted)]">Создан</span>
-            <p class="text-[var(--text-primary)]">
-              {{ formatRelativeDate(chat.createdAt) }}
-            </p>
+          <div class="chat-detail-page__sidebar-row">
+            <dt>Создан</dt>
+            <dd>{{ formatRelativeDate(chat.createdAt) }}</dd>
           </div>
-          <div v-if="chat.closedAt">
-            <span class="text-[var(--text-muted)]">Закрыт</span>
-            <p class="text-[var(--text-primary)]">
-              {{ formatRelativeDate(chat.closedAt) }}
-            </p>
+          <div v-if="chat.closedAt" class="chat-detail-page__sidebar-row">
+            <dt>Закрыт</dt>
+            <dd>{{ formatRelativeDate(chat.closedAt) }}</dd>
           </div>
-          <NuxtLink
-            v-if="chat.userId"
-            :to="`/users/${chat.userId}`"
-            class="inline-flex items-center gap-1 text-primary hover:underline text-sm mt-2"
-          >
-            <Icon name="heroicons:user-circle" class="w-4 h-4" />
-            Карточка пользователя
-          </NuxtLink>
-        </div>
+        </dl>
+        <NuxtLink
+          v-if="chat.userId"
+          :to="`/users/${chat.userId}`"
+          class="chat-detail-page__sidebar-link"
+        >
+          <Icon name="heroicons:user-circle" class="w-4 h-4" />
+          Карточка пользователя
+        </NuxtLink>
       </div>
     </aside>
   </div>

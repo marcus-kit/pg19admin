@@ -9,10 +9,17 @@ import type { Chat } from '~/types/admin'
 // ═══════════════════════════════════════════════════════════════════════════
 import {
   CHAT_STATUS,
-  CHAT_STATUS_OPTIONS,
   getStatusLabel,
   getStatusBadgeClass,
 } from '~/composables/useStatusConfig'
+
+/** Фильтры статусов только для вкладки Поддержка: Ожидают, Активные, Закрытые, Все */
+const CHAT_PAGE_STATUS_OPTIONS = [
+  { value: 'waiting', label: 'Ожидают' },
+  { value: 'active', label: 'Активные' },
+  { value: 'closed', label: 'Закрытые' },
+  { value: 'all', label: 'Все' },
+]
 
 /** Фильтры для списка чатов */
 interface ChatFilters extends Record<string, unknown> {
@@ -283,7 +290,7 @@ onUnmounted(() => {
       <!-- Статусы: подчёркивание-табы -->
       <nav class="chat-page__nav" aria-label="Фильтр по статусу">
         <button
-          v-for="opt in CHAT_STATUS_OPTIONS"
+          v-for="opt in CHAT_PAGE_STATUS_OPTIONS"
           :key="opt.value"
           type="button"
           class="chat-page__nav-item"
