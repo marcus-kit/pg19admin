@@ -139,50 +139,86 @@ function handleClickOutside(e: MouseEvent) {
   }
 }
 
+// Esc — отмена и возврат к списку
+function onKeydown(e: KeyboardEvent) {
+  if (e.key === 'Escape') {
+    if (showUserDropdown.value) {
+      showUserDropdown.value = false
+    }
+    else {
+      cancel()
+    }
+  }
+}
+
 onMounted(() => {
   document.addEventListener('click', handleClickOutside)
+  document.addEventListener('keydown', onKeydown)
 })
 
 onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside)
+  document.removeEventListener('keydown', onKeydown)
 })
 </script>
 
 <template>
   <div>
     <!-- Header -->
-    <div class="flex items-center gap-3 mb-6">
-      <UiButton @click="cancel" variant="ghost" size="sm">
-        <Icon name="heroicons:arrow-left" class="w-5 h-5" />
+    <div class="mb-6">
+      <UiButton @click="cancel" variant="ghost" size="sm" title="К списку (Esc)" class="-ml-1 mb-3">
+        <Icon name="heroicons:arrow-left" class="w-5 h-5 mr-1" />
+        <span class="text-sm text-[var(--text-secondary)]">К списку</span>
       </UiButton>
       <h1 class="text-2xl font-bold text-[var(--text-primary)]">Создать аккаунт</h1>
+      <p class="text-sm text-[var(--text-muted)] mt-0.5">Новый договор и привязка к пользователю</p>
     </div>
 
     <!-- Error -->
-    <div v-if="error" class="mb-6 p-4 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400">
-      {{ error }}
+    <div
+      v-if="error"
+      class="mb-6 flex items-center gap-3 p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400"
+    >
+      <Icon name="heroicons:exclamation-triangle" class="w-5 h-5 shrink-0" />
+      <span>{{ error }}</span>
     </div>
 
-    <!-- Form -->
-    <div class="max-w-2xl">
-      <form @submit.prevent="createAccount" class="space-y-6">
-        <!-- Владелец -->
-        <UiCard>
-          <template #header>
-            <span class="font-medium text-[var(--text-primary)]">Владелец</span>
-          </template>
+    <!-- Form: две колонки на десктопе — слева Владелец+Договор, справа Адрес+Заметки -->
+    <div class="max-w-5xl">
+      <form @submit.prevent="createAccount">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <!-- Левая колонка -->
+          <div class="space-y-6">
+            <!-- Владелец -->
+            <UiCard>
+          <div class="flex items-center gap-2 mb-4 pb-3 border-b border-[var(--glass-border)]">
+            <span
+              class="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/20 text-primary"
+            >
+              <Icon name="heroicons:user" class="w-5 h-5" />
+            </span>
+            <span class="font-semibold text-[var(--text-primary)]">Владелец</span>
+          </div>
 
           <div class="user-search-container relative">
             <label class="block text-sm font-medium text-[var(--text-muted)] mb-2">Пользователь</label>
 
-            <div v-if="selectedUser" class="flex items-center justify-between p-3 rounded-lg bg-[var(--glass-bg)] border border-[var(--glass-border)]">
-              <div>
+            <div
+              v-if="selectedUser"
+              class="flex items-center gap-3 p-4 rounded-xl bg-[var(--glass-bg)] border border-[var(--glass-border)] ring-1 ring-transparent hover:ring-primary/20 transition-all"
+            >
+              <span
+                class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary/20 text-base font-semibold text-primary"
+              >
+                {{ (selectedUser.fullName || '?')[0]?.toUpperCase() ?? '?' }}
+              </span>
+              <div class="min-w-0 flex-1">
                 <p class="font-medium text-[var(--text-primary)]">{{ selectedUser.fullName }}</p>
                 <p class="text-sm text-[var(--text-muted)]">
                   {{ selectedUser.phone || selectedUser.email || 'Контакты не указаны' }}
                 </p>
               </div>
-              <UiButton @click="clearUser" variant="ghost" size="sm">
+              <UiButton @click="clearUser" variant="ghost" size="sm" title="Снять выбор">
                 <Icon name="heroicons:x-mark" class="w-4 h-4" />
               </UiButton>
             </div>
@@ -205,20 +241,31 @@ onUnmounted(() => {
               <!-- Dropdown -->
               <div
                 v-if="showUserDropdown && (userSearchResults.length > 0 || userSearch.length >= 2)"
-                class="absolute z-10 w-full mt-1 py-1 rounded-lg bg-[var(--bg-surface)] border border-[var(--glass-border)] shadow-xl max-h-60 overflow-y-auto"
+                class="absolute z-10 w-full mt-1.5 py-1 rounded-xl bg-[var(--bg-surface)] border border-[var(--glass-border)] shadow-xl max-h-60 overflow-y-auto"
               >
                 <div
                   v-for="user in userSearchResults"
                   :key="user.id"
                   @click="selectUser(user)"
-                  class="px-4 py-2 cursor-pointer hover:bg-[var(--glass-bg)] transition-colors"
+                  class="flex items-center gap-3 px-4 py-2.5 cursor-pointer hover:bg-[var(--glass-bg)] transition-colors"
                 >
-                  <p class="font-medium text-[var(--text-primary)]">{{ user.fullName }}</p>
-                  <p class="text-sm text-[var(--text-muted)]">
-                    {{ user.phone || user.email || 'Контакты не указаны' }}
-                  </p>
+                  <span
+                    class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/20 text-sm font-medium text-primary"
+                  >
+                    {{ (user.fullName || '?')[0]?.toUpperCase() ?? '?' }}
+                  </span>
+                  <div class="min-w-0">
+                    <p class="font-medium text-[var(--text-primary)]">{{ user.fullName }}</p>
+                    <p class="text-sm text-[var(--text-muted)] truncate">
+                      {{ user.phone || user.email || 'Контакты не указаны' }}
+                    </p>
+                  </div>
                 </div>
-                <div v-if="userSearchResults.length === 0 && userSearch.length >= 2 && !userSearchLoading" class="px-4 py-2 text-[var(--text-muted)]">
+                <div
+                  v-if="userSearchResults.length === 0 && userSearch.length >= 2 && !userSearchLoading"
+                  class="flex items-center gap-2 px-4 py-3 text-[var(--text-muted)]"
+                >
+                  <Icon name="heroicons:user-plus" class="w-4 h-4 shrink-0" />
                   Пользователи не найдены
                 </div>
               </div>
@@ -230,11 +277,16 @@ onUnmounted(() => {
           </div>
         </UiCard>
 
-        <!-- Договор -->
-        <UiCard>
-          <template #header>
-            <span class="font-medium text-[var(--text-primary)]">Договор</span>
-          </template>
+            <!-- Договор -->
+            <UiCard>
+          <div class="flex items-center gap-2 mb-4 pb-3 border-b border-[var(--glass-border)]">
+            <span
+              class="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/20 text-primary"
+            >
+              <Icon name="heroicons:document-text" class="w-5 h-5" />
+            </span>
+            <span class="font-semibold text-[var(--text-primary)]">Договор</span>
+          </div>
 
           <div class="space-y-4">
             <div class="grid grid-cols-2 gap-4">
@@ -265,12 +317,20 @@ onUnmounted(() => {
             </div>
           </div>
         </UiCard>
+          </div>
 
-        <!-- Адрес -->
-        <UiCard>
-          <template #header>
-            <span class="font-medium text-[var(--text-primary)]">Адрес</span>
-          </template>
+          <!-- Правая колонка -->
+          <div class="space-y-6">
+            <!-- Адрес -->
+            <UiCard>
+          <div class="flex items-center gap-2 mb-4 pb-3 border-b border-[var(--glass-border)]">
+            <span
+              class="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/20 text-primary"
+            >
+              <Icon name="heroicons:map-pin" class="w-5 h-5" />
+            </span>
+            <span class="font-semibold text-[var(--text-primary)]">Адрес</span>
+          </div>
 
           <div class="grid grid-cols-2 gap-4">
             <UiInput v-model="form.address.city" label="Город" placeholder="Ростов-на-Дону" />
@@ -284,29 +344,37 @@ onUnmounted(() => {
           </div>
         </UiCard>
 
-        <!-- Заметки -->
-        <UiCard>
-          <template #header>
-            <span class="font-medium text-[var(--text-primary)]">Заметки</span>
-          </template>
+            <!-- Заметки -->
+            <UiCard>
+          <div class="flex items-center gap-2 mb-4 pb-3 border-b border-[var(--glass-border)]">
+            <span
+              class="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/20 text-primary"
+            >
+              <Icon name="heroicons:chat-bubble-left-ellipsis" class="w-5 h-5" />
+            </span>
+            <span class="font-semibold text-[var(--text-primary)]">Заметки</span>
+          </div>
 
           <textarea
             v-model="form.notes"
             rows="3"
-            placeholder="Заметки..."
-            class="w-full px-4 py-3 glass-card rounded-lg text-[var(--text-primary)] border border-[var(--glass-border)] focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all bg-[var(--glass-bg)] resize-none"
+            placeholder="Дополнительные заметки к договору..."
+            class="w-full min-h-[80px] px-4 py-3 rounded-xl text-[var(--text-primary)] border border-[var(--glass-border)] focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all bg-[var(--glass-bg)] resize-y"
           />
         </UiCard>
+          </div>
+        </div>
 
         <!-- Actions -->
-        <div class="flex gap-3">
+        <div class="flex flex-wrap items-center gap-3 mt-6 pt-6 border-t border-[var(--glass-border)]">
           <UiButton :loading="saving" :disabled="saving" type="submit">
             <Icon name="heroicons:plus" class="w-4 h-4" />
-            Создать
+            Создать аккаунт
           </UiButton>
           <UiButton :disabled="saving" @click="cancel" variant="ghost">
             Отмена
           </UiButton>
+          <span class="text-xs text-[var(--text-muted)] ml-auto">Esc — отмена и возврат к списку</span>
         </div>
       </form>
     </div>
