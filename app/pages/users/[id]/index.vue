@@ -215,7 +215,7 @@ onMounted(() => {
       <div class="flex items-start justify-between gap-4 mb-6">
         <div>
           <div class="flex items-center gap-3 mb-2">
-            <UiButton @click="router.push('/users')" variant="ghost" size="sm">
+            <UiButton @click="router.back()" variant="ghost" size="sm" title="Назад">
               <Icon name="heroicons:arrow-left" class="w-5 h-5" />
             </UiButton>
             <UiBadge :class="getStatusBadgeClass(user.status)">
