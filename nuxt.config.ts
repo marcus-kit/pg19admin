@@ -47,7 +47,8 @@ export default defineNuxtConfig({
   // Runtime конфигурация
   runtimeConfig: {
     // Server-only (не попадают в клиентский бандл)
-    supabaseServiceKey: process.env.SUPABASE_SERVICE_KEY || '',
+    // Модуль @nuxtjs/supabase автоматически использует эту переменную
+    supabaseServiceKey: process.env.NUXT_SUPABASE_SERVICE_KEY || process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_SECRET_KEY || process.env.NUXT_SUPABASE_SECRET_KEY || '',
     openaiApiKey: process.env.OPENAI_API_KEY || '',
 
     // Public (доступны и на клиенте)
@@ -86,8 +87,15 @@ export default defineNuxtConfig({
     redirect: false,
     cookieOptions: {
       maxAge: 60 * 60 * 8, // 8 часов
-      sameSite: 'strict',
-      secure: true,
+      sameSite: 'lax', // 'strict' блокирует cookies при OAuth редиректах
+      secure: false, // false для локальной разработки (HTTP)
+    },
+  },
+
+  // Vite — оптимизация зависимостей
+  vite: {
+    optimizeDeps: {
+      include: ['to-px'], // CommonJS модуль из @unovis/ts (nuxt-charts)
     },
   },
 })
