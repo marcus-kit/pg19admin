@@ -29,23 +29,23 @@ const model = defineModel<string>({ required: true })
 </script>
 
 <template>
-  <div class="flex gap-1 flex-wrap" role="tablist">
-    <UiButton
+  <div class="flex gap-2 flex-wrap" role="tablist">
+    <button
       v-for="opt in props.options"
       :key="opt.value"
+      type="button"
+      role="tab"
       :aria-selected="model === opt.value"
       :class="[
-        'transition-colors',
+        'px-4 py-2 text-sm rounded-lg border transition-colors',
+        size === 'sm' ? 'text-sm' : 'text-base',
         model === opt.value
-          ? 'bg-primary/25 text-primary font-semibold ring-2 ring-primary/50 ring-inset border border-primary/40'
-          : 'hover:bg-white/5',
+          ? 'bg-primary text-white border-primary font-semibold shadow-sm ring-2 ring-primary/30'
+          : 'bg-[var(--glass-bg)] text-[var(--text-secondary)] border-[var(--glass-border)] hover:text-[var(--text-primary)]',
       ]"
-      :size="size"
-      role="tab"
-      variant="ghost"
       @click="model = opt.value"
     >
       {{ opt.label }}
-    </UiButton>
+    </button>
   </div>
 </template>

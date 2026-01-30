@@ -110,23 +110,23 @@ watch(selectedCategoryId, () => {
       </div>
     </div>
 
-    <!-- Tabs -->
+    <!-- Tabs: Услуги / Категории -->
     <div class="flex gap-2 mb-6 border-b border-[var(--glass-border)]">
       <button
         :class="activeTab === 'services'
-          ? 'border-primary text-primary'
-          : 'border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]'"
+          ? 'border-primary text-primary bg-primary/10 font-semibold'
+          : 'border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--glass-bg)]'"
         @click="activeTab = 'services'"
-        class="px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px"
+        class="px-4 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px rounded-t-lg"
       >
         Услуги ({{ services.length }})
       </button>
       <button
         :class="activeTab === 'categories'
-          ? 'border-primary text-primary'
-          : 'border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]'"
+          ? 'border-primary text-primary bg-primary/10 font-semibold'
+          : 'border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--glass-bg)]'"
         @click="activeTab = 'categories'"
-        class="px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px"
+        class="px-4 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px rounded-t-lg"
       >
         Категории ({{ categories.length }})
       </button>
@@ -134,26 +134,30 @@ watch(selectedCategoryId, () => {
 
     <!-- Services Tab -->
     <div v-if="activeTab === 'services'">
-      <!-- Category Filter -->
+      <!-- Category Filter: Все, Интернет, Телевидение и т.д. -->
       <div class="flex flex-wrap gap-2 mb-6">
-        <UiButton
-          :class="{ 'bg-primary/20': selectedCategoryId === null }"
+        <button
+          type="button"
+          :class="selectedCategoryId === null
+            ? 'bg-primary text-white border-primary font-semibold shadow-sm ring-2 ring-primary/30'
+            : 'bg-[var(--glass-bg)] text-[var(--text-secondary)] border-[var(--glass-border)] hover:bg-[var(--glass-bg)] hover:text-[var(--text-primary)]'"
+          class="px-4 py-2 text-sm rounded-lg border transition-colors"
           @click="selectedCategoryId = null"
-          variant="ghost"
-          size="sm"
         >
           Все
-        </UiButton>
-        <UiButton
+        </button>
+        <button
           v-for="cat in categories"
           :key="cat.id"
-          :class="{ 'bg-primary/20': selectedCategoryId === cat.id }"
+          type="button"
+          :class="selectedCategoryId === cat.id
+            ? 'bg-primary text-white border-primary font-semibold shadow-sm ring-2 ring-primary/30'
+            : 'bg-[var(--glass-bg)] text-[var(--text-secondary)] border-[var(--glass-border)] hover:bg-[var(--glass-bg)] hover:text-[var(--text-primary)]'"
+          class="px-4 py-2 text-sm rounded-lg border transition-colors"
           @click="selectedCategoryId = cat.id"
-          variant="ghost"
-          size="sm"
         >
           {{ cat.name }}
-        </UiButton>
+        </button>
       </div>
 
       <!-- Services List -->
@@ -170,7 +174,12 @@ watch(selectedCategoryId, () => {
           <div class="flex items-start justify-between gap-4">
             <div class="flex-1">
               <div class="flex items-center gap-2 mb-2 flex-wrap">
-                <UiBadge :class="getStatusBadgeClass(ACTIVE_STATUS, getActiveStatus(item.isActive))">
+                <UiBadge
+                  :class="[
+                    getStatusBadgeClass(ACTIVE_STATUS, getActiveStatus(item.isActive)),
+                    item.isActive ? 'ring-1 ring-accent/40' : '',
+                  ]"
+                >
                   {{ getStatusLabel(ACTIVE_STATUS, getActiveStatus(item.isActive)) }}
                 </UiBadge>
                 <UiBadge v-if="item.category" class="bg-secondary/20 text-secondary">
@@ -234,7 +243,12 @@ watch(selectedCategoryId, () => {
         <div class="flex items-start justify-between gap-4">
           <div class="flex-1">
             <div class="flex items-center gap-2 mb-2">
-              <UiBadge :class="getStatusBadgeClass(ACTIVE_STATUS, getActiveStatus(item.isActive))">
+              <UiBadge
+                :class="[
+                  getStatusBadgeClass(ACTIVE_STATUS, getActiveStatus(item.isActive)),
+                  item.isActive ? 'ring-1 ring-accent/40' : '',
+                ]"
+              >
                 {{ getStatusLabel(ACTIVE_STATUS, getActiveStatus(item.isActive)) }}
               </UiBadge>
               <span class="text-xs text-[var(--text-muted)] font-mono bg-[var(--glass-bg)] px-2 py-0.5 rounded">
