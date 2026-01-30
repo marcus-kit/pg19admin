@@ -231,177 +231,188 @@ onMounted(() => {
 </script>
 
 <template>
-  <div>
-    <!-- Header -->
-    <div class="flex items-center justify-between mb-8">
-      <h1 class="text-3xl font-bold text-[var(--text-primary)]">
-        Редактировать новость
-      </h1>
-    </div>
+  <div class="news-form-page">
+    <!-- Hero: градиент + кнопка назад + заголовок -->
+    <header class="news-form-page__hero">
+      <div class="news-form-page__hero-bg" aria-hidden="true" />
+      <div class="news-form-page__hero-inner">
+        <button
+          type="button"
+          class="news-form-page__back"
+          aria-label="Назад к списку"
+          @click="cancel"
+        >
+          <Icon name="heroicons:arrow-left" class="w-5 h-5" />
+        </button>
+        <div class="flex items-center gap-3">
+          <div class="news-form-page__hero-icon">
+            <Icon name="heroicons:pencil-square" class="w-7 h-7 text-primary" />
+          </div>
+          <div>
+            <h1 class="news-form-page__hero-title">
+              Редактировать новость
+            </h1>
+            <p class="news-form-page__hero-subtitle">
+              Изменение заголовка, контента и вложений
+            </p>
+          </div>
+        </div>
+      </div>
+    </header>
 
     <!-- Loading -->
-    <UiLoading v-if="loading" />
+    <UiLoading v-if="loading" class="news-form-page__loading" />
 
-    <!-- Error -->
-    <div v-else-if="error && !loading" class="mb-6 p-4 bg-red-500/20 border border-red-500/30 rounded-lg text-red-400">
+    <!-- Ошибка -->
+    <div v-else-if="error" class="news-form-page__error" role="alert">
       {{ error }}
     </div>
 
-    <!-- Form -->
-    <form v-else @submit.prevent="saveNews" class="space-y-6">
-      <!-- Title -->
-      <div>
-        <label class="block text-sm font-medium text-[var(--text-primary)] mb-2">
-          Заголовок *
-        </label>
-        <UiInput
-          v-model="form.title"
-          placeholder="Введите заголовок новости"
-          size="lg"
-        />
-      </div>
+    <!-- Форма в glass-карточке -->
+    <div v-else class="news-form-page__main glass-card glass-card-static">
+      <form @submit.prevent="saveNews" class="news-form-page__form">
+        <section class="news-form-page__section">
+          <h2 class="news-form-page__section-title">
+            Основные данные
+          </h2>
+          <div class="news-form-page__fields space-y-4">
+            <UiInput
+              v-model="form.title"
+              label="Заголовок *"
+              placeholder="Введите заголовок новости"
+              size="lg"
+            />
+            <UiInput
+              v-model="form.summary"
+              label="Краткое описание"
+              placeholder="Краткое описание (опционально)"
+            />
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <UiSelect
+                v-model="form.category"
+                :options="categoryOptions"
+                :placeholder="undefined"
+                label="Категория"
+              />
+              <UiSelect
+                v-model="form.status"
+                :options="statusOptions"
+                :placeholder="undefined"
+                label="Статус"
+              />
+            </div>
+            <div class="flex items-center gap-3">
+              <input
+                v-model="form.isPinned"
+                id="isPinned"
+                type="checkbox"
+                class="w-5 h-5 rounded border-[var(--glass-border)] bg-[var(--glass-bg)] text-primary focus:ring-primary"
+              />
+              <label for="isPinned" class="text-sm text-[var(--text-secondary)] cursor-pointer">
+                Закрепить новость
+              </label>
+            </div>
+          </div>
+        </section>
 
-      <!-- Summary -->
-      <div>
-        <label class="block text-sm font-medium text-[var(--text-primary)] mb-2">
-          Краткое описание
-        </label>
-        <UiInput
-          v-model="form.summary"
-          placeholder="Краткое описание (опционально)"
-        />
-      </div>
+        <section class="news-form-page__section">
+          <h2 class="news-form-page__section-title">
+            Контент *
+          </h2>
+          <div class="news-form-page__fields">
+            <NewsEditor v-model="form.content" />
+          </div>
+        </section>
 
-      <!-- Category & Status -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <UiSelect
-          v-model="form.category"
-          :options="categoryOptions"
-          :placeholder="undefined"
-          label="Категория"
-        />
+        <section class="news-form-page__section">
+          <h2 class="news-form-page__section-title">
+            Вложения
+          </h2>
+          <div class="news-form-page__fields space-y-4">
+            <!-- Список вложений -->
+            <div v-if="attachments.length > 0" class="space-y-2">
+              <div
+                v-for="att in attachments"
+                :key="att.id"
+                class="news-form-page__attachment"
+              >
+                <Icon :name="getFileIcon(att.mimeType)" class="w-5 h-5 text-primary flex-shrink-0" />
+                <span class="flex-1 text-sm text-[var(--text-secondary)] truncate">
+                  {{ att.fileName }}
+                </span>
+                <a
+                  :href="att.filePath"
+                  target="_blank"
+                  class="news-form-page__attachment-link"
+                  title="Открыть"
+                >
+                  <Icon name="heroicons:arrow-top-right-on-square" class="w-4 h-4" />
+                </a>
+                <button
+                  :disabled="deleting === att.id"
+                  type="button"
+                  class="news-form-page__attachment-delete"
+                  title="Удалить"
+                  @click="deleteAttachment(att)"
+                >
+                  <Icon
+                    :name="deleting === att.id ? 'heroicons:arrow-path' : 'heroicons:trash'"
+                    :class="['w-4 h-4', { 'animate-spin': deleting === att.id }]"
+                  />
+                </button>
+              </div>
+            </div>
 
-        <UiSelect
-          v-model="form.status"
-          :options="statusOptions"
-          :placeholder="undefined"
-          label="Статус"
-        />
-      </div>
-
-      <!-- Pin -->
-      <div class="flex items-center gap-3">
-        <input
-          v-model="form.isPinned"
-          id="isPinned"
-          type="checkbox"
-          class="w-5 h-5 rounded border-[var(--glass-border)] bg-[var(--glass-bg)] text-primary focus:ring-primary"
-        />
-        <label for="isPinned" class="text-sm text-[var(--text-secondary)] cursor-pointer">
-          Закрепить новость
-        </label>
-      </div>
-
-      <!-- Content Editor -->
-      <div>
-        <label class="block text-sm font-medium text-[var(--text-primary)] mb-2">
-          Контент *
-        </label>
-        <NewsEditor v-model="form.content" />
-      </div>
-
-      <!-- Attachments (бывший NewsAttachments) -->
-      <div class="space-y-4">
-        <h3 class="text-sm font-medium text-[var(--text-primary)]">
-          Вложения
-        </h3>
-
-        <!-- Existing Attachments -->
-        <div v-if="attachments.length > 0" class="space-y-2">
-          <div
-            v-for="att in attachments"
-            :key="att.id"
-            class="flex items-center gap-3 p-3 rounded-lg border transition-colors"
-            style="background: var(--glass-bg); border-color: var(--glass-border);"
-          >
-            <Icon :name="getFileIcon(att.mimeType)" class="w-5 h-5 text-primary flex-shrink-0" />
-            <span class="flex-1 text-sm text-[var(--text-secondary)] truncate">
-              {{ att.fileName }}
-            </span>
-            <a
-              :href="att.filePath"
-              target="_blank"
-              class="p-1.5 rounded hover:bg-primary/10 text-[var(--text-muted)] hover:text-primary transition-colors"
-              title="Открыть"
-            >
-              <Icon name="heroicons:arrow-top-right-on-square" class="w-4 h-4" />
-            </a>
-            <button
-              :disabled="deleting === att.id"
-              @click="deleteAttachment(att)"
-              title="Удалить"
-              type="button"
-              class="p-1.5 rounded hover:bg-red-500/10 text-[var(--text-muted)] hover:text-red-400 transition-colors disabled:opacity-50"
+            <!-- Зона загрузки -->
+            <div
+              :class="[
+                'news-form-page__upload',
+                dragOver && 'news-form-page__upload--active',
+              ]"
+              @dragover.prevent="dragOver = true"
+              @dragleave.prevent="dragOver = false"
+              @drop.prevent="handleDrop"
+              @click="fileInput?.click()"
             >
               <Icon
-                :name="deleting === att.id ? 'heroicons:arrow-path' : 'heroicons:trash'"
-                :class="['w-4 h-4', { 'animate-spin': deleting === att.id }]"
+                :name="uploading ? 'heroicons:arrow-path' : 'heroicons:cloud-arrow-up'"
+                :class="['w-8 h-8 mx-auto mb-2 text-[var(--text-muted)]', { 'animate-spin': uploading }]"
               />
-            </button>
+              <p class="text-sm text-[var(--text-secondary)]">
+                {{ uploading ? 'Загрузка...' : 'Перетащите файлы или нажмите для выбора' }}
+              </p>
+              <p class="text-xs text-[var(--text-muted)] mt-1">
+                До 10 МБ на файл
+              </p>
+            </div>
+
+            <input
+              ref="fileInput"
+              type="file"
+              class="hidden"
+              multiple
+              @change="handleFileSelect"
+            />
           </div>
+        </section>
+
+        <div class="news-form-page__actions">
+          <UiButton
+            :loading="saving"
+            :disabled="saving"
+            type="submit"
+          >
+            Сохранить изменения
+          </UiButton>
+          <UiButton
+            :disabled="saving"
+            variant="secondary"
+            @click="cancel"
+          >
+            Отмена
+          </UiButton>
         </div>
-
-        <!-- Upload Zone -->
-        <div
-          :class="[
-            'border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-all',
-            dragOver
-              ? 'border-primary bg-primary/10'
-              : 'border-[var(--glass-border)] hover:border-primary/50 hover:bg-[var(--glass-bg)]',
-          ]"
-          @dragover.prevent="dragOver = true"
-          @dragleave.prevent="dragOver = false"
-          @drop.prevent="handleDrop"
-          @click="fileInput?.click()"
-        >
-          <Icon
-            :name="uploading ? 'heroicons:arrow-path' : 'heroicons:cloud-arrow-up'"
-            :class="['w-8 h-8 mx-auto mb-2 text-[var(--text-muted)]', { 'animate-spin': uploading }]"
-          />
-          <p class="text-sm text-[var(--text-secondary)]">
-            {{ uploading ? 'Загрузка...' : 'Перетащите файлы или нажмите для выбора' }}
-          </p>
-          <p class="text-xs text-[var(--text-muted)] mt-1">
-            До 10 МБ на файл
-          </p>
-        </div>
-
-        <input
-          ref="fileInput"
-          @change="handleFileSelect"
-          type="file"
-          class="hidden"
-          multiple
-        />
-      </div>
-
-      <!-- Actions -->
-      <div class="flex gap-3">
-        <UiButton
-          :loading="saving"
-          :disabled="saving"
-          type="submit"
-        >
-          Сохранить изменения
-        </UiButton>
-        <UiButton
-          :disabled="saving"
-          @click="cancel"
-          variant="ghost"
-        >
-          Отмена
-        </UiButton>
-      </div>
-    </form>
+      </form>
+    </div>
   </div>
 </template>

@@ -8,7 +8,6 @@ useHead({ title: 'Создать новость — Админ-панель' })
 const router = useRouter()
 const toast = useToast()
 
-// Данные формы
 const form = reactive({
   title: '',
   summary: '',
@@ -18,26 +17,22 @@ const form = reactive({
   isPinned: false,
 })
 
-const saving = ref(false) // Идёт ли сохранение
-const error = ref('') // Текст ошибки
+const saving = ref(false)
+const error = ref('')
 
-// Опции выбора категории
 const categoryOptions = [
   { label: 'Объявление', value: 'announcement' },
   { label: 'Протокол', value: 'protocol' },
   { label: 'Уведомление', value: 'notification' },
 ]
 
-// Опции выбора статуса
 const statusOptions = [
   { label: 'Черновик', value: 'draft' },
   { label: 'Опубликовать', value: 'published' },
   { label: 'Архив', value: 'archived' },
 ]
 
-// Сохранение новости
 async function saveNews() {
-  // Валидация
   if (!form.title.trim()) {
     error.value = 'Введите заголовок'
     return
@@ -64,130 +59,136 @@ async function saveNews() {
       },
     })
 
-    // Успех — переход к редактированию для добавления вложений
     toast.success('Новость успешно создана')
     router.push(`/news/${response.news.id}/edit`)
   }
   catch (err: unknown) {
     toast.error('Не удалось создать новость')
-    const message = err instanceof Error ? err.message : 'Ошибка при создании новости'
-    error.value = message
+    error.value = err instanceof Error ? err.message : 'Ошибка при создании новости'
   }
   finally {
     saving.value = false
   }
 }
 
-// Отмена и возврат к списку
 function cancel() {
   router.push('/news')
 }
 </script>
 
 <template>
-  <div>
-    <!-- Header -->
-    <div class="flex items-center justify-between mb-8">
-      <h1 class="text-3xl font-bold text-[var(--text-primary)]">
-        Создать новость
-      </h1>
-    </div>
+  <div class="news-form-page">
+    <!-- Hero: градиент + кнопка назад + заголовок -->
+    <header class="news-form-page__hero">
+      <div class="news-form-page__hero-bg" aria-hidden="true" />
+      <div class="news-form-page__hero-inner">
+        <button
+          type="button"
+          class="news-form-page__back"
+          aria-label="Назад к списку"
+          @click="cancel"
+        >
+          <Icon name="heroicons:arrow-left" class="w-5 h-5" />
+        </button>
+        <div class="flex items-center gap-3">
+          <div class="news-form-page__hero-icon">
+            <Icon name="heroicons:newspaper" class="w-7 h-7 text-primary" />
+          </div>
+          <div>
+            <h1 class="news-form-page__hero-title">
+              Создать новость
+            </h1>
+            <p class="news-form-page__hero-subtitle">
+              Заполните заголовок и контент новости
+            </p>
+          </div>
+        </div>
+      </div>
+    </header>
 
-    <!-- Error -->
-    <div v-if="error" class="mb-6 p-4 bg-red-500/20 border border-red-500/30 rounded-lg text-red-400">
+    <!-- Ошибка -->
+    <div v-if="error" class="news-form-page__error" role="alert">
       {{ error }}
     </div>
 
-    <!-- Form -->
-    <form @submit.prevent="saveNews" class="space-y-6">
-      <!-- Title -->
-      <div>
-        <label class="block text-sm font-medium text-[var(--text-primary)] mb-2">
-          Заголовок *
-        </label>
-        <UiInput
-          v-model="form.title"
-          placeholder="Введите заголовок новости"
-          size="lg"
-        />
-      </div>
+    <!-- Форма в glass-карточке -->
+    <div class="news-form-page__main glass-card glass-card-static">
+      <form @submit.prevent="saveNews" class="news-form-page__form">
+        <section class="news-form-page__section">
+          <h2 class="news-form-page__section-title">
+            Основные данные
+          </h2>
+          <div class="news-form-page__fields space-y-4">
+            <UiInput
+              v-model="form.title"
+              label="Заголовок *"
+              placeholder="Введите заголовок новости"
+              size="lg"
+            />
+            <UiInput
+              v-model="form.summary"
+              label="Краткое описание"
+              placeholder="Краткое описание (опционально)"
+            />
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <UiSelect
+                v-model="form.category"
+                :options="categoryOptions"
+                :placeholder="undefined"
+                label="Категория"
+              />
+              <UiSelect
+                v-model="form.status"
+                :options="statusOptions"
+                :placeholder="undefined"
+                label="Статус"
+              />
+            </div>
+            <div class="flex items-center gap-3">
+              <input
+                v-model="form.isPinned"
+                id="isPinned"
+                type="checkbox"
+                class="w-5 h-5 rounded border-[var(--glass-border)] bg-[var(--glass-bg)] text-primary focus:ring-primary"
+              />
+              <label for="isPinned" class="text-sm text-[var(--text-secondary)] cursor-pointer">
+                Закрепить новость
+              </label>
+            </div>
+          </div>
+        </section>
 
-      <!-- Summary -->
-      <div>
-        <label class="block text-sm font-medium text-[var(--text-primary)] mb-2">
-          Краткое описание
-        </label>
-        <UiInput
-          v-model="form.summary"
-          placeholder="Краткое описание (опционально)"
-        />
-      </div>
+        <section class="news-form-page__section">
+          <h2 class="news-form-page__section-title">
+            Контент *
+          </h2>
+          <div class="news-form-page__fields">
+            <NewsEditor v-model="form.content" />
+          </div>
+        </section>
 
-      <!-- Category & Status -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <UiSelect
-          v-model="form.category"
-          :options="categoryOptions"
-          :placeholder="undefined"
-          label="Категория"
-        />
-
-        <UiSelect
-          v-model="form.status"
-          :options="statusOptions"
-          :placeholder="undefined"
-          label="Статус"
-        />
-      </div>
-
-      <!-- Pin -->
-      <div class="flex items-center gap-3">
-        <input
-          v-model="form.isPinned"
-          id="isPinned"
-          type="checkbox"
-          class="w-5 h-5 rounded border-[var(--glass-border)] bg-[var(--glass-bg)] text-primary focus:ring-primary"
-        />
-        <label for="isPinned" class="text-sm text-[var(--text-secondary)] cursor-pointer">
-          Закрепить новость
-        </label>
-      </div>
-
-      <!-- Content Editor -->
-      <div>
-        <label class="block text-sm font-medium text-[var(--text-primary)] mb-2">
-          Контент *
-        </label>
-        <NewsEditor v-model="form.content" />
-      </div>
-
-      <!-- Attachments hint -->
-      <div class="p-4 rounded-lg border border-dashed" style="border-color: var(--glass-border); background: var(--glass-bg);">
-        <div class="flex items-center gap-3 text-[var(--text-muted)]">
-          <Icon name="heroicons:paper-clip" class="w-5 h-5" />
-          <p class="text-sm">
-            Вложения можно добавить после сохранения новости
-          </p>
+        <div class="news-form-page__hint">
+          <Icon name="heroicons:paper-clip" class="news-form-page__hint-icon" />
+          <p>Вложения можно добавить после сохранения новости</p>
         </div>
-      </div>
 
-      <!-- Actions -->
-      <div class="flex gap-3">
-        <UiButton
-          :loading="saving"
-          :disabled="saving"
-          type="submit"
-        >
-          Сохранить
-        </UiButton>
-        <UiButton
-          :disabled="saving"
-          @click="cancel"
-          variant="ghost"
-        >
-          Отмена
-        </UiButton>
-      </div>
-    </form>
+        <div class="news-form-page__actions">
+          <UiButton
+            :loading="saving"
+            :disabled="saving"
+            type="submit"
+          >
+            Сохранить
+          </UiButton>
+          <UiButton
+            :disabled="saving"
+            variant="secondary"
+            @click="cancel"
+          >
+            Отмена
+          </UiButton>
+        </div>
+      </form>
+    </div>
   </div>
 </template>
