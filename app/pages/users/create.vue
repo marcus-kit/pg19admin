@@ -26,10 +26,9 @@ const form = ref({
   regApartment: '',
 })
 
-const saving = ref(false) // Идёт ли сохранение
-const error = ref('') // Текст ошибки
+const saving = ref(false)
+const error = ref('')
 
-// Создание нового пользователя
 async function createUser() {
   if (saving.value) return
 
@@ -67,37 +66,55 @@ async function createUser() {
   }
 }
 
-// Отмена и возврат к списку
 function cancel() {
   router.push('/users')
 }
 </script>
 
 <template>
-  <div>
-    <!-- Header -->
-    <div class="flex items-center gap-3 mb-6">
-      <UiButton @click="cancel" variant="ghost" size="sm">
-        <Icon name="heroicons:arrow-left" class="w-5 h-5" />
-      </UiButton>
-      <h1 class="text-2xl font-bold text-[var(--text-primary)]">Создать пользователя</h1>
-    </div>
+  <div class="user-create-page">
+    <!-- Hero: градиент + кнопка назад + заголовок -->
+    <header class="user-create-page__hero">
+      <div class="user-create-page__hero-bg" aria-hidden="true" />
+      <div class="user-create-page__hero-inner">
+        <button
+          type="button"
+          class="user-create-page__back"
+          aria-label="Назад к списку"
+          @click="cancel"
+        >
+          <Icon name="heroicons:arrow-left" class="w-5 h-5" />
+        </button>
+        <div class="flex items-center gap-3">
+          <div class="user-create-page__hero-icon">
+            <Icon name="heroicons:user-plus" class="w-7 h-7 text-primary" />
+          </div>
+          <div>
+            <h1 class="user-create-page__hero-title">
+              Создать пользователя
+            </h1>
+            <p class="user-create-page__hero-subtitle">
+              Заполните данные нового пользователя
+            </p>
+          </div>
+        </div>
+      </div>
+    </header>
 
-    <!-- Error -->
-    <div v-if="error" class="mb-6 p-4 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400">
+    <!-- Ошибка -->
+    <div v-if="error" class="user-create-page__error" role="alert">
       {{ error }}
     </div>
 
-    <!-- Form -->
-    <div class="max-w-2xl">
-      <form @submit.prevent="createUser" class="space-y-6">
+    <!-- Форма в glass-карточке -->
+    <div class="user-create-page__main glass-card glass-card-static">
+      <form @submit.prevent="createUser" class="user-create-page__form">
         <!-- Основные данные -->
-        <UiCard>
-          <template #header>
-            <span class="font-medium text-[var(--text-primary)]">Основные данные</span>
-          </template>
-
-          <div class="space-y-4">
+        <section class="user-create-page__section">
+          <h2 class="user-create-page__section-title">
+            Основные данные
+          </h2>
+          <div class="user-create-page__fields">
             <div class="grid grid-cols-2 gap-4">
               <UiInput
                 v-model="form.lastName"
@@ -150,15 +167,14 @@ function cancel() {
               />
             </div>
           </div>
-        </UiCard>
+        </section>
 
         <!-- Паспортные данные -->
-        <UiCard>
-          <template #header>
-            <span class="font-medium text-[var(--text-primary)]">Паспортные данные</span>
-          </template>
-
-          <div class="grid grid-cols-2 gap-4">
+        <section class="user-create-page__section">
+          <h2 class="user-create-page__section-title">
+            Паспортные данные
+          </h2>
+          <div class="user-create-page__fields grid grid-cols-2 gap-4">
             <UiInput
               v-model="form.passportSeries"
               label="Серия"
@@ -172,15 +188,14 @@ function cancel() {
               maxlength="6"
             />
           </div>
-        </UiCard>
+        </section>
 
         <!-- Адрес регистрации -->
-        <UiCard>
-          <template #header>
-            <span class="font-medium text-[var(--text-primary)]">Адрес регистрации</span>
-          </template>
-
-          <div class="space-y-4">
+        <section class="user-create-page__section">
+          <h2 class="user-create-page__section-title">
+            Адрес регистрации
+          </h2>
+          <div class="user-create-page__fields space-y-4">
             <UiInput
               v-model="form.regCity"
               label="Город"
@@ -204,15 +219,15 @@ function cancel() {
               />
             </div>
           </div>
-        </UiCard>
+        </section>
 
-        <!-- Actions -->
-        <div class="flex gap-3">
+        <!-- Кнопки -->
+        <div class="user-create-page__actions">
           <UiButton :loading="saving" :disabled="saving" type="submit">
             <Icon name="heroicons:plus" class="w-4 h-4" />
             Создать
           </UiButton>
-          <UiButton :disabled="saving" @click="cancel" variant="ghost">
+          <UiButton :disabled="saving" variant="secondary" @click="cancel">
             Отмена
           </UiButton>
         </div>
