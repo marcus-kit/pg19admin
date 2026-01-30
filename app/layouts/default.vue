@@ -6,7 +6,11 @@
  * и контейнер для toast-уведомлений.
  */
 
+const route = useRoute()
 const supabase = useSupabaseClient()
+
+/** Подсветка «Заявки» на любом маршруте /requests, /requests/connection, /requests/callback, /requests/[id] */
+const isRequestsActive = computed(() => route.path.startsWith('/requests'))
 
 async function handleLogout() {
   await supabase.auth.signOut()
@@ -66,7 +70,13 @@ async function handleLogout() {
             <span>Карта покрытия</span>
           </NuxtLink>
 
-          <NuxtLink to="/requests" active-class="nav-item-active" class="nav-item">
+          <NuxtLink
+            to="/requests"
+            active-class="nav-item-active"
+            exact-active-class="nav-item-active"
+            class="nav-item"
+            :class="{ 'nav-item-active': isRequestsActive }"
+          >
             <Icon name="heroicons:clipboard-document-list" class="w-5 h-5" />
             <span>Заявки</span>
           </NuxtLink>

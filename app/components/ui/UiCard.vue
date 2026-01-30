@@ -33,7 +33,7 @@ const paddingClasses: Record<string, string> = {
   <div
     :class="[
       paddingClasses[padding],
-      hover && 'cursor-pointer',
+      hover && 'cursor-pointer glass-card-hover',
     ]"
     class="glass-card rounded-2xl"
   >
