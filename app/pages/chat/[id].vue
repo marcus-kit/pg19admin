@@ -43,6 +43,8 @@ const newMessage = ref('')
 const fileInput = ref<HTMLInputElement | null>(null)
 const pendingFile = ref<File | null>(null)
 const pendingPreview = ref<string | null>(null)
+/** Ошибка отправки: сообщение не ушло, показываем «Повторить» */
+const sendFailed = ref(false)
 
 // Константы для работы с файлами
 const ACCEPT_FILES = 'image/jpeg,image/png,image/gif,image/webp,.pdf,.doc,.docx,.xls,.xlsx'
@@ -188,11 +190,12 @@ async function uploadFile(file: File) {
   })
 }
 
-/** Отправка сообщения (с файлом или без) */
-async function handleSendMessage(content: string, file: File | null) {
-  if (sending.value) return
+/** Отправка сообщения (с файлом или без). Возвращает true при успехе, false при ошибке. */
+async function handleSendMessage(content: string, file: File | null): Promise<boolean> {
+  if (sending.value) return false
 
   sending.value = true
+  sendFailed.value = false
   try {
     let attachment: { url: string, name: string, size: number, isImage: boolean } | null = null
     if (file) {
@@ -217,9 +220,12 @@ async function handleSendMessage(content: string, file: File | null) {
 
     await nextTick()
     scrollToBottom()
+    return true
   }
   catch {
-    toast.error('Ошибка при отправке сообщения')
+    toast.error('Ошибка при отправке. Сообщение сохранено, нажмите «Повторить» или отправьте снова.')
+    sendFailed.value = true
+    return false
   }
   finally {
     sending.value = false
@@ -329,13 +335,15 @@ function removePendingFile() {
   }
 }
 
-/** Отправка формы (сообщение + файл) */
-function handleSubmit() {
+/** Отправка формы (сообщение + файл). При ошибке сообщение не очищается. */
+async function handleSubmit() {
   if (!newMessage.value.trim() && !pendingFile.value) return
 
-  handleSendMessage(newMessage.value.trim(), pendingFile.value)
-  newMessage.value = ''
-  removePendingFile()
+  const ok = await handleSendMessage(newMessage.value.trim(), pendingFile.value)
+  if (ok) {
+    newMessage.value = ''
+    removePendingFile()
+  }
 }
 
 /** Enter без Shift — отправить, Shift+Enter — новая строка */
@@ -756,6 +764,23 @@ onUnmounted(() => {
       v-if="chat?.status !== 'closed'"
       class="pt-2 border-t border-[var(--glass-border)]"
     >
+      <!-- Ошибка отправки: сообщение сохранено, можно повторить -->
+      <div
+        v-if="sendFailed"
+        class="mb-2 flex items-center justify-between gap-2 rounded-lg bg-red-500/10 border border-red-500/20 px-3 py-2 text-sm"
+      >
+        <span class="text-red-400">Не удалось отправить. Сообщение сохранено.</span>
+        <UiButton
+          size="sm"
+          variant="secondary"
+          :disabled="sending"
+          @click="handleSubmit()"
+        >
+          <Icon name="heroicons:arrow-path" class="w-4 h-4 mr-1" />
+          Повторить
+        </UiButton>
+      </div>
+
       <!-- Pending file preview -->
       <div
         v-if="pendingFile"
