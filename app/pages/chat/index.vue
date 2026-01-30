@@ -226,48 +226,54 @@ onUnmounted(() => {
 <template>
   <div>
     <!-- Header -->
-    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-      <h1 class="text-3xl font-bold text-[var(--text-primary)]">
-        Чаты поддержки
-      </h1>
-    </div>
-
-    <!-- Filters + поиск + сортировка -->
-    <div class="flex flex-col gap-4 mb-6">
-      <div class="flex flex-wrap items-center gap-4">
-        <UiFilterTabs v-model="filters.status" :options="CHAT_STATUS_OPTIONS" />
-        <div class="flex items-center gap-2 ml-auto">
-          <input
-            id="showMine"
-            v-model="filters.assignedToMe"
-            type="checkbox"
-            class="w-4 h-4 rounded border-[var(--glass-border)] bg-[var(--glass-bg)] text-primary focus:ring-primary"
-          />
-          <label for="showMine" class="text-sm text-[var(--text-secondary)] cursor-pointer">
-            Только мои
-          </label>
-        </div>
+    <div class="mb-6 flex flex-col gap-4 md:flex-row md:items-center">
+      <div class="flex items-center gap-4 flex-1 min-w-0">
+        <h1 class="flex items-center gap-3 text-3xl font-bold text-[var(--text-primary)] whitespace-nowrap flex-shrink-0">
+          <Icon name="heroicons:chat-bubble-left-right" class="h-8 w-8" />
+          Чаты поддержки
+        </h1>
+        
+        <UiInput
+          v-model="searchQuery"
+          type="search"
+          placeholder="Поиск..."
+          class="flex-1 min-w-0 max-w-md"
+        >
+          <template #prefix>
+            <Icon name="heroicons:magnifying-glass" class="w-4 h-4" />
+          </template>
+        </UiInput>
       </div>
-
-      <div class="flex flex-nowrap items-center gap-3">
-        <div class="w-64 min-w-0 flex-1">
+      
+      <!-- Сортировка и кнопка "Только мои" -->
+      <div class="flex items-center gap-2 flex-shrink-0">
+        <div class="relative flex-shrink-0">
           <UiSelect
             v-model="sortBy"
             :options="SORT_OPTIONS.map(o => ({ value: o.value, label: o.label }))"
             placeholder="Сортировка"
             size="md"
-            class="w-full"
+            class="min-w-[180px]"
           />
         </div>
-        <div class="w-64 min-w-0 flex-1">
-          <UiInput
-            v-model="searchQuery"
-            type="search"
-            placeholder="Поиск.."
-            class="w-full"
+        
+        <div class="flex items-center gap-2 flex-shrink-0">
+          <input
+            id="showMine"
+            v-model="filters.assignedToMe"
+            type="checkbox"
+            class="w-4 h-4 rounded border-[var(--glass-border)] bg-[var(--glass-bg)] text-primary focus:ring-primary cursor-pointer"
           />
+          <label for="showMine" class="text-sm text-[var(--text-secondary)] cursor-pointer whitespace-nowrap">
+            Только мои
+          </label>
         </div>
       </div>
+    </div>
+
+    <!-- Фильтры по статусу -->
+    <div class="mb-6">
+      <UiFilterTabs v-model="filters.status" :options="CHAT_STATUS_OPTIONS" />
     </div>
 
     <!-- Loading -->
