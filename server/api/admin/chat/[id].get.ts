@@ -78,7 +78,7 @@ export default defineEventHandler(async (event) => {
       isRead: msg.is_read,
       readAt: msg.read_at,
       createdAt: msg.created_at,
-      editedAt: msg.edited_at,
+      editedAt: (msg as any).edited_at ?? null,
       systemAction: msg.system_action,
     })),
     hasMore: messages!.length === limit,

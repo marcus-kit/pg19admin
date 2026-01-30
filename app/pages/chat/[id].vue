@@ -37,12 +37,24 @@ const sending = ref(false)
 const chat = ref<Chat | null>(null)
 const messages = ref<ChatMessage[]>([])
 const messagesContainer = ref<HTMLElement | null>(null)
+const currentAdminName = ref<string | null>(null)
 
 // Состояние для ввода сообщения
 const newMessage = ref('')
 const fileInput = ref<HTMLInputElement | null>(null)
 const pendingFile = ref<File | null>(null)
 const pendingPreview = ref<string | null>(null)
+
+// Состояние для редактирования сообщения
+const editingMessageId = ref<string | null>(null)
+const editingMessageContent = ref('')
+
+// Состояние для контекстного меню
+const contextMenu = ref<{
+  messageId: string
+  x: number
+  y: number
+} | null>(null)
 
 // Константы для работы с файлами
 const ACCEPT_FILES = 'image/jpeg,image/png,image/gif,image/webp,.pdf,.doc,.docx,.xls,.xlsx'
@@ -135,6 +147,15 @@ function getSenderDisplayName(msg: ChatMessage): string {
 async function fetchChat() {
   loading.value = true
   try {
+    // Загружаем данные текущего админа
+    try {
+      const adminData = await $fetch<{ admin: { fullName: string } }>('/api/admin/auth/me')
+      currentAdminName.value = adminData.admin.fullName
+    }
+    catch {
+      // Игнорируем ошибку, если не удалось загрузить
+    }
+
     const data = await $fetch<{ chat: Chat, messages: ChatMessage[] }>(`/api/admin/chat/${chatId.value}`)
     chat.value = data.chat
     messages.value = data.messages
@@ -175,9 +196,132 @@ async function uploadFile(file: File) {
   })
 }
 
+/** Начать редактирование сообщения */
+function startEditing(msg: ChatMessage) {
+  editingMessageId.value = msg.id
+  editingMessageContent.value = msg.content
+  newMessage.value = msg.content
+  // Прокручиваем к полю ввода
+  nextTick(() => {
+    const textarea = document.querySelector('textarea')
+    textarea?.focus()
+    textarea?.scrollIntoView({ behavior: 'smooth', block: 'end' })
+  })
+}
+
+/** Отменить редактирование */
+function cancelEditing() {
+  editingMessageId.value = null
+  editingMessageContent.value = ''
+  newMessage.value = ''
+}
+
+/** Сохранить отредактированное сообщение */
+async function saveEditedMessage() {
+  if (!editingMessageId.value || !newMessage.value.trim()) return
+
+  sending.value = true
+  try {
+    const response = await $fetch<{ message: ChatMessage }>(
+      `/api/admin/chat/${chatId.value}/messages/${editingMessageId.value}`,
+      {
+        method: 'PUT',
+        body: {
+          content: newMessage.value.trim(),
+        },
+      },
+    )
+
+    // Обновляем сообщение в списке
+    const index = messages.value.findIndex(m => m.id === editingMessageId.value)
+    if (index !== -1) {
+      messages.value[index] = response.message
+    }
+
+    cancelEditing()
+    toast.success('Сообщение обновлено')
+  }
+  catch {
+    toast.error('Ошибка при обновлении сообщения')
+  }
+  finally {
+    sending.value = false
+  }
+}
+
+/** Удалить сообщение */
+async function deleteMessage(messageId: string) {
+  if (!confirm('Удалить это сообщение?')) return
+
+  try {
+    await $fetch(`/api/admin/chat/${chatId.value}/messages/${messageId}`, {
+      method: 'DELETE',
+    })
+
+    // Удаляем сообщение из списка
+    const index = messages.value.findIndex(m => m.id === messageId)
+    if (index !== -1) {
+      messages.value.splice(index, 1)
+    }
+
+    toast.success('Сообщение удалено')
+  }
+  catch {
+    toast.error('Ошибка при удалении сообщения')
+  }
+  finally {
+    contextMenu.value = null
+  }
+}
+
+/** Показать контекстное меню */
+function showContextMenu(event: MouseEvent, message: ChatMessage) {
+  // Показываем только для сообщений админа текущего пользователя
+  if (message.senderType !== 'admin' || message.senderName !== currentAdminName.value) {
+    return
+  }
+
+  event.preventDefault()
+  event.stopPropagation()
+
+  contextMenu.value = {
+    messageId: message.id,
+    x: event.clientX,
+    y: event.clientY,
+  }
+}
+
+/** Закрыть контекстное меню */
+function closeContextMenu() {
+  contextMenu.value = null
+}
+
+/** Обработчик редактирования из контекстного меню */
+function handleContextEdit() {
+  if (!contextMenu.value) return
+  const message = messages.value.find(m => m.id === contextMenu.value!.messageId)
+  if (message) {
+    startEditing(message)
+  }
+  closeContextMenu()
+}
+
+/** Обработчик удаления из контекстного меню */
+function handleContextDelete() {
+  if (!contextMenu.value) return
+  deleteMessage(contextMenu.value.messageId)
+}
+
 /** Отправка сообщения (с файлом или без) */
 async function handleSendMessage(content: string, file: File | null) {
   if (sending.value) return
+
+  // Если редактируем сообщение, сохраняем изменения
+  if (editingMessageId.value) {
+    editingMessageContent.value = content
+    await saveEditedMessage()
+    return
+  }
 
   sending.value = true
   try {
@@ -215,16 +359,33 @@ async function handleSendMessage(content: string, file: File | null) {
 
 /** Закрытие чата */
 async function handleClose() {
-  if (!confirm('Закрыть этот чат?')) return
-
   try {
     await $fetch(`/api/admin/chat/${chatId.value}/close`, { method: 'POST' })
     if (chat.value) {
       chat.value.status = 'closed'
     }
+    toast.success('Чат закрыт')
+    // Перезагружаем чат для получения системного сообщения
+    await fetchChat()
   }
   catch {
     toast.error('Ошибка при закрытии чата')
+  }
+}
+
+/** Открытие чата */
+async function handleOpen() {
+  try {
+    await $fetch(`/api/admin/chat/${chatId.value}/open`, { method: 'POST' })
+    if (chat.value) {
+      chat.value.status = 'active'
+    }
+    toast.success('Чат открыт')
+    // Перезагружаем чат для получения системного сообщения
+    await fetchChat()
+  }
+  catch {
+    toast.error('Ошибка при открытии чата')
   }
 }
 
@@ -394,6 +555,10 @@ function setupRealtime() {
 onMounted(() => {
   fetchChat()
   setupRealtime()
+  
+  // Закрываем контекстное меню при клике вне его
+  document.addEventListener('click', closeContextMenu)
+  document.addEventListener('contextmenu', closeContextMenu)
 })
 
 onUnmounted(() => {
@@ -401,6 +566,9 @@ onUnmounted(() => {
   if (pendingPreview.value) {
     URL.revokeObjectURL(pendingPreview.value)
   }
+  
+  document.removeEventListener('click', closeContextMenu)
+  document.removeEventListener('contextmenu', closeContextMenu)
 })
 </script>
 
@@ -421,7 +589,17 @@ onUnmounted(() => {
         </UiButton>
         <div>
           <div class="flex items-center gap-2">
-            <h1 class="text-lg font-semibold text-[var(--text-primary)]">
+            <NuxtLink
+              v-if="isPersonalCabinetChat() && chat.userId"
+              :to="`/users/${chat.userId}?from=chat&chatId=${chat.id}`"
+              class="text-lg font-semibold text-[var(--text-primary)] hover:text-primary transition-colors cursor-pointer"
+            >
+              {{ getChatDisplayName() }}
+            </NuxtLink>
+            <h1
+              v-else
+              class="text-lg font-semibold text-[var(--text-primary)]"
+            >
               {{ getChatDisplayName() }}
             </h1>
             <UiBadge
@@ -566,8 +744,25 @@ onUnmounted(() => {
             <!-- Admin Message -->
             <div
               v-else-if="msg.senderType === 'admin'"
-              class="max-w-[70%] rounded-2xl px-4 py-2 glass-card rounded-br-md border-l-2 border-primary/50"
+              :data-message-id="msg.id"
+              class="max-w-[70%] rounded-2xl px-4 py-2 glass-card rounded-br-md border-l-2 border-primary/50 group relative"
+              :class="{ 'ring-2 ring-primary/30': editingMessageId === msg.id }"
+              @contextmenu="showContextMenu($event, msg)"
             >
+              <div class="flex items-center justify-between mb-1">
+                <div class="flex items-center gap-1.5">
+                  <Icon name="heroicons:user-circle" class="w-3.5 h-3.5 text-primary" />
+                  <span class="text-xs font-medium text-primary">{{ msg.senderName || 'Администратор' }}</span>
+                </div>
+                <button
+                  v-if="!editingMessageId && msg.senderName === currentAdminName"
+                  @click.stop="startEditing(msg)"
+                  class="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-white/10"
+                  title="Редактировать"
+                >
+                  <Icon name="heroicons:pencil" class="w-3.5 h-3.5 text-[var(--text-muted)]" />
+                </button>
+              </div>
               <p
                 v-if="msg.content"
                 class="whitespace-pre-wrap break-words text-[var(--text-primary)]"
@@ -603,9 +798,6 @@ onUnmounted(() => {
               </template>
               <div class="text-xs mt-1 text-[var(--text-muted)]">
                 {{ formatTime(msg.createdAt) }}
-                <span v-if="msg.senderName" class="ml-1 text-primary">
-                  · {{ msg.senderName }}
-                </span>
               </div>
             </div>
 
@@ -648,7 +840,7 @@ onUnmounted(() => {
                   <Icon name="heroicons:arrow-down-tray" class="w-4 h-4 text-[var(--text-muted)]" />
                 </a>
               </template>
-              <div class="text-xs mt-1 text-[var(--text-muted)]">
+              <div class="text-xs mt-1 text-[var(--text-muted)] text-right">
                 {{ formatTime(msg.createdAt) }}
               </div>
             </div>
@@ -709,14 +901,34 @@ onUnmounted(() => {
         class="hidden"
       />
 
-      <form @submit.prevent="handleSubmit" class="flex gap-2">
+      <!-- Режим редактирования -->
+      <div
+        v-if="editingMessageId"
+        class="mb-2 p-2 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-between"
+      >
+        <div class="flex items-center gap-2">
+          <Icon name="heroicons:pencil" class="w-4 h-4 text-primary" />
+          <span class="text-sm text-primary font-medium">Редактирование сообщения</span>
+        </div>
+        <button
+          @click="cancelEditing"
+          class="p-1 rounded hover:bg-white/10 transition-colors"
+          title="Отменить"
+        >
+          <Icon name="heroicons:x-mark" class="w-4 h-4 text-[var(--text-muted)]" />
+        </button>
+      </div>
+
+      <form @submit.prevent="handleSubmit" class="flex gap-2 items-start">
         <!-- Attach button -->
         <UiButton
+          v-if="!editingMessageId"
           :disabled="sending"
           @click="openFileDialog"
           type="button"
           variant="ghost"
           title="Прикрепить файл"
+          class="flex-shrink-0 self-start"
         >
           <Icon name="heroicons:paper-clip" class="w-5 h-5" />
         </UiButton>
@@ -725,16 +937,31 @@ onUnmounted(() => {
           v-model="newMessage"
           :disabled="sending"
           @keydown.enter.exact.prevent="handleSubmit"
+          @keydown.escape="cancelEditing"
           @input="handleTextareaInput"
-          placeholder="Введите сообщение..."
+          :placeholder="editingMessageId ? 'Редактируйте сообщение...' : 'Введите сообщение...'"
           rows="1"
           class="flex-1 px-3 py-2 glass-card rounded-lg text-[var(--text-primary)] border border-[var(--glass-border)] focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all bg-[var(--glass-bg)] resize-none min-h-[40px] max-h-[120px]"
         />
 
         <UiButton
+          v-if="editingMessageId"
+          :loading="sending"
+          :disabled="!newMessage.trim() || sending"
+          @click="saveEditedMessage"
+          type="button"
+          variant="secondary"
+          class="flex-shrink-0 self-start"
+        >
+          <Icon name="heroicons:check" class="w-5 h-5" />
+          Сохранить
+        </UiButton>
+        <UiButton
+          v-else
           :loading="sending"
           :disabled="(!newMessage.trim() && !pendingFile) || sending"
           type="submit"
+          class="flex-shrink-0 self-start"
         >
           <Icon name="heroicons:paper-airplane" class="w-5 h-5" />
         </UiButton>
@@ -744,10 +971,64 @@ onUnmounted(() => {
     <!-- Closed Chat Notice -->
     <div
       v-else-if="chat"
-      class="pt-2 border-t border-[var(--glass-border)] text-center text-[var(--text-muted)]"
+      class="pt-2 border-t border-[var(--glass-border)] text-center space-y-3"
     >
-      <Icon name="heroicons:lock-closed" class="w-5 h-5 inline-block mr-1" />
-      Чат закрыт
+      <div class="text-[var(--text-muted)]">
+        <Icon name="heroicons:lock-closed" class="w-5 h-5 inline-block mr-1" />
+        Чат закрыт
+      </div>
+      <UiButton
+        @click="handleOpen"
+        variant="secondary"
+        size="sm"
+      >
+        <Icon name="heroicons:lock-open" class="w-4 h-4" />
+        Открыть чат
+      </UiButton>
     </div>
+
+    <!-- Context Menu -->
+    <Teleport to="body">
+      <Transition name="fade">
+        <div
+          v-if="contextMenu"
+          :style="{
+            position: 'fixed',
+            left: `${contextMenu.x}px`,
+            top: `${contextMenu.y}px`,
+            zIndex: 1000,
+          }"
+          class="glass-card rounded-lg border border-[var(--glass-border)] shadow-lg py-1 min-w-[150px]"
+          @click.stop
+        >
+          <button
+            @click="handleContextEdit"
+            class="w-full flex items-center gap-2 px-3 py-2 text-sm text-[var(--text-primary)] hover:bg-[var(--glass-bg)] transition-colors"
+          >
+            <Icon name="heroicons:pencil" class="w-4 h-4" />
+            Редактировать
+          </button>
+          <button
+            @click="handleContextDelete"
+            class="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-400 hover:bg-red-500/10 transition-colors"
+          >
+            <Icon name="heroicons:trash" class="w-4 h-4" />
+            Удалить
+          </button>
+        </div>
+      </Transition>
+    </Teleport>
   </div>
 </template>
+
+<style scoped>
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.15s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+</style>

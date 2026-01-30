@@ -93,14 +93,25 @@ function normalizeSearch(s: string): string {
 function chatMatchesSearch(chat: Chat, query: string): boolean {
   if (!query) return true
   const q = normalizeSearch(query)
+  
+  // Формируем полное имя из ФИО
+  const fullName = chat.userFirstName || chat.userLastName
+    ? `${chat.userLastName || ''} ${chat.userFirstName || ''}`.trim()
+    : null
+  
   const fields = [
     chat.userName,
+    chat.userFirstName,
+    chat.userLastName,
+    fullName,
     chat.guestName,
     chat.guestContact,
     chat.subject,
     chat.id,
     chat.userTelegramId != null ? String(chat.userTelegramId) : '',
+    chat.assignedAdmin?.fullName,
   ].filter(Boolean) as string[]
+  
   return fields.some(f => f.toLowerCase().includes(q))
 }
 
@@ -458,7 +469,7 @@ onUnmounted(() => {
     </div>
 
     <!-- Правая колонка: Панель фильтров -->
-    <aside class="hidden lg:block w-96 flex-shrink-0">
+    <aside class="hidden lg:block w-80 flex-shrink-0">
       <div class="glass-card rounded-xl border border-[var(--glass-border)] backdrop-blur-sm overflow-hidden">
         <!-- Заголовок панели с кнопкой сворачивания -->
         <button

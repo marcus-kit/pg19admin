@@ -73,6 +73,19 @@ const editForm = ref({
 
 const userId = computed(() => route.params.id as string)
 
+// Определяем, откуда пришли (для правильной навигации назад)
+const fromChat = computed(() => {
+  const query = route.query
+  return query.from === 'chat' && query.chatId
+})
+
+const backUrl = computed(() => {
+  if (fromChat.value) {
+    return `/chat/${route.query.chatId}`
+  }
+  return '/users'
+})
+
 // Загрузка данных пользователя
 async function fetchUser() {
   loading.value = true
@@ -215,7 +228,7 @@ onMounted(() => {
       <div class="flex items-start justify-between gap-4 mb-6">
         <div>
           <div class="flex items-center gap-3 mb-2">
-            <UiButton @click="router.push('/users')" variant="ghost" size="sm">
+            <UiButton @click="router.push(backUrl)" variant="ghost" size="sm">
               <Icon name="heroicons:arrow-left" class="w-5 h-5" />
             </UiButton>
             <UiBadge :class="getStatusBadgeClass(user.status)">

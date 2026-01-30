@@ -232,6 +232,7 @@ export interface ChatMessage {
   attachmentSize: number | null
   isRead: boolean
   createdAt: string
+  editedAt?: string | null
 }
 
 // ==================== ЗАЯВКИ ====================
