@@ -8,6 +8,7 @@ import type { Chat, ChatMessage } from '~/types/admin'
 // ИМПОРТЫ
 // ═══════════════════════════════════════════════════════════════════════════
 import { getErrorStatusCode, formatFileSize, formatTime, formatRelativeDate } from '~/composables/useFormatters'
+import { CHAT_STATUS, getStatusLabel, getStatusBadgeClass } from '~/composables/useStatusConfig'
 
 // ═══════════════════════════════════════════════════════════════════════════
 // МАКРОСЫ
@@ -37,6 +38,9 @@ const sending = ref(false)
 const chat = ref<Chat | null>(null)
 const messages = ref<ChatMessage[]>([])
 const messagesContainer = ref<HTMLElement | null>(null)
+const messageInputRef = ref<HTMLTextAreaElement | null>(null)
+/** Показывать кнопку «Вниз», когда пользователь проскроллил вверх */
+const showScrollToBottom = ref(false)
 
 // Состояние для ввода сообщения
 const newMessage = ref('')
@@ -144,6 +148,10 @@ async function fetchChat() {
     loading.value = false
     await nextTick()
     scrollToBottom()
+    showScrollToBottom.value = false
+    if (chat.value?.status !== 'closed') {
+      setTimeout(() => messageInputRef.value?.focus(), 100)
+    }
   }
 }
 
@@ -175,9 +183,11 @@ async function loadMoreMessages() {
   }
 }
 
-/** Обработка скролла: подгрузка при достижении верха */
+/** Обработка скролла: подгрузка при достижении верха, видимость кнопки «Вниз» */
 function onMessagesScroll() {
-  if (!messagesContainer.value || loadingMore.value || !hasMoreMessages.value) return
+  if (!messagesContainer.value) return
+  showScrollToBottom.value = !isScrolledToBottom()
+  if (loadingMore.value || !hasMoreMessages.value) return
   if (messagesContainer.value.scrollTop < SCROLL_LOAD_THRESHOLD) {
     loadMoreMessages()
   }
@@ -286,6 +296,7 @@ async function handleAssignToMe() {
 function scrollToBottom() {
   if (!messagesContainer.value) return
   messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight
+  showScrollToBottom.value = false
 }
 
 /** Метка даты для группировки сообщений (Сегодня/Вчера/дата) */
@@ -520,7 +531,7 @@ onUnmounted(() => {
             <Icon name="heroicons:arrow-left" class="w-5 h-5" />
           </UiButton>
           <div class="min-w-0">
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-2 flex-wrap">
               <h1 class="text-lg font-semibold text-[var(--text-primary)] truncate">
                 {{ chat.userName || chat.guestName || `Чат #${chat.id}` }}
               </h1>
@@ -530,6 +541,12 @@ onUnmounted(() => {
                 class="bg-purple-500/20 text-purple-400 shrink-0"
               >
                 Гость
+              </UiBadge>
+              <UiBadge
+                :class="getStatusBadgeClass(CHAT_STATUS, chat.status)"
+                size="sm"
+              >
+                {{ getStatusLabel(CHAT_STATUS, chat.status) }}
               </UiBadge>
             </div>
             <div class="flex items-center gap-2 text-xs text-[var(--text-muted)] truncate">
@@ -569,7 +586,7 @@ onUnmounted(() => {
       <div
         v-else
         ref="messagesContainer"
-        class="flex-1 overflow-y-auto py-2 space-y-3"
+        class="flex-1 overflow-y-auto py-2 space-y-3 relative"
         @scroll="onMessagesScroll"
       >
         <!-- Индикатор подгрузки старых сообщений -->
@@ -794,6 +811,20 @@ onUnmounted(() => {
       >
         <p class="text-[var(--text-muted)]">Сообщений пока нет</p>
       </div>
+
+      <!-- Кнопка «Вниз» при скролле вверх -->
+      <Transition name="fade">
+        <button
+          v-show="showScrollToBottom"
+          type="button"
+          class="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 px-4 py-2 rounded-full glass-card border border-[var(--glass-border)] shadow-lg hover:bg-white/10 text-sm font-medium text-[var(--text-primary)] flex items-center gap-2"
+          aria-label="Прокрутить вниз"
+          @click="scrollToBottom()"
+        >
+          <Icon name="heroicons:chevron-down" class="w-5 h-5" />
+          Вниз
+        </button>
+      </Transition>
     </div>
 
     <!-- Input -->
@@ -901,6 +932,7 @@ onUnmounted(() => {
         </UiButton>
 
         <textarea
+          ref="messageInputRef"
           v-model="newMessage"
           :disabled="sending"
           @keydown="onMessageKeydown"

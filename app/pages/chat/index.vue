@@ -67,7 +67,8 @@ const sortBy = ref<SortOption>('lastMessage')
 
 // Навигация с клавиатуры
 const listContainerRef = ref<HTMLElement | null>(null)
-const focusedIndex = ref(0)
+/** Индекс карточки с фокусом клавиатуры (-1 = подсветка никому не показывается) */
+const focusedIndex = ref(-1)
 const cardRefs = ref<(HTMLElement | null)[]>([])
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -137,9 +138,28 @@ const filteredAndSortedChats = computed(() => {
   return list
 })
 
+/** Статистика для hero: всего диалогов и непрочитанных */
+const chatStats = computed(() => {
+  const list = chats.value
+  const total = list.length
+  const unread = list.reduce((acc, c) => acc + (c.unreadAdminCount || 0), 0)
+  return { total, unread }
+})
+
 // ═══════════════════════════════════════════════════════════════════════════
 // МЕТОДЫ
 // ═══════════════════════════════════════════════════════════════════════════
+
+/** Инициалы для аватарки чата */
+function getChatInitials(chat: Chat): string {
+  const name = chat.userName || chat.guestName || ''
+  if (!name.trim()) return '?'
+  const parts = name.trim().split(/\s+/)
+  if (parts.length >= 2) {
+    return (parts[0]!.charAt(0) + parts[parts.length - 1]!.charAt(0)).toUpperCase().slice(0, 2)
+  }
+  return name.slice(0, 2).toUpperCase()
+}
 
 /** Переход на страницу чата */
 function goToChat(id: string) {
@@ -164,17 +184,19 @@ function onListKeydown(e: KeyboardEvent) {
   switch (e.key) {
     case 'ArrowDown':
       e.preventDefault()
-      focusedIndex.value = Math.min(focusedIndex.value + 1, list.length - 1)
+      focusedIndex.value = focusedIndex.value < 0 ? 0 : Math.min(focusedIndex.value + 1, list.length - 1)
       nextTick(() => cardRefs.value[focusedIndex.value]?.scrollIntoView({ block: 'nearest' }))
       break
     case 'ArrowUp':
       e.preventDefault()
-      focusedIndex.value = Math.max(focusedIndex.value - 1, 0)
+      focusedIndex.value = focusedIndex.value < 0 ? list.length - 1 : Math.max(focusedIndex.value - 1, 0)
       nextTick(() => cardRefs.value[focusedIndex.value]?.scrollIntoView({ block: 'nearest' }))
       break
     case 'Enter':
       e.preventDefault()
-      goToChat(list[focusedIndex.value]!.id)
+      if (focusedIndex.value >= 0) {
+        goToChat(list[focusedIndex.value]!.id)
+      }
       break
     default:
       break
@@ -209,9 +231,11 @@ function stopRefreshTimer() {
   }
 }
 
-// Сбрасываем focusedIndex при смене списка (поиск/фильтр)
+// Сбрасываем focusedIndex при смене списка (поиск/фильтр), -1 не трогаем
 watch(filteredAndSortedChats, (list) => {
-  focusedIndex.value = Math.min(focusedIndex.value, Math.max(0, list.length - 1))
+  if (focusedIndex.value >= 0) {
+    focusedIndex.value = Math.min(focusedIndex.value, Math.max(0, list.length - 1))
+  }
 })
 
 onMounted(() => {
@@ -224,54 +248,88 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div>
-    <!-- Header -->
-    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-      <h1 class="text-3xl font-bold text-[var(--text-primary)]">
-        Чаты поддержки
-      </h1>
-    </div>
-
-    <!-- Filters + поиск + сортировка -->
-    <div class="flex flex-col gap-4 mb-6">
-      <div class="flex flex-wrap items-center gap-4">
-        <UiFilterTabs v-model="filters.status" :options="CHAT_STATUS_OPTIONS" />
-        <div class="flex items-center gap-2 ml-auto">
-          <input
-            id="showMine"
-            v-model="filters.assignedToMe"
-            type="checkbox"
-            class="w-4 h-4 rounded border-[var(--glass-border)] bg-[var(--glass-bg)] text-primary focus:ring-primary"
-          />
-          <label for="showMine" class="text-sm text-[var(--text-secondary)] cursor-pointer">
-            Только мои
-          </label>
+  <div class="chat-page">
+    <!-- Hero: градиент + заголовок + статистика -->
+    <header class="chat-page__hero">
+      <div class="chat-page__hero-bg" aria-hidden="true" />
+      <div class="chat-page__hero-inner">
+        <div class="flex items-center gap-3 mb-2">
+          <div class="chat-page__hero-icon">
+            <Icon name="heroicons:chat-bubble-left-right" class="w-7 h-7 text-primary" />
+          </div>
+          <div>
+            <h1 class="chat-page__hero-title">
+              Поддержка
+            </h1>
+            <p class="chat-page__hero-subtitle">
+              Диалоги с клиентами в одном месте
+            </p>
+          </div>
+        </div>
+        <div v-if="!loading" class="chat-page__stats">
+          <span class="chat-page__stat">
+            <strong>{{ chatStats.total }}</strong> {{ chatStats.total === 1 ? 'диалог' : chatStats.total < 5 ? 'диалога' : 'диалогов' }}
+          </span>
+          <span v-if="chatStats.unread > 0" class="chat-page__stat chat-page__stat--unread">
+            <span class="chat-page__stat-dot" />
+            <strong>{{ chatStats.unread }}</strong> непрочитанных
+          </span>
         </div>
       </div>
+    </header>
 
-      <div class="flex flex-nowrap items-center gap-3">
-        <div class="w-64 min-w-0 flex-1">
+    <!-- Панель фильтров и поиска -->
+    <div class="chat-page__toolbar">
+      <!-- Статусы: подчёркивание-табы -->
+      <nav class="chat-page__nav" aria-label="Фильтр по статусу">
+        <button
+          v-for="opt in CHAT_STATUS_OPTIONS"
+          :key="opt.value"
+          type="button"
+          class="chat-page__nav-item"
+          :class="{ 'chat-page__nav-item--active': filters.status === opt.value }"
+          @click="filters.status = opt.value"
+        >
+          {{ opt.label }}
+        </button>
+      </nav>
+      <!-- Поиск, сортировка и «Мои» — отдельные блоки -->
+      <div class="chat-page__bar-row">
+        <div class="chat-page__block chat-page__block--search">
+          <Icon name="heroicons:magnifying-glass" class="chat-page__block-search-icon" aria-hidden="true" />
+          <input
+            v-model="searchQuery"
+            type="search"
+            placeholder="Поиск..."
+            class="chat-page__block-search"
+            aria-label="Поиск чатов"
+          />
+        </div>
+        <div class="chat-page__block chat-page__block--sort">
           <UiSelect
             v-model="sortBy"
             :options="SORT_OPTIONS.map(o => ({ value: o.value, label: o.label }))"
             placeholder="Сортировка"
             size="md"
-            class="w-full"
+            class="chat-page__block-sort"
           />
         </div>
-        <div class="w-64 min-w-0 flex-1">
-          <UiInput
-            v-model="searchQuery"
-            type="search"
-            placeholder="Поиск.."
-            class="w-full"
-          />
-        </div>
+        <button
+          type="button"
+          class="chat-page__block chat-page__block--mine"
+          :class="{ 'chat-page__block--mine-on': filters.assignedToMe }"
+          :title="filters.assignedToMe ? 'Показать все чаты' : 'Только мои'"
+          aria-pressed="filters.assignedToMe"
+          @click="filters.assignedToMe = !filters.assignedToMe"
+        >
+          <Icon name="heroicons:user" class="w-4 h-4" />
+          <span>Мои</span>
+        </button>
       </div>
     </div>
 
     <!-- Loading -->
-    <UiLoading v-if="loading" />
+    <UiLoading v-if="loading" class="chat-page__loading" />
 
     <!-- Chat List (с навигацией с клавиатуры) -->
     <div
@@ -280,90 +338,77 @@ onUnmounted(() => {
       tabindex="0"
       role="list"
       aria-label="Список чатов"
-      class="outline-none focus:outline-none space-y-3"
+      class="chat-page__list outline-none"
       @keydown="onListKeydown"
     >
-      <UiCard
+      <article
         v-for="(chat, i) in filteredAndSortedChats"
         :key="chat.id"
         :ref="(el) => setCardRef(i, el)"
-        :hover="true"
-        padding="sm"
-        class="cursor-pointer transition-ring focus-within:ring-2 focus-within:ring-primary/30 focus-within:ring-offset-2 focus-within:ring-offset-[var(--bg-primary)]"
-        :class="{ 'ring-2 ring-primary/40 ring-offset-2 ring-offset-[var(--bg-primary)]': i === focusedIndex }"
+        class="chat-page__card"
+        :class="{
+          'chat-page__card--unread': chat.unreadAdminCount > 0,
+          'chat-page__card--focused': i === focusedIndex,
+        }"
         tabindex="-1"
         @click="onCardClick(chat, i)"
       >
-        <div class="flex items-start justify-between gap-4">
-          <div class="flex-1 min-w-0">
-            <div class="flex items-center gap-2 mb-1 flex-wrap">
-              <span class="font-medium text-[var(--text-primary)]">
-                {{ chat.userName || `Чат #${chat.id}` }}
-              </span>
-              <span
-                v-if="chat.guestContact"
-                class="text-xs text-[var(--text-muted)]"
-              >
-                ({{ chat.guestContact }})
-              </span>
-              <UiBadge
-                v-if="chat.guestName && !chat.userId"
-                size="sm"
-                class="bg-purple-500/20 text-purple-400"
-              >
-                Гость
-              </UiBadge>
-              <UiBadge
-                :class="getStatusBadgeClass(CHAT_STATUS, chat.status)"
-                size="sm"
-              >
-                {{ getStatusLabel(CHAT_STATUS, chat.status) }}
-              </UiBadge>
-              <span
-                v-if="chat.unreadAdminCount > 0"
-                class="inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-red-500 rounded-full"
-              >
-                {{ chat.unreadAdminCount > 9 ? '9+' : chat.unreadAdminCount }}
-              </span>
-            </div>
-
-            <p
-              v-if="chat.subject"
-              class="text-sm text-[var(--text-secondary)] truncate mb-1"
-            >
-              {{ chat.subject }}
-            </p>
-
-            <div class="flex items-center gap-3 text-xs text-[var(--text-muted)]">
-              <span v-if="chat.assignedAdmin" class="flex items-center gap-1">
-                <Icon name="heroicons:user" class="w-3 h-3" />
-                {{ chat.assignedAdmin.fullName }}
-              </span>
-              <span v-if="chat.userTelegramId" class="flex items-center gap-1">
-                <Icon name="simple-icons:telegram" class="w-3 h-3" />
-                {{ chat.userTelegramId }}
-              </span>
-            </div>
-          </div>
-
-          <div class="text-right shrink-0">
-            <span class="text-xs text-[var(--text-muted)]">
+        <div class="chat-page__card-avatar" :class="{ 'chat-page__card-avatar--unread': chat.unreadAdminCount > 0 }">
+          <span>{{ getChatInitials(chat) }}</span>
+          <span v-if="chat.unreadAdminCount > 0" class="chat-page__card-badge">
+            {{ chat.unreadAdminCount > 9 ? '9+' : chat.unreadAdminCount }}
+          </span>
+        </div>
+        <div class="chat-page__card-body">
+          <div class="chat-page__card-top">
+            <span class="chat-page__card-name" :class="{ 'font-semibold': chat.unreadAdminCount > 0 }">
+              {{ chat.userName || chat.guestName || `Чат #${chat.id.slice(0, 8)}` }}
+            </span>
+            <span class="chat-page__card-time">
               <UiRelativeTime :date="chat.lastMessageAt" />
             </span>
-            <Icon
-              name="heroicons:chevron-right"
-              class="w-5 h-5 text-[var(--text-muted)] mt-2"
-            />
+          </div>
+          <p v-if="chat.subject" class="chat-page__card-subject">
+            {{ chat.subject }}
+          </p>
+          <div class="chat-page__card-meta">
+            <UiBadge
+              v-if="chat.guestName && !chat.userId"
+              size="sm"
+              class="chat-page__card-guest"
+            >
+              Гость
+            </UiBadge>
+            <UiBadge
+              :class="getStatusBadgeClass(CHAT_STATUS, chat.status)"
+              size="sm"
+            >
+              {{ getStatusLabel(CHAT_STATUS, chat.status) }}
+            </UiBadge>
+            <span v-if="chat.assignedAdmin" class="chat-page__card-assigned">
+              <Icon name="heroicons:user-circle" class="w-3.5 h-3.5" />
+              {{ chat.assignedAdmin.fullName }}
+            </span>
           </div>
         </div>
-      </UiCard>
+        <Icon name="heroicons:chevron-right" class="chat-page__card-arrow" />
+      </article>
 
-      <!-- Empty State -->
-      <UiEmptyState
+      <!-- Empty state -->
+      <div
         v-if="filteredAndSortedChats.length === 0"
-        :title="searchQuery.trim() ? 'Ничего не найдено по запросу' : (filters.status === 'all' ? 'Чатов пока нет' : 'Нет чатов с таким статусом')"
-        icon="heroicons:chat-bubble-left-right"
-      />
+        class="chat-page__empty"
+      >
+        <div class="chat-page__empty-icon">
+          <Icon name="heroicons:chat-bubble-left-right" class="w-16 h-16 text-[var(--text-muted)]/40" />
+        </div>
+        <h2 class="chat-page__empty-title">
+          {{ searchQuery.trim() ? 'Ничего не найдено' : (filters.status === 'all' ? 'Пока нет диалогов' : 'Нет чатов с этим статусом') }}
+        </h2>
+        <p class="chat-page__empty-text">
+          {{ searchQuery.trim() ? 'Попробуйте другой запрос или сбросьте фильтры' : 'Новые обращения появятся здесь' }}
+        </p>
+      </div>
     </div>
   </div>
 </template>
