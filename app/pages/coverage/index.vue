@@ -535,24 +535,24 @@ onUnmounted(() => {
         <Transition name="slide-right">
           <div
             v-if="showZonesDrawer"
-            class="fixed right-0 top-0 h-full w-full max-w-md bg-[var(--bg-secondary)] border-l border-[var(--glass-border)] z-50 overflow-y-auto"
+            class="fixed right-0 top-0 h-full w-full max-w-md glass-card border-l border-[var(--glass-border)] z-50 overflow-y-auto shadow-xl"
           >
             <!-- Header -->
-            <div class="sticky top-0 bg-[var(--bg-secondary)] border-b border-[var(--glass-border)] p-4 flex items-center justify-between">
+            <div class="sticky top-0 z-10 bg-[var(--glass-bg)]/95 backdrop-blur-sm border-b border-[var(--glass-border)] p-4 flex items-center justify-between">
               <h2 class="text-lg font-semibold text-[var(--text-primary)]">
                 Зоны покрытия ({{ filteredZones.length }})
               </h2>
-              <button @click="showZonesDrawer = false" class="p-2 hover:bg-[var(--glass-bg)] rounded-lg text-[var(--text-muted)]">
+              <button @click="showZonesDrawer = false" class="p-2 hover:bg-white/10 rounded-lg text-[var(--text-muted)]">
                 <Icon name="heroicons:x-mark" class="w-5 h-5" />
               </button>
             </div>
 
-            <!-- Content -->
-            <div class="p-4 space-y-4">
+            <!-- Content: фон для списка -->
+            <div class="p-4 min-h-full bg-[var(--glass-bg)]">
               <!-- Zone List -->
               <UiLoading v-if="loading" size="sm" />
 
-              <div v-else class="space-y-2">
+              <div v-else class="space-y-2 rounded-xl p-4 bg-[var(--bg-primary)]/80 border border-[var(--glass-border)]">
                 <div
                   v-for="zone in filteredZones"
                   :key="zone.id"
