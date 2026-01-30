@@ -17,12 +17,11 @@ export default defineEventHandler(async (event) => {
     `)
     .order('last_message_at', { ascending: false, nullsFirst: false })
 
-  if (status && ['active', 'waiting', 'closed'].includes(status)) {
+  const allowedStatuses = ['active', 'waiting', 'processing', 'closed', 'resolved']
+  if (status && allowedStatuses.includes(status)) {
     queryBuilder = queryBuilder.eq('status', status)
   }
-  else {
-    queryBuilder = queryBuilder.in('status', ['active', 'waiting'])
-  }
+  // при status === 'all' или отсутствии — не фильтруем по статусу (все чаты)
 
   if (assignedToMe) {
     queryBuilder = queryBuilder.eq('assigned_admin_id', admin.id)

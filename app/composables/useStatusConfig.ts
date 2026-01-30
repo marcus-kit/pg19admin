@@ -160,6 +160,8 @@ export const TICKET_PRIORITY_OPTIONS: FilterOption<TicketPriority>[] = [
 export const CHAT_STATUS_OPTIONS: FilterOption<ChatStatus>[] = [
   { value: 'waiting', label: 'Ожидают' },
   { value: 'active', label: 'Активные' },
+  { value: 'processing', label: 'В обработке' },
+  { value: 'resolved', label: 'Решённые' },
   { value: 'closed', label: 'Закрытые' },
   { value: 'all', label: 'Все' },
 ]

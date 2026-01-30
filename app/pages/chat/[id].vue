@@ -50,7 +50,7 @@ const sendFailed = ref(false)
 const ACCEPT_FILES = 'image/jpeg,image/png,image/gif,image/webp,.pdf,.doc,.docx,.xls,.xlsx'
 const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
 
-/** Шаблоны ответов (только фронтенд) */
+/** Шаблоны ответов для операторов */
 const CHAT_TEMPLATES = [
   { id: 'greet', label: 'Приветствие', text: 'Здравствуйте! Чем могу помочь?' },
   { id: 'received', label: 'Принято', text: 'Принято в работу. Ожидайте ответа.' },
@@ -58,6 +58,25 @@ const CHAT_TEMPLATES = [
   { id: 'clarify', label: 'Уточните', text: 'Уточните, пожалуйста, детали вашего вопроса.' },
   { id: 'thanks', label: 'Благодарность', text: 'Спасибо за обращение! Если возникнут вопросы — пишите.' },
 ]
+
+const templatesOpen = ref(false)
+const templatesRef = ref<HTMLElement | null>(null)
+let templatesCloseHandler: ((e: MouseEvent) => void) | null = null
+
+watch(templatesOpen, (open) => {
+  if (templatesCloseHandler) {
+    document.removeEventListener('click', templatesCloseHandler)
+    templatesCloseHandler = null
+  }
+  if (!open) return
+  templatesCloseHandler = (e: MouseEvent) => {
+    const el = templatesRef.value
+    if (el && !el.contains(e.target as Node)) {
+      templatesOpen.value = false
+    }
+  }
+  nextTick(() => document.addEventListener('click', templatesCloseHandler))
+})
 
 // Пагинация сообщений
 const hasMoreMessages = ref(false)
@@ -354,11 +373,12 @@ function onMessageKeydown(e: KeyboardEvent) {
   }
 }
 
-/** Вставка шаблона в поле ввода */
+/** Вставка шаблона в поле ввода и закрытие меню */
 function insertTemplate(template: { text: string }) {
   const text = template.text.trim()
   if (!text) return
   newMessage.value = newMessage.value ? `${newMessage.value}\n${text}` : text
+  templatesOpen.value = false
 }
 
 /** Копирование текста сообщения в буфер */
@@ -450,12 +470,29 @@ function setupRealtime() {
 // LIFECYCLE HOOKS
 // ═══════════════════════════════════════════════════════════════════════════
 
+/** Esc — закрыть меню шаблонов или вернуться к списку чатов */
+function onPageKeydown(e: KeyboardEvent) {
+  if (e.key !== 'Escape') return
+  if (templatesOpen.value) {
+    templatesOpen.value = false
+  }
+  else {
+    router.push('/chat')
+  }
+}
+
 onMounted(() => {
   fetchChat()
   setupRealtime()
+  if (typeof document !== 'undefined') {
+    document.addEventListener('keydown', onPageKeydown)
+  }
 })
 
 onUnmounted(() => {
+  if (typeof document !== 'undefined') {
+    document.removeEventListener('keydown', onPageKeydown)
+  }
   subscription?.unsubscribe()
   if (titleFlashTimeout) clearTimeout(titleFlashTimeout)
   if (pendingPreview.value) {
@@ -819,6 +856,37 @@ onUnmounted(() => {
         type="file"
         class="hidden"
       />
+
+      <!-- Шаблоны ответов -->
+      <div ref="templatesRef" class="relative mb-2">
+        <UiButton
+          type="button"
+          variant="ghost"
+          size="sm"
+          class="text-[var(--text-muted)]"
+          @click.stop="templatesOpen = !templatesOpen"
+        >
+          <Icon name="heroicons:document-text" class="w-4 h-4 mr-1" />
+          Шаблоны
+          <Icon :name="templatesOpen ? 'heroicons:chevron-up' : 'heroicons:chevron-down'" class="w-4 h-4 ml-1" />
+        </UiButton>
+        <div
+          v-show="templatesOpen"
+          class="absolute bottom-full left-0 mb-1 w-72 max-h-48 overflow-y-auto rounded-lg glass-card border border-[var(--glass-border)] p-2 shadow-lg z-10"
+          @click.stop
+        >
+          <button
+            v-for="t in CHAT_TEMPLATES"
+            :key="t.id"
+            type="button"
+            class="w-full text-left px-3 py-2 rounded-lg hover:bg-white/10 text-sm text-[var(--text-primary)] transition-colors"
+            @click="insertTemplate(t)"
+          >
+            <span class="font-medium">{{ t.label }}</span>
+            <p class="text-xs text-[var(--text-muted)] truncate mt-0.5">{{ t.text }}</p>
+          </button>
+        </div>
+      </div>
 
       <form @submit.prevent="handleSubmit" class="flex gap-2">
         <!-- Attach button -->
