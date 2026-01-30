@@ -15,7 +15,8 @@ export default defineEventHandler(async (event) => {
     .from('chats')
     .select(`
       *,
-      assigned_admin:admins!assigned_admin_id(id, full_name, email)
+      assigned_admin:admins!assigned_admin_id(id, full_name, email),
+      user:users!user_id(first_name, last_name)
     `)
     .eq('id', id)
     .single()
@@ -48,6 +49,8 @@ export default defineEventHandler(async (event) => {
       id: chat.id,
       userId: chat.user_id,
       userName: chat.user_name || chat.guest_name,
+      userFirstName: (chat as any).user?.first_name ?? null,
+      userLastName: (chat as any).user?.last_name ?? null,
       guestName: chat.guest_name,
       guestContact: chat.guest_contact,
       userTelegramId: chat.user_telegram_id,

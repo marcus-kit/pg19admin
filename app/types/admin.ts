@@ -210,6 +210,8 @@ export interface Chat {
   guestName: string | null
   guestContact: string | null
   userTelegramId: number | null
+  userFirstName: string | null
+  userLastName: string | null
   status: ChatStatus
   subject: string | null
   assignedAdmin: { id: string, fullName: string } | null

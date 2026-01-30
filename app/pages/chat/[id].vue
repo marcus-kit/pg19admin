@@ -74,6 +74,59 @@ const groupedMessages = computed(() => {
   return groups
 })
 
+/** Получить отображаемое имя чата */
+function getChatDisplayName(): string {
+  if (!chat.value) return ''
+  
+  // Приоритет: ФИО из личного кабинета
+  if (chat.value.userFirstName || chat.value.userLastName) {
+    return `${chat.value.userLastName || ''} ${chat.value.userFirstName || ''}`.trim()
+  }
+  // Затем userName из чата
+  if (chat.value.userName) {
+    return chat.value.userName
+  }
+  // Затем guestName из чата
+  if (chat.value.guestName) {
+    return chat.value.guestName
+  }
+  
+  // Если ничего нет, используем ID чата
+  return `Чат #${chat.value.id}`
+}
+
+/** Проверяет, является ли чат из личного кабинета */
+function isPersonalCabinetChat(): boolean {
+  return !!chat.value?.userId
+}
+
+/** Получить отображаемое имя отправителя сообщения */
+function getSenderDisplayName(msg: ChatMessage): string {
+  // Если это сообщение от пользователя, используем данные из чата
+  if (msg.senderType === 'user' && chat.value) {
+    // Приоритет: ФИО из личного кабинета
+    if (chat.value.userFirstName || chat.value.userLastName) {
+      return `${chat.value.userLastName || ''} ${chat.value.userFirstName || ''}`.trim()
+    }
+    // Затем userName из чата
+    if (chat.value.userName) {
+      return chat.value.userName
+    }
+    // Затем guestName из чата
+    if (chat.value.guestName) {
+      return chat.value.guestName
+    }
+  }
+  
+  // Используем senderName из сообщения, если есть
+  if (msg.senderName) {
+    return msg.senderName
+  }
+  
+  // Если ничего нет, используем ID чата
+  return `Чат #${chat.value?.id || msg.chatId}`
+}
+
 // ═══════════════════════════════════════════════════════════════════════════
 // МЕТОДЫ
 // ═══════════════════════════════════════════════════════════════════════════
@@ -369,10 +422,17 @@ onUnmounted(() => {
         <div>
           <div class="flex items-center gap-2">
             <h1 class="text-lg font-semibold text-[var(--text-primary)]">
-              {{ chat.userName || chat.guestName || `Чат #${chat.id}` }}
+              {{ getChatDisplayName() }}
             </h1>
             <UiBadge
-              v-if="chat.guestName && !chat.userId"
+              v-if="isPersonalCabinetChat()"
+              size="sm"
+              class="bg-blue-500/20 text-blue-400"
+            >
+              Личный кабинет
+            </UiBadge>
+            <UiBadge
+              v-else-if="chat.guestName"
               size="sm"
               class="bg-purple-500/20 text-purple-400"
             >
@@ -554,6 +614,10 @@ onUnmounted(() => {
               v-else
               class="max-w-[70%] rounded-2xl px-4 py-2 glass-card rounded-bl-md"
             >
+              <div class="flex items-center gap-1.5 mb-1">
+                <Icon name="heroicons:user" class="w-3.5 h-3.5 text-accent" />
+                <span class="text-xs font-medium text-accent">{{ getSenderDisplayName(msg) }}</span>
+              </div>
               <p v-if="msg.content" class="whitespace-pre-wrap break-words">
                 {{ msg.content }}
               </p>

@@ -18,6 +18,7 @@ import {
 interface ChatFilters extends Record<string, unknown> {
   status: string
   assignedToMe: boolean
+  senderType?: string
 }
 
 /** Варианты сортировки списка чатов */
@@ -52,7 +53,7 @@ const {
   endpoint: '/api/admin/chat',
   responseKey: 'chats',
   initialFilters: {
-    status: 'waiting',
+    status: 'all',
     assignedToMe: false,
   },
   transformParams: f => ({
@@ -64,6 +65,15 @@ const {
 // Клиентский поиск (по имени, контакту, теме, Telegram ID) — без запросов к API
 const searchQuery = ref('')
 const sortBy = ref<SortOption>('lastMessage')
+const senderType = ref<'all' | 'personal' | 'guest'>('all')
+const filtersExpanded = ref(true)
+
+// Опции для фильтра типа отправителя
+const senderTypeOptions = [
+  { value: 'all', label: 'Все' },
+  { value: 'personal', label: 'Личный кабинет' },
+  { value: 'guest', label: 'Гость' },
+]
 
 // Навигация с клавиатуры
 const listContainerRef = ref<HTMLElement | null>(null)
@@ -113,6 +123,19 @@ const filteredAndSortedChats = computed(() => {
     ? chats.value.filter(c => chatMatchesSearch(c, searchQuery.value))
     : [...chats.value]
 
+  // Фильтрация по типу отправителя
+  if (senderType.value !== 'all') {
+    list = list.filter(chat => {
+      if (senderType.value === 'personal') {
+        return !!chat.userId // Личный кабинет - есть userId
+      }
+      if (senderType.value === 'guest') {
+        return !chat.userId // Гость - нет userId
+      }
+      return true
+    })
+  }
+
   const option = sortBy.value
   if (option === 'unread') {
     list = [...list].sort((a, b) => {
@@ -137,9 +160,67 @@ const filteredAndSortedChats = computed(() => {
   return list
 })
 
+/** Проверяет, есть ли активные фильтры */
+const hasActiveFilters = computed(() => {
+  return (
+    filters.value.status !== 'all' ||
+    senderType.value !== 'all' ||
+    sortBy.value !== 'lastMessage' ||
+    filters.value.assignedToMe !== false
+  )
+})
+
 // ═══════════════════════════════════════════════════════════════════════════
 // МЕТОДЫ
 // ═══════════════════════════════════════════════════════════════════════════
+
+/** Генерация инициалов для чата */
+function getChatInitials(chat: Chat): string {
+  // Если есть имя и фамилия пользователя
+  if (chat.userFirstName && chat.userLastName) {
+    return `${chat.userFirstName.charAt(0)}${chat.userLastName.charAt(0)}`.toUpperCase()
+  }
+  if (chat.userFirstName) {
+    return chat.userFirstName.charAt(0).toUpperCase()
+  }
+  
+  // Если есть имя гостя, извлекаем инициалы
+  if (chat.guestName) {
+    const parts = chat.guestName.trim().split(/\s+/)
+    if (parts.length >= 2) {
+      return `${parts[0]?.charAt(0) || ''}${parts[parts.length - 1]?.charAt(0) || ''}`.toUpperCase()
+    }
+    return chat.guestName.charAt(0).toUpperCase()
+  }
+  
+  // Если есть контакт гостя, используем первые буквы
+  if (chat.guestContact) {
+    const parts = chat.guestContact.trim().split(/\s+/)
+    if (parts.length >= 2) {
+      return `${parts[0]?.charAt(0) || ''}${parts[parts.length - 1]?.charAt(0) || ''}`.toUpperCase()
+    }
+    return chat.guestContact.charAt(0).toUpperCase()
+  }
+  
+  // Если ничего нет, используем первые символы ID
+  return chat.id.substring(0, 2).toUpperCase()
+}
+
+/** Получить отображаемое имя чата */
+function getChatDisplayName(chat: Chat): string {
+  // Приоритет: ФИО из личного кабинета
+  if (chat.userFirstName || chat.userLastName) {
+    return `${chat.userLastName || ''} ${chat.userFirstName || ''}`.trim()
+  }
+  if (chat.userName) return chat.userName
+  if (chat.guestName) return chat.guestName
+  return `Чат #${chat.id}`
+}
+
+/** Проверка, является ли чат из личного кабинета */
+function isPersonalCabinetChat(chat: Chat): boolean {
+  return !!chat.userId
+}
 
 /** Переход на страницу чата */
 function goToChat(id: string) {
@@ -187,6 +268,14 @@ function onCardClick(chat: Chat, index: number) {
   goToChat(chat.id)
 }
 
+/** Сбросить все фильтры к значениям по умолчанию */
+function resetFilters() {
+  filters.value.status = 'all'
+  senderType.value = 'all'
+  sortBy.value = 'lastMessage'
+  filters.value.assignedToMe = false
+}
+
 // ═══════════════════════════════════════════════════════════════════════════
 // АВТООБНОВЛЕНИЕ СПИСКА
 // ═══════════════════════════════════════════════════════════════════════════
@@ -224,71 +313,42 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div>
-    <!-- Header -->
-    <div class="mb-6 flex flex-col gap-4 md:flex-row md:items-center">
-      <div class="flex items-center gap-4 flex-1 min-w-0">
-        <h1 class="flex items-center gap-3 text-3xl font-bold text-[var(--text-primary)] whitespace-nowrap flex-shrink-0">
-          <Icon name="heroicons:chat-bubble-left-right" class="h-8 w-8" />
-          Чаты поддержки
-        </h1>
-        
-        <UiInput
-          v-model="searchQuery"
-          type="search"
-          placeholder="Поиск..."
-          class="flex-1 min-w-0 max-w-md"
-        >
-          <template #prefix>
-            <Icon name="heroicons:magnifying-glass" class="w-4 h-4" />
-          </template>
-        </UiInput>
-      </div>
-      
-      <!-- Сортировка и кнопка "Только мои" -->
-      <div class="flex items-center gap-2 flex-shrink-0">
-        <div class="relative flex-shrink-0">
-          <UiSelect
-            v-model="sortBy"
-            :options="SORT_OPTIONS.map(o => ({ value: o.value, label: o.label }))"
-            placeholder="Сортировка"
-            size="md"
-            class="min-w-[180px]"
-          />
-        </div>
-        
-        <div class="flex items-center gap-2 flex-shrink-0">
-          <input
-            id="showMine"
-            v-model="filters.assignedToMe"
-            type="checkbox"
-            class="w-4 h-4 rounded border-[var(--glass-border)] bg-[var(--glass-bg)] text-primary focus:ring-primary cursor-pointer"
-          />
-          <label for="showMine" class="text-sm text-[var(--text-secondary)] cursor-pointer whitespace-nowrap">
-            Только мои
-          </label>
+  <div class="flex gap-6">
+    <!-- Левая колонка: Заголовок, поиск и список чатов -->
+    <div class="flex-1 min-w-0">
+      <!-- Header -->
+      <div class="mb-6">
+        <div class="flex items-center gap-4 mb-4">
+          <h1 class="flex items-center gap-3 text-3xl font-bold text-[var(--text-primary)] whitespace-nowrap flex-shrink-0">
+            <Icon name="heroicons:chat-bubble-left-right" class="h-8 w-8" />
+            Чаты поддержки
+          </h1>
+          
+          <UiInput
+            v-model="searchQuery"
+            type="search"
+            placeholder="Поиск..."
+            class="flex-1 min-w-0"
+          >
+            <template #prefix>
+              <Icon name="heroicons:magnifying-glass" class="w-4 h-4" />
+            </template>
+          </UiInput>
         </div>
       </div>
-    </div>
 
-    <!-- Фильтры по статусу -->
-    <div class="mb-6">
-      <UiFilterTabs v-model="filters.status" :options="CHAT_STATUS_OPTIONS" />
-    </div>
-
-    <!-- Loading -->
-    <UiLoading v-if="loading" />
-
-    <!-- Chat List (с навигацией с клавиатуры) -->
-    <div
-      v-else
-      ref="listContainerRef"
-      tabindex="0"
-      role="list"
-      aria-label="Список чатов"
-      class="outline-none focus:outline-none space-y-3"
-      @keydown="onListKeydown"
-    >
+      <!-- Chat List (с навигацией с клавиатуры) -->
+      <div
+        ref="listContainerRef"
+        tabindex="0"
+        role="list"
+        aria-label="Список чатов"
+        :class="[
+          'outline-none focus:outline-none space-y-3 transition-opacity duration-200',
+          loading && 'opacity-50 pointer-events-none'
+        ]"
+        @keydown="onListKeydown"
+      >
       <UiCard
         v-for="(chat, i) in filteredAndSortedChats"
         :key="chat.id"
@@ -303,8 +363,17 @@ onUnmounted(() => {
         <div class="flex items-start justify-between gap-4">
           <div class="flex-1 min-w-0">
             <div class="flex items-center gap-2 mb-1 flex-wrap">
+              <!-- Аватар с инициалами, если нет имени и ФИО -->
+              <div
+                v-if="!chat.userName && !chat.guestName && !chat.userFirstName && !chat.userLastName"
+                class="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-primary/30 to-secondary/30 flex-shrink-0"
+              >
+                <span class="text-xs font-medium text-[var(--text-primary)]">
+                  {{ getChatInitials(chat) }}
+                </span>
+              </div>
               <span class="font-medium text-[var(--text-primary)]">
-                {{ chat.userName || `Чат #${chat.id}` }}
+                {{ getChatDisplayName(chat) }}
               </span>
               <span
                 v-if="chat.guestContact"
@@ -312,6 +381,13 @@ onUnmounted(() => {
               >
                 ({{ chat.guestContact }})
               </span>
+              <UiBadge
+                v-if="isPersonalCabinetChat(chat)"
+                size="sm"
+                class="bg-blue-500/20 text-blue-400"
+              >
+                Личный кабинет
+              </UiBadge>
               <UiBadge
                 v-if="chat.guestName && !chat.userId"
                 size="sm"
@@ -364,12 +440,122 @@ onUnmounted(() => {
         </div>
       </UiCard>
 
-      <!-- Empty State -->
-      <UiEmptyState
-        v-if="filteredAndSortedChats.length === 0"
-        :title="searchQuery.trim() ? 'Ничего не найдено по запросу' : (filters.status === 'all' ? 'Чатов пока нет' : 'Нет чатов с таким статусом')"
-        icon="heroicons:chat-bubble-left-right"
-      />
+        <!-- Empty State -->
+        <UiEmptyState
+          v-if="!loading && filteredAndSortedChats.length === 0"
+          :title="searchQuery.trim() ? 'Ничего не найдено по запросу' : (filters.status === 'all' ? 'Чатов пока нет' : 'Нет чатов с таким статусом')"
+          icon="heroicons:chat-bubble-left-right"
+        />
+        
+        <!-- Индикатор загрузки -->
+        <div
+          v-if="loading && filteredAndSortedChats.length === 0"
+          class="flex items-center justify-center py-12"
+        >
+          <UiLoading />
+        </div>
+      </div>
     </div>
+
+    <!-- Правая колонка: Панель фильтров -->
+    <aside class="hidden lg:block w-96 flex-shrink-0">
+      <div class="glass-card rounded-xl border border-[var(--glass-border)] backdrop-blur-sm overflow-hidden">
+        <!-- Заголовок панели с кнопкой сворачивания -->
+        <button
+          @click="filtersExpanded = !filtersExpanded"
+          class="w-full flex items-center justify-between p-4 hover:bg-[var(--glass-bg)] transition-colors"
+        >
+          <div class="flex items-center gap-2">
+            <Icon name="heroicons:funnel" class="w-5 h-5 text-[var(--text-primary)]" />
+            <span class="font-semibold text-[var(--text-primary)]">Фильтры</span>
+            
+            <!-- Кнопка сброса фильтров -->
+            <UiButton
+              v-if="hasActiveFilters"
+              @click.stop="resetFilters"
+              variant="ghost"
+              size="sm"
+              class="flex-shrink-0 ml-2"
+            >
+              <Icon name="heroicons:arrow-path" class="w-4 h-4" />
+              Сбросить
+            </UiButton>
+          </div>
+          
+          <Icon
+            :name="filtersExpanded ? 'heroicons:chevron-up' : 'heroicons:chevron-down'"
+            class="w-5 h-5 text-[var(--text-muted)] transition-transform"
+          />
+        </button>
+
+        <!-- Содержимое панели -->
+        <Transition name="slide">
+          <div v-if="filtersExpanded" class="px-4 pb-4 space-y-4">
+            <!-- Статус чата -->
+            <div>
+              <label class="block text-xs font-medium text-[var(--text-muted)] mb-2 uppercase tracking-wide">
+                Статус
+              </label>
+              <UiFilterTabs v-model="filters.status" :options="CHAT_STATUS_OPTIONS" />
+            </div>
+
+            <!-- Тип отправителя -->
+            <div>
+              <label class="block text-xs font-medium text-[var(--text-muted)] mb-2 uppercase tracking-wide">
+                Тип отправителя
+              </label>
+              <UiFilterTabs v-model="senderType as any" :options="senderTypeOptions" />
+            </div>
+
+            <!-- Сортировка -->
+            <div>
+              <label class="block text-xs font-medium text-[var(--text-muted)] mb-2 uppercase tracking-wide">
+                Сортировка
+              </label>
+              <UiFilterTabs v-model="sortBy as any" :options="SORT_OPTIONS.map(o => ({ value: o.value, label: o.label }))" />
+            </div>
+
+            <!-- Только мои -->
+            <div>
+              <label
+                for="showMine"
+                class="flex items-center gap-2 cursor-pointer p-2 rounded-lg hover:bg-[var(--glass-bg)] transition-colors"
+              >
+                <input
+                  id="showMine"
+                  v-model="filters.assignedToMe"
+                  type="checkbox"
+                  class="w-4 h-4 rounded border-[var(--glass-border)] bg-[var(--glass-bg)] text-primary focus:ring-primary cursor-pointer"
+                />
+                <span class="text-sm font-medium text-[var(--text-primary)]">Только мои</span>
+              </label>
+            </div>
+          </div>
+        </Transition>
+      </div>
+    </aside>
   </div>
 </template>
+
+<style scoped>
+/* Анимация сворачивания/разворачивания панели фильтров */
+.slide-enter-active,
+.slide-leave-active {
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+.slide-enter-from,
+.slide-leave-to {
+  max-height: 0;
+  opacity: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+.slide-enter-to,
+.slide-leave-from {
+  max-height: 500px;
+  opacity: 1;
+}
+</style>
