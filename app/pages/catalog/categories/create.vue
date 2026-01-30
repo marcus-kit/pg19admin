@@ -93,102 +93,77 @@ async function save() {
     saving.value = false
   }
 }
+
+function cancel() {
+  router.push('/catalog')
+}
 </script>
 
 <template>
-  <div>
-    <div class="flex items-center justify-between mb-8">
-      <h1 class="text-3xl font-bold text-[var(--text-primary)]">
-        Создать категорию
-      </h1>
-    </div>
-
-    <div v-if="error" class="mb-6 p-4 bg-red-500/20 border border-red-500/30 rounded-lg text-red-400">
-      {{ error }}
-    </div>
-
-    <form @submit.prevent="save" class="space-y-6 max-w-2xl">
-      <div>
-        <label class="block text-sm font-medium text-[var(--text-primary)] mb-2">
-          Название *
-        </label>
-        <UiInput
-          v-model="form.name"
-          @blur="generateSlug"
-          placeholder="Например: Интернет"
-          size="lg"
-        />
-      </div>
-
-      <div>
-        <label class="block text-sm font-medium text-[var(--text-primary)] mb-2">
-          URL (slug) *
-        </label>
-        <div class="flex items-center gap-2">
-          <span class="text-[var(--text-muted)]">/</span>
-          <UiInput v-model="form.slug" placeholder="internet" class="flex-1 font-mono" />
-        </div>
-      </div>
-
-      <div>
-        <label class="block text-sm font-medium text-[var(--text-primary)] mb-2">
-          Описание
-        </label>
-        <textarea
-          v-model="form.description"
-          placeholder="Описание категории"
-          rows="3"
-          class="w-full px-4 py-3 glass-card rounded-lg text-[var(--text-primary)] border border-[var(--glass-border)] focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all bg-[var(--glass-bg)] resize-none"
-        />
-      </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div>
-          <label class="block text-sm font-medium text-[var(--text-secondary)] mb-2">
-            Иконка
-          </label>
-          <div class="flex items-center gap-3">
-            <div class="flex-1">
-              <UiSelect
-                v-model="form.icon"
-                :options="iconOptions"
-                :placeholder="undefined"
-              />
-            </div>
-            <div class="w-12 h-12 flex items-center justify-center glass-card rounded-xl">
-              <Icon :name="form.icon" class="w-6 h-6 text-primary" />
-            </div>
+  <div class="catalog-form-page">
+    <header class="catalog-form-page__hero">
+      <div class="catalog-form-page__hero-bg" aria-hidden="true" />
+      <div class="catalog-form-page__hero-inner">
+        <button type="button" class="catalog-form-page__back" aria-label="Назад" @click="cancel">
+          <Icon name="heroicons:arrow-left" class="w-5 h-5" />
+        </button>
+        <div class="flex items-center gap-3">
+          <div class="catalog-form-page__hero-icon">
+            <Icon name="heroicons:folder-plus" class="w-7 h-7 text-primary" />
+          </div>
+          <div>
+            <h1 class="catalog-form-page__hero-title">Создать категорию</h1>
+            <p class="catalog-form-page__hero-subtitle">Добавление новой категории в каталог</p>
           </div>
         </div>
+      </div>
+    </header>
 
-        <div>
-          <label class="block text-sm font-medium text-[var(--text-secondary)] mb-2">
-            Порядок сортировки
-          </label>
-          <UiInput v-model.number="form.sortOrder" type="number" placeholder="0" />
+    <div v-if="error" class="catalog-form-page__error" role="alert">{{ error }}</div>
+
+    <div class="catalog-form-page__main glass-card glass-card-static">
+      <form @submit.prevent="save" class="catalog-form-page__form">
+        <section class="catalog-form-page__section">
+          <h2 class="catalog-form-page__section-title">Основные данные</h2>
+          <div class="catalog-form-page__fields space-y-4">
+            <UiInput v-model="form.name" label="Название *" placeholder="Например: Интернет" size="lg" @blur="generateSlug" />
+            <div>
+              <label class="block text-sm font-medium text-[var(--text-primary)] mb-2">URL (slug) *</label>
+              <div class="flex items-center gap-2">
+                <span class="text-[var(--text-muted)]">/</span>
+                <UiInput v-model="form.slug" placeholder="internet" class="flex-1 font-mono" />
+              </div>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-[var(--text-primary)] mb-2">Описание</label>
+              <textarea v-model="form.description" placeholder="Описание категории" rows="3" class="w-full px-4 py-3 rounded-lg text-[var(--text-primary)] border border-[var(--glass-border)] focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all bg-[var(--glass-bg)] resize-none" />
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-[var(--text-secondary)] mb-2">Иконка</label>
+                <div class="flex items-center gap-3">
+                  <div class="flex-1">
+                    <UiSelect v-model="form.icon" :options="iconOptions" :placeholder="undefined" />
+                  </div>
+                  <div class="w-12 h-12 flex items-center justify-center rounded-xl border border-[var(--glass-border)] bg-[var(--glass-bg)]">
+                    <Icon :name="form.icon" class="w-6 h-6 text-primary" />
+                  </div>
+                </div>
+              </div>
+              <UiInput v-model.number="form.sortOrder" label="Порядок сортировки" type="number" placeholder="0" />
+            </div>
+            <div class="flex items-center gap-3">
+              <input v-model="form.isActive" type="checkbox" id="isActive" class="w-5 h-5 rounded border-[var(--glass-border)] bg-[var(--glass-bg)] text-primary focus:ring-primary" />
+              <label for="isActive" class="text-sm text-[var(--text-secondary)] cursor-pointer">Активна</label>
+            </div>
+          </div>
+        </section>
+
+        <div class="catalog-form-page__actions">
+          <UiButton :loading="saving" :disabled="saving" type="submit">Сохранить</UiButton>
+          <UiButton :disabled="saving" variant="secondary" @click="cancel">Отмена</UiButton>
         </div>
-      </div>
-
-      <div class="flex items-center gap-3">
-        <input
-          v-model="form.isActive"
-          type="checkbox"
-          id="isActive"
-          class="w-5 h-5 rounded border-[var(--glass-border)] bg-[var(--glass-bg)] text-primary focus:ring-primary"
-        />
-        <label for="isActive" class="text-sm text-[var(--text-secondary)] cursor-pointer">
-          Активна
-        </label>
-      </div>
-
-      <div class="flex gap-3">
-        <UiButton :loading="saving" :disabled="saving" type="submit">
-          Сохранить
-        </UiButton>
-        <UiButton :disabled="saving" @click="router.push('/catalog')" variant="ghost">
-          Отмена
-        </UiButton>
-      </div>
-    </form>
+      </form>
+    </div>
   </div>
 </template>

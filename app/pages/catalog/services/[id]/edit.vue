@@ -153,6 +153,10 @@ async function save() {
   }
 }
 
+function cancel() {
+  router.push('/catalog')
+}
+
 onMounted(async () => {
   await fetchCategories()
   await fetchService()
@@ -160,159 +164,90 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div>
-    <div class="flex items-center justify-between mb-8">
-      <h1 class="text-3xl font-bold text-[var(--text-primary)]">
-        Редактировать услугу
-      </h1>
+  <div class="catalog-form-page">
+    <header class="catalog-form-page__hero">
+      <div class="catalog-form-page__hero-bg" aria-hidden="true" />
+      <div class="catalog-form-page__hero-inner">
+        <button type="button" class="catalog-form-page__back" aria-label="Назад" @click="cancel">
+          <Icon name="heroicons:arrow-left" class="w-5 h-5" />
+        </button>
+        <div class="flex items-center gap-3">
+          <div class="catalog-form-page__hero-icon">
+            <Icon name="heroicons:pencil-square" class="w-7 h-7 text-primary" />
+          </div>
+          <div>
+            <h1 class="catalog-form-page__hero-title">Редактировать услугу</h1>
+            <p class="catalog-form-page__hero-subtitle">Изменение данных услуги</p>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <UiLoading v-if="loading" class="catalog-form-page__loading" />
+    <div v-else-if="error && !form.name" class="catalog-form-page__error" role="alert">{{ error }}</div>
+
+    <div v-else class="catalog-form-page__main glass-card glass-card-static">
+      <form @submit.prevent="save" class="catalog-form-page__form">
+        <div v-if="error" class="catalog-form-page__error" role="alert">{{ error }}</div>
+
+        <section class="catalog-form-page__section">
+          <h2 class="catalog-form-page__section-title">Основные данные</h2>
+          <div class="catalog-form-page__fields space-y-4">
+            <UiInput v-model="form.name" label="Название *" placeholder="Например: Интернет 100 Мбит/с" size="lg" />
+            <UiSelect v-model="form.categoryId" :options="categoryOptions" label="Категория" placeholder="Без категории" />
+            <div>
+              <label class="block text-sm font-medium text-[var(--text-primary)] mb-2">Краткое описание</label>
+              <textarea v-model="form.description" placeholder="Краткое описание для карточки услуги" rows="2" class="w-full px-4 py-3 rounded-lg text-[var(--text-primary)] border border-[var(--glass-border)] focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all bg-[var(--glass-bg)] resize-none" />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-[var(--text-primary)] mb-2">Полное описание</label>
+              <textarea v-model="form.fullDescription" placeholder="Подробное описание услуги для страницы детализации" rows="4" class="w-full px-4 py-3 rounded-lg text-[var(--text-primary)] border border-[var(--glass-border)] focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all bg-[var(--glass-bg)] resize-none" />
+            </div>
+          </div>
+        </section>
+
+        <section class="catalog-form-page__section">
+          <h2 class="catalog-form-page__section-title">Стоимость</h2>
+          <div class="catalog-form-page__fields grid grid-cols-1 md:grid-cols-2 gap-4">
+            <UiInput v-model.number="priceMonthlyRub" label="Ежемесячная стоимость (₽) *" type="number" min="0" step="0.01" placeholder="500" />
+            <UiInput v-model.number="priceConnectionRub" label="Стоимость подключения (₽)" type="number" min="0" step="0.01" placeholder="0 — бесплатно" />
+          </div>
+        </section>
+
+        <section class="catalog-form-page__section">
+          <h2 class="catalog-form-page__section-title">Дополнительно</h2>
+          <div class="catalog-form-page__fields space-y-4">
+            <UiInput v-model="form.imageUrl" label="URL изображения" placeholder="https://..." />
+            <div>
+              <label class="block text-sm font-medium text-[var(--text-primary)] mb-2">Характеристики</label>
+              <div class="flex gap-2 mb-3">
+                <UiInput v-model="newFeature" @keyup.enter.prevent="addFeature" placeholder="Добавить характеристику" class="flex-1" />
+                <UiButton @click="addFeature" type="button" variant="secondary">
+                  <Icon name="heroicons:plus" class="w-5 h-5" />
+                </UiButton>
+              </div>
+              <div v-if="form.features.length > 0" class="flex flex-wrap gap-2">
+                <span v-for="(feature, index) in form.features" :key="index" class="inline-flex items-center gap-1 px-3 py-1 bg-primary/20 text-primary rounded-full text-sm">
+                  {{ feature }}
+                  <button @click="removeFeature(index)" type="button" class="hover:text-red-400 transition-colors">
+                    <Icon name="heroicons:x-mark" class="w-4 h-4" />
+                  </button>
+                </span>
+              </div>
+            </div>
+            <UiInput v-model.number="form.sortOrder" label="Порядок сортировки" type="number" placeholder="0" />
+            <div class="flex items-center gap-3">
+              <input v-model="form.isActive" type="checkbox" id="isActive" class="w-5 h-5 rounded border-[var(--glass-border)] bg-[var(--glass-bg)] text-primary focus:ring-primary" />
+              <label for="isActive" class="text-sm text-[var(--text-secondary)] cursor-pointer">Активна</label>
+            </div>
+          </div>
+        </section>
+
+        <div class="catalog-form-page__actions">
+          <UiButton :loading="saving" :disabled="saving" type="submit">Сохранить изменения</UiButton>
+          <UiButton :disabled="saving" variant="secondary" @click="cancel">Отмена</UiButton>
+        </div>
+      </form>
     </div>
-
-    <UiLoading v-if="loading" />
-
-    <div v-else-if="error && !form.name" class="p-4 bg-red-500/20 border border-red-500/30 rounded-lg text-red-400">
-      {{ error }}
-    </div>
-
-    <form v-else @submit.prevent="save" class="space-y-6 max-w-2xl">
-      <div v-if="error" class="p-4 bg-red-500/20 border border-red-500/30 rounded-lg text-red-400">
-        {{ error }}
-      </div>
-
-      <div>
-        <label class="block text-sm font-medium text-[var(--text-primary)] mb-2">
-          Название *
-        </label>
-        <UiInput v-model="form.name" placeholder="Например: Интернет 100 Мбит/с" size="lg" />
-      </div>
-
-      <UiSelect
-        v-model="form.categoryId"
-        :options="categoryOptions"
-        label="Категория"
-        placeholder="Без категории"
-      />
-
-      <div>
-        <label class="block text-sm font-medium text-[var(--text-primary)] mb-2">
-          Краткое описание
-        </label>
-        <textarea
-          v-model="form.description"
-          placeholder="Краткое описание для карточки услуги"
-          rows="2"
-          class="w-full px-4 py-3 glass-card rounded-lg text-[var(--text-primary)] border border-[var(--glass-border)] focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all bg-[var(--glass-bg)] resize-none"
-        />
-      </div>
-
-      <div>
-        <label class="block text-sm font-medium text-[var(--text-primary)] mb-2">
-          Полное описание
-        </label>
-        <textarea
-          v-model="form.fullDescription"
-          placeholder="Подробное описание услуги для страницы детализации"
-          rows="4"
-          class="w-full px-4 py-3 glass-card rounded-lg text-[var(--text-primary)] border border-[var(--glass-border)] focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all bg-[var(--glass-bg)] resize-none"
-        />
-      </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div>
-          <label class="block text-sm font-medium text-[var(--text-primary)] mb-2">
-            Ежемесячная стоимость (₽) *
-          </label>
-          <UiInput
-            v-model.number="priceMonthlyRub"
-            type="number"
-            min="0"
-            step="0.01"
-            placeholder="500"
-          />
-        </div>
-
-        <div>
-          <label class="block text-sm font-medium text-[var(--text-primary)] mb-2">
-            Стоимость подключения (₽)
-          </label>
-          <UiInput
-            v-model.number="priceConnectionRub"
-            type="number"
-            min="0"
-            step="0.01"
-            placeholder="0 — бесплатно"
-          />
-        </div>
-      </div>
-
-      <div>
-        <label class="block text-sm font-medium text-[var(--text-primary)] mb-2">
-          URL изображения
-        </label>
-        <UiInput v-model="form.imageUrl" placeholder="https://..." />
-      </div>
-
-      <div>
-        <label class="block text-sm font-medium text-[var(--text-primary)] mb-2">
-          Характеристики
-        </label>
-        <div class="flex gap-2 mb-3">
-          <UiInput
-            v-model="newFeature"
-            @keyup.enter.prevent="addFeature"
-            placeholder="Добавить характеристику"
-            class="flex-1"
-          />
-          <UiButton @click="addFeature" type="button" variant="secondary">
-            <Icon name="heroicons:plus" class="w-5 h-5" />
-          </UiButton>
-        </div>
-        <div v-if="form.features.length > 0" class="flex flex-wrap gap-2">
-          <span
-            v-for="(feature, index) in form.features"
-            :key="index"
-            class="inline-flex items-center gap-1 px-3 py-1 bg-primary/20 text-primary rounded-full text-sm"
-          >
-            {{ feature }}
-            <button
-              @click="removeFeature(index)"
-              type="button"
-              class="hover:text-red-400 transition-colors"
-            >
-              <Icon name="heroicons:x-mark" class="w-4 h-4" />
-            </button>
-          </span>
-        </div>
-      </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div>
-          <label class="block text-sm font-medium text-[var(--text-primary)] mb-2">
-            Порядок сортировки
-          </label>
-          <UiInput v-model.number="form.sortOrder" type="number" placeholder="0" />
-        </div>
-      </div>
-
-      <div class="flex items-center gap-3">
-        <input
-          v-model="form.isActive"
-          type="checkbox"
-          id="isActive"
-          class="w-5 h-5 rounded border-[var(--glass-border)] bg-[var(--glass-bg)] text-primary focus:ring-primary"
-        />
-        <label for="isActive" class="text-sm text-[var(--text-secondary)] cursor-pointer">
-          Активна
-        </label>
-      </div>
-
-      <div class="flex gap-3">
-        <UiButton :loading="saving" :disabled="saving" type="submit">
-          Сохранить изменения
-        </UiButton>
-        <UiButton :disabled="saving" @click="router.push('/catalog')" variant="ghost">
-          Отмена
-        </UiButton>
-      </div>
-    </form>
   </div>
 </template>

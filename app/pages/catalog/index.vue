@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { ServiceCategory, Service } from '~/types/admin'
 import { ACTIVE_STATUS, getStatusBadgeClass, getStatusLabel } from '~/composables/useStatusConfig'
+import { formatPrice } from '~/composables/useFormatters'
 
 definePageMeta({
   middleware: 'admin',
@@ -11,16 +12,22 @@ useHead({ title: 'Каталог услуг — Админ-панель' })
 const toast = useToast()
 const router = useRouter()
 
-// Состояние страницы
 const activeTab = ref<'categories' | 'services'>('services')
 const loading = ref(false)
 const categories = ref<ServiceCategory[]>([])
 const services = ref<Service[]>([])
 const selectedCategoryId = ref<string | null>(null)
 
-// Конвертирует boolean isActive в ключ статуса для badge
 function getActiveStatus(isActive: boolean) {
   return isActive ? 'active' : 'inactive'
+}
+
+function goToEditService(item: Service) {
+  router.push(`/catalog/services/${item.id}/edit`)
+}
+
+function goToEditCategory(item: ServiceCategory) {
+  router.push(`/catalog/categories/${item.id}/edit`)
 }
 
 // Загрузка списка категорий
@@ -92,206 +99,164 @@ watch(selectedCategoryId, () => {
 </script>
 
 <template>
-  <div>
-    <!-- Header -->
-    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
-      <h1 class="text-3xl font-bold text-[var(--text-primary)]">
-        Каталог услуг
-      </h1>
-      <div class="flex gap-2">
-        <UiButton @click="router.push('/catalog/categories/create')" variant="secondary">
-          <Icon name="heroicons:folder-plus" class="w-5 h-5" />
-          Категория
-        </UiButton>
-        <UiButton @click="router.push('/catalog/services/create')">
-          <Icon name="heroicons:plus" class="w-5 h-5" />
-          Услуга
-        </UiButton>
-      </div>
-    </div>
-
-    <!-- Tabs: Услуги / Категории -->
-    <div class="flex gap-2 mb-6 border-b border-[var(--glass-border)]">
-      <button
-        :class="activeTab === 'services'
-          ? 'border-primary text-primary bg-primary/10 font-semibold'
-          : 'border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--glass-bg)]'"
-        @click="activeTab = 'services'"
-        class="px-4 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px rounded-t-lg"
-      >
-        Услуги ({{ services.length }})
-      </button>
-      <button
-        :class="activeTab === 'categories'
-          ? 'border-primary text-primary bg-primary/10 font-semibold'
-          : 'border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--glass-bg)]'"
-        @click="activeTab = 'categories'"
-        class="px-4 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px rounded-t-lg"
-      >
-        Категории ({{ categories.length }})
-      </button>
-    </div>
-
-    <!-- Services Tab -->
-    <div v-if="activeTab === 'services'">
-      <!-- Category Filter: Все, Интернет, Телевидение и т.д. -->
-      <div class="flex flex-wrap gap-2 mb-6">
-        <button
-          type="button"
-          :class="selectedCategoryId === null
-            ? 'bg-primary text-white border-primary font-semibold shadow-sm ring-2 ring-primary/30'
-            : 'bg-[var(--glass-bg)] text-[var(--text-secondary)] border-[var(--glass-border)] hover:bg-[var(--glass-bg)] hover:text-[var(--text-primary)]'"
-          class="px-4 py-2 text-sm rounded-lg border transition-colors"
-          @click="selectedCategoryId = null"
-        >
-          Все
-        </button>
-        <button
-          v-for="cat in categories"
-          :key="cat.id"
-          type="button"
-          :class="selectedCategoryId === cat.id
-            ? 'bg-primary text-white border-primary font-semibold shadow-sm ring-2 ring-primary/30'
-            : 'bg-[var(--glass-bg)] text-[var(--text-secondary)] border-[var(--glass-border)] hover:bg-[var(--glass-bg)] hover:text-[var(--text-primary)]'"
-          class="px-4 py-2 text-sm rounded-lg border transition-colors"
-          @click="selectedCategoryId = cat.id"
-        >
-          {{ cat.name }}
-        </button>
-      </div>
-
-      <!-- Services List -->
-      <div v-if="loading" class="text-center py-12">
-        <Icon name="heroicons:arrow-path" class="w-8 h-8 animate-spin text-primary mx-auto" />
-      </div>
-
-      <div v-else class="space-y-4">
-        <UiCard
-          v-for="item in services"
-          :key="item.id"
-          class="hover:shadow-lg transition-shadow"
-        >
-          <div class="flex items-start justify-between gap-4">
-            <div class="flex-1">
-              <div class="flex items-center gap-2 mb-2 flex-wrap">
-                <UiBadge
-                  :class="[
-                    getStatusBadgeClass(ACTIVE_STATUS, getActiveStatus(item.isActive)),
-                    item.isActive ? 'ring-1 ring-accent/40' : '',
-                  ]"
-                >
-                  {{ getStatusLabel(ACTIVE_STATUS, getActiveStatus(item.isActive)) }}
-                </UiBadge>
-                <UiBadge v-if="item.category" class="bg-secondary/20 text-secondary">
-                  {{ item.category.name }}
-                </UiBadge>
-              </div>
-
-              <h3 class="text-lg font-semibold text-[var(--text-primary)] mb-1">
-                {{ item.name }}
-              </h3>
-
-              <p v-if="item.description" class="text-sm text-[var(--text-muted)] mb-2">
-                {{ item.description }}
-              </p>
-
-              <div class="flex gap-4 text-sm">
-                <span class="text-primary font-medium">
-                  {{ formatPrice(item.priceMonthly) }}/мес
-                </span>
-                <span v-if="item.priceConnection" class="text-[var(--text-muted)]">
-                  Подключение: {{ formatPrice(item.priceConnection) }}
-                </span>
-              </div>
-            </div>
-
-            <div class="flex gap-2">
-              <UiButton
-                @click="router.push(`/catalog/services/${item.id}/edit`)"
-                variant="ghost"
-                size="sm"
-                title="Редактировать"
-              >
-                <Icon name="heroicons:pencil" class="w-4 h-4" />
-              </UiButton>
-              <UiButton
-                @click="deleteService(item.id)"
-                variant="ghost"
-                size="sm"
-                title="Удалить"
-              >
-                <Icon name="heroicons:trash" class="w-4 h-4 text-red-400" />
-              </UiButton>
-            </div>
+  <div class="catalog-page">
+    <!-- Hero -->
+    <header class="catalog-page__hero">
+      <div class="catalog-page__hero-bg" aria-hidden="true" />
+      <div class="catalog-page__hero-inner">
+        <div class="flex items-center gap-3 mb-2">
+          <div class="catalog-page__hero-icon">
+            <Icon name="heroicons:squares-2x2" class="w-7 h-7 text-primary" />
           </div>
-        </UiCard>
+          <div>
+            <h1 class="catalog-page__hero-title">Каталог услуг</h1>
+            <p class="catalog-page__hero-subtitle">Услуги и категории</p>
+          </div>
+        </div>
+        <div class="catalog-page__stats">
+          <span class="catalog-page__stat"><strong>{{ services.length }}</strong> услуг</span>
+          <span class="catalog-page__stat"><strong>{{ categories.length }}</strong> категорий</span>
+        </div>
+      </div>
+    </header>
 
-        <div v-if="services.length === 0" class="text-center py-12">
-          <Icon name="heroicons:squares-2x2" class="w-16 h-16 text-[var(--text-muted)] mx-auto mb-4" />
-          <p class="text-[var(--text-muted)]">Услуг пока нет</p>
+    <!-- Табы и кнопки -->
+    <div class="catalog-page__toolbar">
+      <nav class="catalog-page__nav" aria-label="Услуги или категории">
+        <button
+          type="button"
+          class="catalog-page__nav-item"
+          :class="{ 'catalog-page__nav-item--active': activeTab === 'services' }"
+          @click="activeTab = 'services'"
+        >
+          Услуги ({{ services.length }})
+        </button>
+        <button
+          type="button"
+          class="catalog-page__nav-item"
+          :class="{ 'catalog-page__nav-item--active': activeTab === 'categories' }"
+          @click="activeTab = 'categories'"
+        >
+          Категории ({{ categories.length }})
+        </button>
+      </nav>
+      <div class="catalog-page__bar-row">
+        <div v-if="activeTab === 'services'" class="catalog-page__filters">
+          <button
+            type="button"
+            class="catalog-page__filter-btn"
+            :class="{ 'catalog-page__filter-btn--active': selectedCategoryId === null }"
+            @click="selectedCategoryId = null"
+          >
+            Все
+          </button>
+          <button
+            v-for="cat in categories"
+            :key="cat.id"
+            type="button"
+            class="catalog-page__filter-btn"
+            :class="{ 'catalog-page__filter-btn--active': selectedCategoryId === cat.id }"
+            @click="selectedCategoryId = cat.id"
+          >
+            {{ cat.name }}
+          </button>
+        </div>
+        <div class="catalog-page__actions">
+          <NuxtLink to="/catalog/categories/create" class="catalog-page__btn catalog-page__btn--secondary">
+            <Icon name="heroicons:folder-plus" class="w-4 h-4" />
+            <span>Категория</span>
+          </NuxtLink>
+          <NuxtLink to="/catalog/services/create" class="catalog-page__btn catalog-page__btn--primary">
+            <Icon name="heroicons:plus" class="w-4 h-4" />
+            <span>Услуга</span>
+          </NuxtLink>
         </div>
       </div>
     </div>
 
-    <!-- Categories Tab -->
-    <div v-if="activeTab === 'categories'" class="space-y-4">
-      <UiCard
-        v-for="item in categories"
-        :key="item.id"
-        class="hover:shadow-lg transition-shadow"
-      >
-        <div class="flex items-start justify-between gap-4">
-          <div class="flex-1">
-            <div class="flex items-center gap-2 mb-2">
-              <UiBadge
-                :class="[
-                  getStatusBadgeClass(ACTIVE_STATUS, getActiveStatus(item.isActive)),
-                  item.isActive ? 'ring-1 ring-accent/40' : '',
-                ]"
-              >
+    <!-- Услуги -->
+    <div v-if="activeTab === 'services'" class="catalog-page__list-wrap">
+      <UiLoading v-if="loading" class="catalog-page__loading" />
+      <div v-else class="catalog-page__list">
+        <article
+          v-for="item in services"
+          :key="item.id"
+          class="catalog-page__card"
+          @click="goToEditService(item)"
+        >
+          <div class="catalog-page__card-body">
+            <div class="catalog-page__card-top">
+              <span class="catalog-page__card-name">{{ item.name }}</span>
+              <span class="catalog-page__card-price">{{ formatPrice(item.priceMonthly) }}/мес</span>
+            </div>
+            <p v-if="item.description" class="catalog-page__card-desc">{{ item.description }}</p>
+            <div class="catalog-page__card-meta">
+              <UiBadge :class="getStatusBadgeClass(ACTIVE_STATUS, getActiveStatus(item.isActive))" size="sm">
                 {{ getStatusLabel(ACTIVE_STATUS, getActiveStatus(item.isActive)) }}
               </UiBadge>
-              <span class="text-xs text-[var(--text-muted)] font-mono bg-[var(--glass-bg)] px-2 py-0.5 rounded">
-                /{{ item.slug }}
+              <UiBadge v-if="item.category" size="sm" class="bg-secondary/20 text-secondary">
+                {{ item.category.name }}
+              </UiBadge>
+              <span v-if="item.priceConnection" class="catalog-page__card-connection">
+                Подключение: {{ formatPrice(item.priceConnection) }}
               </span>
             </div>
-
-            <div class="flex items-center gap-2 mb-1">
-              <Icon v-if="item.icon" :name="item.icon" class="w-5 h-5 text-primary" />
-              <h3 class="text-lg font-semibold text-[var(--text-primary)]">
-                {{ item.name }}
-              </h3>
-            </div>
-
-            <p v-if="item.description" class="text-sm text-[var(--text-muted)]">
-              {{ item.description }}
-            </p>
           </div>
-
-          <div class="flex gap-2">
-            <UiButton
-              @click="router.push(`/catalog/categories/${item.id}/edit`)"
-              variant="ghost"
-              size="sm"
-              title="Редактировать"
-            >
+          <div class="catalog-page__card-actions" @click.stop>
+            <UiButton variant="ghost" size="sm" title="Редактировать" @click="goToEditService(item)">
               <Icon name="heroicons:pencil" class="w-4 h-4" />
             </UiButton>
-            <UiButton
-              @click="deleteCategory(item.id)"
-              variant="ghost"
-              size="sm"
-              title="Удалить"
-            >
+            <UiButton variant="ghost" size="sm" title="Удалить" @click="deleteService(item.id)">
               <Icon name="heroicons:trash" class="w-4 h-4 text-red-400" />
             </UiButton>
           </div>
+          <Icon name="heroicons:chevron-right" class="catalog-page__card-arrow" />
+        </article>
+        <div v-if="services.length === 0" class="catalog-page__empty">
+          <Icon name="heroicons:squares-2x2" class="catalog-page__empty-icon" />
+          <h2 class="catalog-page__empty-title">Услуг пока нет</h2>
+          <p class="catalog-page__empty-text">Добавьте первую услугу</p>
         </div>
-      </UiCard>
+      </div>
+    </div>
 
-      <div v-if="categories.length === 0" class="text-center py-12">
-        <Icon name="heroicons:folder" class="w-16 h-16 text-[var(--text-muted)] mx-auto mb-4" />
-        <p class="text-[var(--text-muted)]">Категорий пока нет</p>
+    <!-- Категории -->
+    <div v-if="activeTab === 'categories'" class="catalog-page__list">
+      <article
+        v-for="item in categories"
+        :key="item.id"
+        class="catalog-page__card"
+        @click="goToEditCategory(item)"
+      >
+        <div class="catalog-page__card-body">
+          <div class="catalog-page__card-top">
+            <span class="catalog-page__card-name">
+              <Icon v-if="item.icon" :name="item.icon" class="catalog-page__card-icon" />
+              {{ item.name }}
+            </span>
+            <span class="catalog-page__card-slug">/{{ item.slug }}</span>
+          </div>
+          <p v-if="item.description" class="catalog-page__card-desc">{{ item.description }}</p>
+          <div class="catalog-page__card-meta">
+            <UiBadge :class="getStatusBadgeClass(ACTIVE_STATUS, getActiveStatus(item.isActive))" size="sm">
+              {{ getStatusLabel(ACTIVE_STATUS, getActiveStatus(item.isActive)) }}
+            </UiBadge>
+          </div>
+        </div>
+        <div class="catalog-page__card-actions" @click.stop>
+          <UiButton variant="ghost" size="sm" title="Редактировать" @click="goToEditCategory(item)">
+            <Icon name="heroicons:pencil" class="w-4 h-4" />
+          </UiButton>
+          <UiButton variant="ghost" size="sm" title="Удалить" @click="deleteCategory(item.id)">
+            <Icon name="heroicons:trash" class="w-4 h-4 text-red-400" />
+          </UiButton>
+        </div>
+        <Icon name="heroicons:chevron-right" class="catalog-page__card-arrow" />
+      </article>
+      <div v-if="categories.length === 0" class="catalog-page__empty">
+        <Icon name="heroicons:folder" class="catalog-page__empty-icon" />
+        <h2 class="catalog-page__empty-title">Категорий пока нет</h2>
+        <p class="catalog-page__empty-text">Добавьте первую категорию</p>
       </div>
     </div>
   </div>
