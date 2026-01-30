@@ -216,6 +216,7 @@ export interface Chat {
   unreadAdminCount: number
   lastMessageAt: string | null
   createdAt: string
+  closedAt?: string | null
 }
 
 export interface ChatMessage {

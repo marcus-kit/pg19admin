@@ -7,7 +7,7 @@ import type { Chat, ChatMessage } from '~/types/admin'
 // ═══════════════════════════════════════════════════════════════════════════
 // ИМПОРТЫ
 // ═══════════════════════════════════════════════════════════════════════════
-import { getErrorStatusCode, formatFileSize, formatTime } from '~/composables/useFormatters'
+import { getErrorStatusCode, formatFileSize, formatTime, formatRelativeDate } from '~/composables/useFormatters'
 
 // ═══════════════════════════════════════════════════════════════════════════
 // МАКРОСЫ
@@ -48,6 +48,25 @@ const pendingPreview = ref<string | null>(null)
 const ACCEPT_FILES = 'image/jpeg,image/png,image/gif,image/webp,.pdf,.doc,.docx,.xls,.xlsx'
 const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
 
+/** Шаблоны ответов (только фронтенд) */
+const CHAT_TEMPLATES = [
+  { id: 'greet', label: 'Приветствие', text: 'Здравствуйте! Чем могу помочь?' },
+  { id: 'received', label: 'Принято', text: 'Принято в работу. Ожидайте ответа.' },
+  { id: 'specialist', label: 'Передали специалисту', text: 'Ваш запрос передан специалисту. Ответим в ближайшее время.' },
+  { id: 'clarify', label: 'Уточните', text: 'Уточните, пожалуйста, детали вашего вопроса.' },
+  { id: 'thanks', label: 'Благодарность', text: 'Спасибо за обращение! Если возникнут вопросы — пишите.' },
+]
+
+// Пагинация сообщений
+const hasMoreMessages = ref(false)
+const loadingMore = ref(false)
+const SCROLL_LOAD_THRESHOLD = 80
+
+// Подсветка новых сообщений от пользователя
+const unreadMessageIds = ref<Set<string>>(new Set())
+const NEW_MESSAGE_TITLE = 'Новое сообщение — ПЖ19'
+let titleFlashTimeout: ReturnType<typeof setTimeout> | null = null
+
 // Supabase Realtime подписка
 let subscription: ReturnType<typeof supabase.channel> | null = null
 
@@ -81,18 +100,18 @@ const groupedMessages = computed(() => {
 /** Загрузка данных чата и сообщений */
 async function fetchChat() {
   loading.value = true
+  unreadMessageIds.value = new Set()
   try {
-    const data = await $fetch<{ chat: Chat, messages: ChatMessage[] }>(`/api/admin/chat/${chatId.value}`)
+    const data = await $fetch<{ chat: Chat, messages: ChatMessage[], hasMore?: boolean }>(
+      `/api/admin/chat/${chatId.value}`,
+    )
     chat.value = data.chat
     messages.value = data.messages
+    hasMoreMessages.value = data.hasMore ?? false
 
-    // Помечаем сообщения как прочитанные
     if (data.chat.unreadAdminCount > 0) {
       await $fetch(`/api/admin/chat/${chatId.value}/read`, { method: 'POST' })
     }
-
-    await nextTick()
-    scrollToBottom()
   }
   catch (error: unknown) {
     toast.error('Не удалось загрузить чат')
@@ -102,7 +121,54 @@ async function fetchChat() {
   }
   finally {
     loading.value = false
+    await nextTick()
+    scrollToBottom()
   }
+}
+
+/** Подгрузка старых сообщений при скролле вверх */
+async function loadMoreMessages() {
+  if (loadingMore.value || !hasMoreMessages.value || messages.value.length === 0) return
+  const oldestCreatedAt = messages.value[0]!.createdAt
+  loadingMore.value = true
+  const prevScrollHeight = messagesContainer.value?.scrollHeight ?? 0
+  const prevScrollTop = messagesContainer.value?.scrollTop ?? 0
+  try {
+    const data = await $fetch<{ messages: ChatMessage[], hasMore?: boolean }>(
+      `/api/admin/chat/${chatId.value}`,
+      { params: { before: oldestCreatedAt } },
+    )
+    hasMoreMessages.value = data.hasMore ?? false
+    messages.value = [...data.messages, ...messages.value]
+    await nextTick()
+    if (messagesContainer.value) {
+      const newScrollHeight = messagesContainer.value.scrollHeight
+      messagesContainer.value.scrollTop = newScrollHeight - prevScrollHeight + prevScrollTop
+    }
+  }
+  catch {
+    toast.error('Не удалось загрузить сообщения')
+  }
+  finally {
+    loadingMore.value = false
+  }
+}
+
+/** Обработка скролла: подгрузка при достижении верха */
+function onMessagesScroll() {
+  if (!messagesContainer.value || loadingMore.value || !hasMoreMessages.value) return
+  if (messagesContainer.value.scrollTop < SCROLL_LOAD_THRESHOLD) {
+    loadMoreMessages()
+  }
+  if (isScrolledToBottom()) {
+    unreadMessageIds.value = new Set()
+  }
+}
+
+function isScrolledToBottom(): boolean {
+  if (!messagesContainer.value) return true
+  const { scrollTop, scrollHeight, clientHeight } = messagesContainer.value
+  return scrollHeight - scrollTop - clientHeight < 50
 }
 
 /** Загрузка файла на сервер */
@@ -272,6 +338,37 @@ function handleSubmit() {
   removePendingFile()
 }
 
+/** Enter без Shift — отправить, Shift+Enter — новая строка */
+function onMessageKeydown(e: KeyboardEvent) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault()
+    handleSubmit()
+  }
+}
+
+/** Вставка шаблона в поле ввода */
+function insertTemplate(template: { text: string }) {
+  const text = template.text.trim()
+  if (!text) return
+  newMessage.value = newMessage.value ? `${newMessage.value}\n${text}` : text
+}
+
+/** Копирование текста сообщения в буфер */
+async function copyMessageText(msg: ChatMessage) {
+  const parts: string[] = []
+  if (msg.content) parts.push(msg.content)
+  if (msg.attachmentName) parts.push(`[Файл: ${msg.attachmentName}]`)
+  const text = parts.join('\n')
+  if (!text) return
+  try {
+    await navigator.clipboard.writeText(text)
+    toast.success('Скопировано')
+  }
+  catch {
+    toast.error('Не удалось скопировать')
+  }
+}
+
 /** Автоматическое изменение высоты textarea */
 function handleTextareaInput(e: Event) {
   const target = e.target as HTMLTextAreaElement
@@ -325,9 +422,16 @@ function setupRealtime() {
         })
         nextTick(() => scrollToBottom())
 
-        // Помечаем как прочитанное если от пользователя
         if (newMsg.sender_type === 'user') {
           $fetch(`/api/admin/chat/${chatId.value}/read`, { method: 'POST' })
+          unreadMessageIds.value = new Set([...unreadMessageIds.value, newMsg.id])
+          const prevTitle = document.title
+          document.title = `(1) ${NEW_MESSAGE_TITLE}`
+          if (titleFlashTimeout) clearTimeout(titleFlashTimeout)
+          titleFlashTimeout = setTimeout(() => {
+            document.title = prevTitle
+            titleFlashTimeout = null
+          }, 3000)
         }
       },
     )
@@ -345,6 +449,7 @@ onMounted(() => {
 
 onUnmounted(() => {
   subscription?.unsubscribe()
+  if (titleFlashTimeout) clearTimeout(titleFlashTimeout)
   if (pendingPreview.value) {
     URL.revokeObjectURL(pendingPreview.value)
   }
@@ -352,78 +457,83 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="flex flex-col h-[calc(100vh-120px)]">
-    <!-- Header -->
-    <div
-      v-if="chat"
-      class="flex items-center justify-between gap-4 pb-2 border-b border-[var(--glass-border)]"
-    >
-      <div class="flex items-center gap-3">
-        <UiButton
-          @click="router.push('/chat')"
-          variant="ghost"
-          size="sm"
-        >
-          <Icon name="heroicons:arrow-left" class="w-5 h-5" />
-        </UiButton>
-        <div>
-          <div class="flex items-center gap-2">
-            <h1 class="text-lg font-semibold text-[var(--text-primary)]">
-              {{ chat.userName || chat.guestName || `Чат #${chat.id}` }}
-            </h1>
-            <UiBadge
-              v-if="chat.guestName && !chat.userId"
-              size="sm"
-              class="bg-purple-500/20 text-purple-400"
-            >
-              Гость
-            </UiBadge>
+  <div class="flex h-[calc(100vh-120px)] gap-4">
+    <!-- Основная область: шапка + сообщения + ввод -->
+    <div class="flex flex-1 flex-col min-w-0">
+      <!-- Header -->
+      <div
+        v-if="chat"
+        class="flex items-center justify-between gap-4 pb-2 border-b border-[var(--glass-border)] shrink-0"
+      >
+        <div class="flex items-center gap-3 min-w-0">
+          <UiButton
+            @click="router.push('/chat')"
+            variant="ghost"
+            size="sm"
+            class="shrink-0"
+          >
+            <Icon name="heroicons:arrow-left" class="w-5 h-5" />
+          </UiButton>
+          <div class="min-w-0">
+            <div class="flex items-center gap-2">
+              <h1 class="text-lg font-semibold text-[var(--text-primary)] truncate">
+                {{ chat.userName || chat.guestName || `Чат #${chat.id}` }}
+              </h1>
+              <UiBadge
+                v-if="chat.guestName && !chat.userId"
+                size="sm"
+                class="bg-purple-500/20 text-purple-400 shrink-0"
+              >
+                Гость
+              </UiBadge>
+            </div>
+            <div class="flex items-center gap-2 text-xs text-[var(--text-muted)] truncate">
+              <span v-if="chat.assignedAdmin">
+                {{ chat.assignedAdmin.fullName }}
+              </span>
+            </div>
           </div>
-          <div class="flex items-center gap-2 text-xs text-[var(--text-muted)]">
-            <span v-if="chat.guestContact">
-              {{ chat.guestContact }}
-            </span>
-            <span v-if="chat.userTelegramId">
-              Telegram: {{ chat.userTelegramId }}
-            </span>
-            <span v-if="chat.assignedAdmin">
-              · {{ chat.assignedAdmin.fullName }}
-            </span>
-          </div>
+        </div>
+
+        <div class="flex gap-2 shrink-0">
+          <UiButton
+            v-if="!chat.assignedAdmin && chat.status !== 'closed'"
+            @click="handleAssignToMe"
+            variant="secondary"
+            size="sm"
+          >
+            <Icon name="heroicons:hand-raised" class="w-4 h-4" />
+            Взять себе
+          </UiButton>
+          <UiButton
+            v-if="chat.status !== 'closed'"
+            @click="handleClose"
+            variant="ghost"
+            size="sm"
+          >
+            <Icon name="heroicons:x-circle" class="w-4 h-4 text-red-400" />
+            Закрыть
+          </UiButton>
         </div>
       </div>
 
-      <div class="flex gap-2">
-        <UiButton
-          v-if="!chat.assignedAdmin && chat.status !== 'closed'"
-          @click="handleAssignToMe"
-          variant="secondary"
-          size="sm"
-        >
-          <Icon name="heroicons:hand-raised" class="w-4 h-4" />
-          Взять себе
-        </UiButton>
-        <UiButton
-          v-if="chat.status !== 'closed'"
-          @click="handleClose"
-          variant="ghost"
-          size="sm"
-        >
-          <Icon name="heroicons:x-circle" class="w-4 h-4 text-red-400" />
-          Закрыть
-        </UiButton>
-      </div>
-    </div>
+      <!-- Loading -->
+      <UiLoading v-if="loading" class="flex-1" />
 
-    <!-- Loading -->
-    <UiLoading v-if="loading" class="flex-1" />
-
-    <!-- Messages -->
-    <div
-      v-else
-      ref="messagesContainer"
-      class="flex-1 overflow-y-auto py-2 space-y-3"
-    >
+      <!-- Messages -->
+      <div
+        v-else
+        ref="messagesContainer"
+        class="flex-1 overflow-y-auto py-2 space-y-3"
+        @scroll="onMessagesScroll"
+      >
+        <!-- Индикатор подгрузки старых сообщений -->
+        <div
+          v-if="loadingMore"
+          class="flex justify-center py-2"
+        >
+          <span class="text-xs text-[var(--text-muted)]">Загрузка...</span>
+        </div>
       <template v-for="group in groupedMessages" :key="group.date">
         <!-- Date Separator -->
         <div class="flex items-center gap-2">
@@ -459,15 +569,28 @@ onUnmounted(() => {
             <!-- Bot Message -->
             <div
               v-else-if="msg.senderType === 'bot'"
-              class="max-w-[70%] rounded-2xl px-4 py-2 glass-card rounded-br-md border-l-2 border-[#8B5CF6]/50"
+              class="max-w-[70%] rounded-2xl px-4 py-2 glass-card rounded-br-md border-l-2 border-[#8B5CF6]/50 group relative"
             >
+              <div
+                v-if="msg.content || msg.attachmentName"
+                class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+              >
+                <button
+                  type="button"
+                  title="Копировать"
+                  class="p-1.5 rounded-lg hover:bg-white/10"
+                  @click.stop="copyMessageText(msg)"
+                >
+                  <Icon name="heroicons:document-duplicate" class="w-4 h-4 text-[var(--text-muted)]" />
+                </button>
+              </div>
               <div class="flex items-center gap-1.5 mb-1">
                 <Icon name="heroicons:cpu-chip" class="w-3.5 h-3.5 text-[#8B5CF6]" />
                 <span class="text-xs font-medium text-[#8B5CF6]">{{ msg.senderName || 'AI Ассистент' }}</span>
               </div>
               <p
                 v-if="msg.content"
-                class="whitespace-pre-wrap break-words text-[var(--text-primary)]"
+                class="whitespace-pre-wrap break-words text-[var(--text-primary)] pr-8"
               >
                 {{ msg.content }}
               </p>
@@ -506,11 +629,24 @@ onUnmounted(() => {
             <!-- Admin Message -->
             <div
               v-else-if="msg.senderType === 'admin'"
-              class="max-w-[70%] rounded-2xl px-4 py-2 glass-card rounded-br-md border-l-2 border-primary/50"
+              class="max-w-[70%] rounded-2xl px-4 py-2 glass-card rounded-br-md border-l-2 border-primary/50 group relative"
             >
+              <div
+                v-if="msg.content || msg.attachmentName"
+                class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+              >
+                <button
+                  type="button"
+                  title="Копировать"
+                  class="p-1.5 rounded-lg hover:bg-white/10"
+                  @click.stop="copyMessageText(msg)"
+                >
+                  <Icon name="heroicons:document-duplicate" class="w-4 h-4 text-[var(--text-muted)]" />
+                </button>
+              </div>
               <p
                 v-if="msg.content"
-                class="whitespace-pre-wrap break-words text-[var(--text-primary)]"
+                class="whitespace-pre-wrap break-words text-[var(--text-primary)] pr-8"
               >
                 {{ msg.content }}
               </p>
@@ -552,9 +688,23 @@ onUnmounted(() => {
             <!-- User Message -->
             <div
               v-else
-              class="max-w-[70%] rounded-2xl px-4 py-2 glass-card rounded-bl-md"
+              class="max-w-[70%] rounded-2xl px-4 py-2 glass-card rounded-bl-md group relative"
+              :class="{ 'ring-1 ring-primary/30 bg-primary/5': unreadMessageIds.has(msg.id) }"
             >
-              <p v-if="msg.content" class="whitespace-pre-wrap break-words">
+              <div
+                v-if="msg.content || msg.attachmentName"
+                class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+              >
+                <button
+                  type="button"
+                  title="Копировать"
+                  class="p-1.5 rounded-lg hover:bg-white/10"
+                  @click.stop="copyMessageText(msg)"
+                >
+                  <Icon name="heroicons:document-duplicate" class="w-4 h-4 text-[var(--text-muted)]" />
+                </button>
+              </div>
+              <p v-if="msg.content" class="whitespace-pre-wrap break-words pr-8">
                 {{ msg.content }}
               </p>
               <template v-if="msg.attachmentUrl">
@@ -660,7 +810,7 @@ onUnmounted(() => {
         <textarea
           v-model="newMessage"
           :disabled="sending"
-          @keydown.enter.exact.prevent="handleSubmit"
+          @keydown="onMessageKeydown"
           @input="handleTextareaInput"
           placeholder="Введите сообщение..."
           rows="1"
@@ -677,13 +827,72 @@ onUnmounted(() => {
       </form>
     </div>
 
-    <!-- Closed Chat Notice -->
-    <div
-      v-else-if="chat"
-      class="pt-2 border-t border-[var(--glass-border)] text-center text-[var(--text-muted)]"
-    >
-      <Icon name="heroicons:lock-closed" class="w-5 h-5 inline-block mr-1" />
-      Чат закрыт
+      <!-- Closed Chat Notice -->
+      <div
+        v-else-if="chat"
+        class="pt-2 border-t border-[var(--glass-border)] text-center text-[var(--text-muted)] shrink-0"
+      >
+        <Icon name="heroicons:lock-closed" class="w-5 h-5 inline-block mr-1" />
+        Чат закрыт
+      </div>
     </div>
+
+    <!-- Боковая панель: карточка клиента -->
+    <aside
+      v-if="chat && !loading"
+      class="w-64 shrink-0 hidden lg:block border-l border-[var(--glass-border)] pl-4 overflow-y-auto"
+    >
+      <div class="space-y-3 sticky top-0">
+        <h3 class="text-sm font-medium text-[var(--text-muted)]">
+          Карточка клиента
+        </h3>
+        <div class="rounded-lg glass-card p-3 space-y-2 text-sm">
+          <div>
+            <span class="text-[var(--text-muted)]">Имя</span>
+            <p class="font-medium text-[var(--text-primary)] truncate">
+              {{ chat.userName || chat.guestName || '—' }}
+            </p>
+          </div>
+          <div v-if="chat.guestContact">
+            <span class="text-[var(--text-muted)]">Контакт</span>
+            <p class="text-[var(--text-primary)] break-all">
+              {{ chat.guestContact }}
+            </p>
+          </div>
+          <div v-if="chat.userTelegramId">
+            <span class="text-[var(--text-muted)]">Telegram</span>
+            <p class="text-[var(--text-primary)]">
+              {{ chat.userTelegramId }}
+            </p>
+          </div>
+          <div v-if="chat.subject">
+            <span class="text-[var(--text-muted)]">Тема</span>
+            <p class="text-[var(--text-primary)] truncate">
+              {{ chat.subject }}
+            </p>
+          </div>
+          <div>
+            <span class="text-[var(--text-muted)]">Создан</span>
+            <p class="text-[var(--text-primary)]">
+              {{ formatRelativeDate(chat.createdAt) }}
+            </p>
+          </div>
+          <div v-if="chat.closedAt">
+            <span class="text-[var(--text-muted)]">Закрыт</span>
+            <p class="text-[var(--text-primary)]">
+              {{ formatRelativeDate(chat.closedAt) }}
+            </p>
+          </div>
+          <NuxtLink
+            v-if="chat.userId"
+            :to="`/users/${chat.userId}`"
+            class="inline-flex items-center gap-1 text-primary hover:underline text-sm mt-2"
+          >
+            <Icon name="heroicons:user-circle" class="w-4 h-4" />
+            Карточка пользователя
+          </NuxtLink>
+        </div>
+      </div>
+    </aside>
   </div>
 </template>
