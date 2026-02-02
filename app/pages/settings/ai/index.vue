@@ -1,5 +1,4 @@
 <script setup lang="ts">
-// Интерфейс настроек AI-бота
 interface AISettings {
   id: string
   isEnabled: boolean
@@ -15,7 +14,6 @@ interface AISettings {
   updatedAt: string
 }
 
-// Интерфейс статистики AI
 interface AIStats {
   period: string
   messages: { total: number, avgPerDay: number }
@@ -36,26 +34,22 @@ useHead({ title: 'Настройки AI-бота — Админ-панель' })
 
 const toast = useToast()
 
-// Состояние страницы
 const loading = ref(false)
 const saving = ref(false)
 const settings = ref<AISettings | null>(null)
 const stats = ref<AIStats | null>(null)
 const statsPeriod = ref('week')
 
-// Локальные копии для редактирования
 const editedPrompt = ref('')
 const editedKeywords = ref('')
 const editedOperatorName = ref('')
 
-// Доступные модели OpenAI
 const models = [
   { value: 'gpt-5-nano', label: 'GPT-5 Nano (быстрый, дешёвый)' },
   { value: 'gpt-5-mini', label: 'GPT-5 Mini (баланс цена/качество)' },
   { value: 'gpt-5', label: 'GPT-5 (максимальное качество)' },
 ]
 
-// Опции периода для статистики
 const statsPeriodOptions = [
   { value: 'today', label: 'Сегодня' },
   { value: 'week', label: 'Неделя' },
@@ -63,7 +57,6 @@ const statsPeriodOptions = [
   { value: 'all', label: 'Всё время' },
 ]
 
-// Загрузка настроек AI
 async function fetchSettings() {
   loading.value = true
   try {
@@ -81,7 +74,6 @@ async function fetchSettings() {
   }
 }
 
-// Загрузка статистики AI за выбранный период
 async function fetchStats() {
   try {
     const data = await $fetch<{ stats: AIStats }>(`/api/admin/ai/stats?period=${statsPeriod.value}`)
@@ -92,7 +84,6 @@ async function fetchStats() {
   }
 }
 
-// Обновление настроек AI (частичное)
 async function updateSettings(updates: Partial<AISettings>) {
   saving.value = true
   try {
@@ -159,7 +150,6 @@ async function saveRagCount(count: number) {
   await updateSettings({ ragMatchCount: count })
 }
 
-// Форматирование числа с разделителями тысяч
 function formatNumber(n: number) {
   return n.toLocaleString('ru-RU')
 }
@@ -175,36 +165,38 @@ watch(statsPeriod, () => {
 </script>
 
 <template>
-  <div>
-    <!-- Header -->
-    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
-      <div>
-        <h1 class="text-3xl font-bold text-[var(--text-primary)]">
-          Настройки AI-бота
-        </h1>
-        <p class="text-[var(--text-muted)] mt-1">
-          Управление AI-ассистентом для чата поддержки
-        </p>
+  <div class="ai-settings-page">
+    <header class="ai-settings-page__hero">
+      <div class="ai-settings-page__hero-bg" aria-hidden="true" />
+      <div class="ai-settings-page__hero-inner">
+        <div class="flex items-center gap-3 mb-2">
+          <div class="ai-settings-page__hero-icon">
+            <Icon name="heroicons:sparkles" class="w-7 h-7 text-primary" />
+          </div>
+          <div>
+            <h1 class="ai-settings-page__hero-title">Настройки AI-бота</h1>
+            <p class="ai-settings-page__hero-subtitle">
+              Управление AI-ассистентом для чата поддержки
+            </p>
+          </div>
+        </div>
+        <NuxtLink to="/settings/ai/knowledge" class="ai-settings-page__btn-knowledge">
+          <Icon name="heroicons:book-open" class="w-5 h-5" />
+          <span>База знаний</span>
+        </NuxtLink>
       </div>
-      <UiButton @click="$router.push('/settings/ai/knowledge')">
-        <Icon name="heroicons:book-open" class="w-5 h-5" />
-        База знаний
-      </UiButton>
-    </div>
+    </header>
 
-    <div v-if="loading" class="text-center py-12">
-      <Icon name="heroicons:arrow-path" class="w-8 h-8 animate-spin text-primary mx-auto" />
-    </div>
+    <UiLoading v-if="loading" class="ai-settings-page__loading" />
 
-    <div v-else-if="settings" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      <!-- Main Settings -->
-      <div class="lg:col-span-2 space-y-6">
-        <!-- Enable/Disable + Operator Name -->
-        <UiCard>
-          <div class="flex items-center justify-between mb-4">
+    <div v-else-if="settings" class="ai-settings-page__layout">
+      <div class="ai-settings-page__main">
+        <!-- Статус бота -->
+        <section class="ai-settings-page__card glass-card glass-card-static">
+          <div class="ai-settings-page__card-head-row">
             <div>
-              <h3 class="font-semibold text-[var(--text-primary)]">Статус бота</h3>
-              <p class="text-sm text-[var(--text-muted)]">
+              <h2 class="ai-settings-page__card-title">Статус бота</h2>
+              <p class="ai-settings-page__card-desc">
                 {{ settings.isEnabled ? 'Бот активен и отвечает на сообщения' : 'Бот отключён' }}
               </p>
             </div>
@@ -214,107 +206,94 @@ watch(statsPeriod, () => {
               @update:model-value="toggleEnabled"
             />
           </div>
-          <div class="pt-4 border-t border-white/10">
-            <label class="block text-sm text-[var(--text-muted)] mb-2">
-              Имя оператора (для маскировки бота)
-            </label>
-            <div class="flex gap-2">
+          <div class="ai-settings-page__card-divider" />
+          <div class="ai-settings-page__field">
+            <label class="ai-settings-page__label">Имя оператора (для маскировки бота)</label>
+            <div class="ai-settings-page__field-row">
               <UiInput
                 v-model="editedOperatorName"
                 placeholder="Анна"
-                class="flex-1"
+                class="ai-settings-page__input-flex"
               />
               <UiButton
                 :disabled="saving || editedOperatorName === settings.operatorName"
-                @click="saveOperatorName"
                 size="sm"
+                @click="saveOperatorName"
               >
                 Сохранить
               </UiButton>
             </div>
-            <p class="text-xs text-[var(--text-muted)] mt-2">
-              Бот будет представляться этим именем в чате
-            </p>
+            <p class="ai-settings-page__hint">Бот будет представляться этим именем в чате</p>
           </div>
-        </UiCard>
+        </section>
 
-        <!-- System Prompt -->
-        <UiCard>
-          <h3 class="font-semibold text-[var(--text-primary)] mb-4">Системный промпт</h3>
+        <!-- Системный промпт -->
+        <section class="ai-settings-page__card glass-card glass-card-static">
+          <h2 class="ai-settings-page__card-title">Системный промпт</h2>
           <textarea
             v-model="editedPrompt"
             rows="10"
             placeholder="Инструкции для AI-бота..."
-            class="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/20 transition-all resize-none font-mono text-sm"
-          ></textarea>
-          <div class="flex justify-end mt-3">
+            class="ai-settings-page__textarea"
+          />
+          <div class="ai-settings-page__card-actions">
             <UiButton
               :disabled="saving || editedPrompt === settings.systemPrompt"
+              :loading="saving"
               @click="savePrompt"
             >
-              <Icon v-if="saving" name="heroicons:arrow-path" class="w-4 h-4 animate-spin" />
               Сохранить промпт
             </UiButton>
           </div>
-        </UiCard>
+        </section>
 
-        <!-- Model & Parameters -->
-        <UiCard>
-          <h3 class="font-semibold text-[var(--text-primary)] mb-4">Модель и параметры</h3>
-
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <!-- Model -->
+        <!-- Модель и параметры -->
+        <section class="ai-settings-page__card glass-card glass-card-static">
+          <h2 class="ai-settings-page__card-title">Модель и параметры</h2>
+          <div class="ai-settings-page__grid-2">
             <UiSelect
               :model-value="settings.model"
               :options="models"
               :disabled="saving"
-              @update:model-value="saveModel($event as string)"
               label="Модель OpenAI"
+              @update:model-value="saveModel($event as string)"
             />
-
-            <!-- Max Tokens -->
-            <div>
-              <label class="block text-sm text-[var(--text-muted)] mb-2">
-                Макс. токенов (100–2000)
-              </label>
+            <div class="ai-settings-page__field">
+              <label class="ai-settings-page__label">Макс. токенов (100–2000)</label>
               <UiInput
                 :model-value="settings.maxTokens"
+                type="number"
                 :min="100"
                 :max="2000"
                 :step="100"
                 @change="saveMaxTokens(Number(($event.target as HTMLInputElement).value))"
-                type="number"
               />
             </div>
-
-            <!-- Max Bot Messages -->
-            <div>
-              <label class="block text-sm text-[var(--text-muted)] mb-2">
-                Макс. сообщений до эскалации
-              </label>
+            <div class="ai-settings-page__field">
+              <label class="ai-settings-page__label">Макс. сообщений до эскалации</label>
               <UiInput
                 :model-value="settings.maxBotMessages"
+                type="number"
                 :min="1"
                 @change="saveMaxBotMessages(Number(($event.target as HTMLInputElement).value))"
-                type="number"
               />
             </div>
           </div>
-        </UiCard>
+        </section>
 
-        <!-- Escalation Keywords -->
-        <UiCard>
-          <h3 class="font-semibold text-[var(--text-primary)] mb-2">Ключевые слова для эскалации</h3>
-          <p class="text-sm text-[var(--text-muted)] mb-4">
+        <!-- Ключевые слова для эскалации -->
+        <section class="ai-settings-page__card glass-card glass-card-static">
+          <h2 class="ai-settings-page__card-title">Ключевые слова для эскалации</h2>
+          <p class="ai-settings-page__card-desc ai-settings-page__card-desc--mb">
             Если сообщение содержит эти слова, чат будет передан оператору
           </p>
           <textarea
             v-model="editedKeywords"
             rows="5"
             placeholder="Одно слово или фраза на строку..."
-            class="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/20 transition-all resize-none text-sm"
-          ></textarea>
-          <div class="flex justify-end mt-3">
+            class="ai-settings-page__textarea"
+          />
+          <div class="ai-settings-page__card-actions">
             <UiButton
               :disabled="saving || editedKeywords === settings.escalationKeywords.join('\n')"
               @click="saveKeywords"
@@ -322,16 +301,14 @@ watch(statsPeriod, () => {
               Сохранить
             </UiButton>
           </div>
-        </UiCard>
+        </section>
 
-        <!-- RAG Settings -->
-        <UiCard>
-          <div class="flex items-center justify-between mb-4">
+        <!-- RAG -->
+        <section class="ai-settings-page__card glass-card glass-card-static">
+          <div class="ai-settings-page__card-head-row">
             <div>
-              <h3 class="font-semibold text-[var(--text-primary)]">RAG (база знаний)</h3>
-              <p class="text-sm text-[var(--text-muted)]">
-                Использовать базу знаний для ответов
-              </p>
+              <h2 class="ai-settings-page__card-title">RAG (база знаний)</h2>
+              <p class="ai-settings-page__card-desc">Использовать базу знаний для ответов</p>
             </div>
             <UiToggle
               :model-value="settings.ragEnabled"
@@ -339,129 +316,94 @@ watch(statsPeriod, () => {
               @update:model-value="toggleRag"
             />
           </div>
-
-          <div v-if="settings.ragEnabled" class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-white/10">
-            <div>
-              <label class="block text-sm text-[var(--text-muted)] mb-2">
-                Порог релевантности (0.5–0.95)
-              </label>
+          <div v-if="settings.ragEnabled" class="ai-settings-page__rag-fields">
+            <div class="ai-settings-page__field">
+              <label class="ai-settings-page__label">Порог релевантности (0.5–0.95)</label>
               <UiInput
                 :model-value="settings.ragMatchThreshold"
+                type="number"
                 :min="0.5"
                 :max="0.95"
                 :step="0.05"
                 @change="saveRagThreshold(Number(($event.target as HTMLInputElement).value))"
-                type="number"
               />
             </div>
-
-            <div>
-              <label class="block text-sm text-[var(--text-muted)] mb-2">
-                Кол-во результатов (1–10)
-              </label>
+            <div class="ai-settings-page__field">
+              <label class="ai-settings-page__label">Кол-во результатов (1–10)</label>
               <UiInput
                 :model-value="settings.ragMatchCount"
+                type="number"
                 :min="1"
                 :max="10"
                 :step="1"
                 @change="saveRagCount(Number(($event.target as HTMLInputElement).value))"
-                type="number"
               />
             </div>
           </div>
-        </UiCard>
+        </section>
       </div>
 
-      <!-- Stats Sidebar -->
-      <div class="space-y-6">
-        <UiCard>
-          <div class="flex items-center justify-between mb-4">
-            <h3 class="font-semibold text-[var(--text-primary)]">Статистика</h3>
-            <div class="w-32">
-              <UiSelect
-                v-model="statsPeriod"
-                :options="statsPeriodOptions"
-                :placeholder="''"
-                size="sm"
-              />
+      <aside class="ai-settings-page__sidebar">
+        <!-- Статистика -->
+        <section class="ai-settings-page__card glass-card glass-card-static">
+          <div class="ai-settings-page__card-head-row">
+            <h2 class="ai-settings-page__card-title">Статистика</h2>
+            <UiSelect
+              v-model="statsPeriod"
+              :options="statsPeriodOptions"
+              :placeholder="''"
+              size="sm"
+              class="ai-settings-page__period-select"
+            />
+          </div>
+          <div v-if="stats" class="ai-settings-page__stats-list">
+            <div class="ai-settings-page__stat-row">
+              <span class="ai-settings-page__stat-label">Сообщений бота</span>
+              <span class="ai-settings-page__stat-value">{{ formatNumber(stats.messages.total) }}</span>
+            </div>
+            <div class="ai-settings-page__stat-row">
+              <span class="ai-settings-page__stat-label">Токенов использовано</span>
+              <span class="ai-settings-page__stat-value">{{ formatNumber(stats.tokens.total) }}</span>
+            </div>
+            <div class="ai-settings-page__stat-row">
+              <span class="ai-settings-page__stat-label">Средняя задержка</span>
+              <span class="ai-settings-page__stat-value">{{ stats.latency.average }} мс</span>
+            </div>
+            <div class="ai-settings-page__stat-row">
+              <span class="ai-settings-page__stat-label">Стоимость</span>
+              <span class="ai-settings-page__stat-value">~${{ stats.cost.estimated.toFixed(2) }}</span>
+            </div>
+            <hr class="ai-settings-page__stat-hr">
+            <div class="ai-settings-page__stat-row">
+              <span class="ai-settings-page__stat-label">Эскалаций</span>
+              <span class="ai-settings-page__stat-value">{{ stats.escalations.total }} ({{ stats.escalations.rate }}%)</span>
+            </div>
+            <div class="ai-settings-page__stat-row">
+              <span class="ai-settings-page__stat-label">Чатов с ботом</span>
+              <span class="ai-settings-page__stat-value">{{ stats.chats.withBot }}</span>
+            </div>
+            <div class="ai-settings-page__stat-row">
+              <span class="ai-settings-page__stat-label">Записей в базе</span>
+              <span class="ai-settings-page__stat-value">{{ stats.knowledge.activeItems }}</span>
             </div>
           </div>
+        </section>
 
-          <div v-if="stats" class="space-y-4">
-            <div class="flex justify-between items-center">
-              <span class="text-sm text-[var(--text-muted)]">Сообщений бота</span>
-              <span class="font-semibold text-[var(--text-primary)]">
-                {{ formatNumber(stats.messages.total) }}
-              </span>
-            </div>
-
-            <div class="flex justify-between items-center">
-              <span class="text-sm text-[var(--text-muted)]">Токенов использовано</span>
-              <span class="font-semibold text-[var(--text-primary)]">
-                {{ formatNumber(stats.tokens.total) }}
-              </span>
-            </div>
-
-            <div class="flex justify-between items-center">
-              <span class="text-sm text-[var(--text-muted)]">Средняя задержка</span>
-              <span class="font-semibold text-[var(--text-primary)]">
-                {{ stats.latency.average }} мс
-              </span>
-            </div>
-
-            <div class="flex justify-between items-center">
-              <span class="text-sm text-[var(--text-muted)]">Стоимость</span>
-              <span class="font-semibold text-[var(--text-primary)]">
-                ~${{ stats.cost.estimated.toFixed(2) }}
-              </span>
-            </div>
-
-            <hr class="border-white/10" />
-
-            <div class="flex justify-between items-center">
-              <span class="text-sm text-[var(--text-muted)]">Эскалаций</span>
-              <span class="font-semibold text-[var(--text-primary)]">
-                {{ stats.escalations.total }} ({{ stats.escalations.rate }}%)
-              </span>
-            </div>
-
-            <div class="flex justify-between items-center">
-              <span class="text-sm text-[var(--text-muted)]">Чатов с ботом</span>
-              <span class="font-semibold text-[var(--text-primary)]">
-                {{ stats.chats.withBot }}
-              </span>
-            </div>
-
-            <div class="flex justify-between items-center">
-              <span class="text-sm text-[var(--text-muted)]">Записей в базе</span>
-              <span class="font-semibold text-[var(--text-primary)]">
-                {{ stats.knowledge.activeItems }}
-              </span>
-            </div>
-          </div>
-        </UiCard>
-
-        <!-- Quick Links -->
-        <UiCard>
-          <h3 class="font-semibold text-[var(--text-primary)] mb-4">Быстрые ссылки</h3>
-          <div class="space-y-2">
-            <NuxtLink
-              to="/settings/ai/knowledge"
-              class="flex items-center gap-2 p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors"
-            >
-              <Icon name="heroicons:book-open" class="w-5 h-5 text-primary" />
-              <span class="text-[var(--text-primary)]">База знаний FAQ</span>
+        <!-- Быстрые ссылки -->
+        <section class="ai-settings-page__card glass-card glass-card-static">
+          <h2 class="ai-settings-page__card-title">Быстрые ссылки</h2>
+          <div class="ai-settings-page__links">
+            <NuxtLink to="/settings/ai/knowledge" class="ai-settings-page__link-item">
+              <Icon name="heroicons:book-open" class="ai-settings-page__link-icon" />
+              <span>База знаний FAQ</span>
             </NuxtLink>
-            <NuxtLink
-              to="/chat"
-              class="flex items-center gap-2 p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors"
-            >
-              <Icon name="heroicons:chat-bubble-left-right" class="w-5 h-5 text-primary" />
-              <span class="text-[var(--text-primary)]">Чаты поддержки</span>
+            <NuxtLink to="/chat" class="ai-settings-page__link-item">
+              <Icon name="heroicons:chat-bubble-left-right" class="ai-settings-page__link-icon" />
+              <span>Чаты поддержки</span>
             </NuxtLink>
           </div>
-        </UiCard>
-      </div>
+        </section>
+      </aside>
     </div>
   </div>
 </template>

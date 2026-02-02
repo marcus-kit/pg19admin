@@ -1,5 +1,4 @@
 <script setup lang="ts">
-// Интерфейс записи базы знаний
 interface KnowledgeItem {
   id: string
   category: string | null
@@ -21,7 +20,6 @@ useHead({ title: 'База знаний AI — Админ-панель' })
 
 const toast = useToast()
 
-// Состояние страницы
 const loading = ref(false)
 const saving = ref(false)
 const items = ref<KnowledgeItem[]>([])
@@ -29,7 +27,6 @@ const categoryFilter = ref('all')
 const statusFilter = ref('active')
 const searchQuery = ref('')
 
-// Modal state
 const showModal = ref(false)
 const editingItem = ref<KnowledgeItem | null>(null)
 const formData = ref({
@@ -41,7 +38,6 @@ const formData = ref({
   isActive: true,
 })
 
-// Доступные категории для записей базы знаний
 const categories = [
   { value: '', label: 'Без категории' },
   { value: 'internet', label: 'Интернет' },
@@ -51,7 +47,17 @@ const categories = [
   { value: 'general', label: 'Общие вопросы' },
 ]
 
-// Загрузка списка записей с фильтрами
+const categoryOptions = [
+  { value: 'all', label: 'Все категории' },
+  ...categories.map(c => ({ value: c.value, label: c.label })),
+]
+
+const statusOptions = [
+  { value: 'all', label: 'Все записи' },
+  { value: 'active', label: 'Активные' },
+  { value: 'inactive', label: 'Неактивные' },
+]
+
 async function fetchItems() {
   loading.value = true
   try {
@@ -77,7 +83,6 @@ async function fetchItems() {
   }
 }
 
-// Открытие модала создания новой записи
 function openCreateModal() {
   editingItem.value = null
   formData.value = {
@@ -91,7 +96,6 @@ function openCreateModal() {
   showModal.value = true
 }
 
-// Открытие модала редактирования существующей записи
 function openEditModal(item: KnowledgeItem) {
   editingItem.value = item
   formData.value = {
@@ -105,7 +109,6 @@ function openEditModal(item: KnowledgeItem) {
   showModal.value = true
 }
 
-// Сохранение записи (создание или обновление)
 async function saveItem() {
   if (!formData.value.question.trim() || !formData.value.answer.trim()) {
     toast.error('Заполните вопрос и ответ')
@@ -151,7 +154,6 @@ async function saveItem() {
   }
 }
 
-// Удаление записи с подтверждением
 async function deleteItem(item: KnowledgeItem) {
   if (!confirm(`Удалить запись "${item.question.slice(0, 50)}..."?`)) return
 
@@ -167,7 +169,6 @@ async function deleteItem(item: KnowledgeItem) {
   }
 }
 
-// Переключение активности записи
 async function toggleActive(item: KnowledgeItem) {
   try {
     await $fetch(`/api/admin/ai/knowledge/${item.id}`, {
@@ -182,13 +183,11 @@ async function toggleActive(item: KnowledgeItem) {
   }
 }
 
-// Получение метки категории по значению
 function getCategoryLabel(category: string | null) {
   const found = categories.find(c => c.value === category)
   return found?.label || category || 'Без категории'
 }
 
-// Получение CSS-классов цвета для badge категории
 function getCategoryColor(category: string | null) {
   const colors: Record<string, string> = {
     internet: 'bg-blue-500/20 text-blue-400',
@@ -200,7 +199,6 @@ function getCategoryColor(category: string | null) {
   return colors[category || ''] || 'bg-gray-500/20 text-gray-400'
 }
 
-// Debounced search
 let searchTimeout: ReturnType<typeof setTimeout>
 watch(searchQuery, () => {
   clearTimeout(searchTimeout)
@@ -219,157 +217,136 @@ watch([categoryFilter, statusFilter], () => {
 </script>
 
 <template>
-  <div>
-    <!-- Header -->
-    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
-      <div>
-        <div class="flex items-center gap-2 mb-1">
-          <NuxtLink
-            to="/settings/ai"
-            class="text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
-          >
-            <Icon name="heroicons:arrow-left" class="w-5 h-5" />
-          </NuxtLink>
-          <h1 class="text-3xl font-bold text-[var(--text-primary)]">
-            База знаний AI
-          </h1>
+  <div class="ai-knowledge-page">
+    <header class="ai-knowledge-page__hero">
+      <div class="ai-knowledge-page__hero-bg" aria-hidden="true" />
+      <div class="ai-knowledge-page__hero-inner">
+        <NuxtLink to="/settings/ai" class="ai-knowledge-page__back" aria-label="Назад">
+          <Icon name="heroicons:arrow-left" class="w-5 h-5" />
+        </NuxtLink>
+        <div class="flex items-center gap-3 mb-2">
+          <div class="ai-knowledge-page__hero-icon">
+            <Icon name="heroicons:book-open" class="w-7 h-7 text-primary" />
+          </div>
+          <div>
+            <h1 class="ai-knowledge-page__hero-title">База знаний AI</h1>
+            <p class="ai-knowledge-page__hero-subtitle">
+              Вопросы и ответы для RAG поиска
+            </p>
+          </div>
         </div>
-        <p class="text-[var(--text-muted)]">
-          Вопросы и ответы для RAG поиска
-        </p>
+        <div v-if="!loading" class="ai-knowledge-page__stats">
+          <span class="ai-knowledge-page__stat"><strong>{{ items.length }}</strong> записей</span>
+        </div>
+        <button type="button" class="ai-knowledge-page__btn-add" @click="openCreateModal">
+          <Icon name="heroicons:plus" class="w-5 h-5" />
+          <span>Добавить запись</span>
+        </button>
       </div>
-      <UiButton @click="openCreateModal">
-        <Icon name="heroicons:plus" class="w-5 h-5" />
-        Добавить запись
-      </UiButton>
-    </div>
+    </header>
 
-    <!-- Filters -->
-    <div class="flex flex-wrap gap-4 mb-6">
-      <!-- Search -->
-      <div class="flex-1 min-w-[200px]">
-        <input
-          v-model="searchQuery"
-          type="text"
-          placeholder="Поиск по вопросам..."
-          class="w-full px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-primary/50"
+    <div class="ai-knowledge-page__toolbar">
+      <div class="ai-knowledge-page__bar-row">
+        <div class="ai-knowledge-page__block ai-knowledge-page__block--search">
+          <Icon name="heroicons:magnifying-glass" class="ai-knowledge-page__search-icon" aria-hidden="true" />
+          <input
+            v-model="searchQuery"
+            type="search"
+            placeholder="Поиск по вопросам..."
+            class="ai-knowledge-page__search-input"
+            aria-label="Поиск в базе знаний"
+          />
+        </div>
+        <UiSelect
+          v-model="categoryFilter"
+          :options="categoryOptions"
+          size="md"
+          class="ai-knowledge-page__select"
+        />
+        <UiSelect
+          v-model="statusFilter"
+          :options="statusOptions"
+          size="md"
+          class="ai-knowledge-page__select"
         />
       </div>
-
-      <!-- Category Filter -->
-      <select
-        v-model="categoryFilter"
-        class="px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-[var(--text-primary)]"
-      >
-        <option value="all">Все категории</option>
-        <option v-for="cat in categories" :key="cat.value" :value="cat.value">
-          {{ cat.label }}
-        </option>
-      </select>
-
-      <!-- Status Filter -->
-      <select
-        v-model="statusFilter"
-        class="px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-[var(--text-primary)]"
-      >
-        <option value="all">Все записи</option>
-        <option value="active">Активные</option>
-        <option value="inactive">Неактивные</option>
-      </select>
     </div>
 
-    <!-- Items List -->
-    <div v-if="loading" class="text-center py-12">
-      <Icon name="heroicons:arrow-path" class="w-8 h-8 animate-spin text-primary mx-auto" />
-    </div>
+    <UiLoading v-if="loading" class="ai-knowledge-page__loading" />
 
-    <div v-else class="space-y-4">
-      <UiCard
+    <div v-else class="ai-knowledge-page__list">
+      <article
         v-for="item in items"
         :key="item.id"
-        :class="{ 'opacity-50': !item.isActive }"
-        class="hover:shadow-lg transition-shadow"
+        class="ai-knowledge-page__card glass-card glass-card-static"
+        :class="{ 'ai-knowledge-page__card--inactive': !item.isActive }"
       >
-        <div class="flex items-start justify-between gap-4">
-          <div class="flex-1 min-w-0">
-            <div class="flex items-center gap-2 mb-2 flex-wrap">
-              <UiBadge :class="getCategoryColor(item.category)">
-                {{ getCategoryLabel(item.category) }}
-              </UiBadge>
-              <UiBadge v-if="!item.isActive" class="bg-red-500/20 text-red-400">
-                Неактивно
-              </UiBadge>
-              <UiBadge v-if="item.priority > 0" class="bg-yellow-500/20 text-yellow-400">
-                Приоритет: {{ item.priority }}
-              </UiBadge>
-            </div>
-
-            <h3 class="text-lg font-semibold text-[var(--text-primary)] mb-2">
-              {{ item.question }}
-            </h3>
-
-            <p class="text-sm text-[var(--text-muted)] line-clamp-2">
-              {{ item.answer }}
-            </p>
-
-            <div v-if="item.keywords.length > 0" class="flex flex-wrap gap-1 mt-2">
-              <span
-                v-for="kw in item.keywords.slice(0, 5)"
-                :key="kw"
-                class="px-2 py-0.5 text-xs rounded-full bg-white/5 text-[var(--text-muted)]"
-              >
-                {{ kw }}
-              </span>
-              <span
-                v-if="item.keywords.length > 5"
-                class="px-2 py-0.5 text-xs rounded-full bg-white/5 text-[var(--text-muted)]"
-              >
-                +{{ item.keywords.length - 5 }}
-              </span>
-            </div>
+        <div class="ai-knowledge-page__card-body">
+          <div class="ai-knowledge-page__card-badges">
+            <UiBadge :class="getCategoryColor(item.category)" size="sm">
+              {{ getCategoryLabel(item.category) }}
+            </UiBadge>
+            <UiBadge v-if="!item.isActive" class="bg-red-500/20 text-red-400" size="sm">
+              Неактивно
+            </UiBadge>
+            <UiBadge v-if="item.priority > 0" class="bg-yellow-500/20 text-yellow-400" size="sm">
+              Приоритет: {{ item.priority }}
+            </UiBadge>
           </div>
-
-          <div class="flex gap-2 flex-shrink-0">
-            <UiButton
-              :title="item.isActive ? 'Деактивировать' : 'Активировать'"
-              @click="toggleActive(item)"
-              variant="ghost"
-              size="sm"
+          <h2 class="ai-knowledge-page__card-question">{{ item.question }}</h2>
+          <p class="ai-knowledge-page__card-answer">{{ item.answer }}</p>
+          <div v-if="item.keywords.length > 0" class="ai-knowledge-page__card-keywords">
+            <span
+              v-for="kw in item.keywords.slice(0, 5)"
+              :key="kw"
+              class="ai-knowledge-page__keyword"
             >
-              <Icon
-                :name="item.isActive ? 'heroicons:eye' : 'heroicons:eye-slash'"
-                class="w-4 h-4"
-              />
-            </UiButton>
-            <UiButton
-              @click="openEditModal(item)"
-              variant="ghost"
-              size="sm"
-              title="Редактировать"
-            >
-              <Icon name="heroicons:pencil" class="w-4 h-4" />
-            </UiButton>
-            <UiButton
-              @click="deleteItem(item)"
-              variant="ghost"
-              size="sm"
-              title="Удалить"
-            >
-              <Icon name="heroicons:trash" class="w-4 h-4 text-red-400" />
-            </UiButton>
+              {{ kw }}
+            </span>
+            <span v-if="item.keywords.length > 5" class="ai-knowledge-page__keyword">
+              +{{ item.keywords.length - 5 }}
+            </span>
           </div>
         </div>
-      </UiCard>
+        <div class="ai-knowledge-page__card-actions">
+          <button
+            type="button"
+            class="ai-knowledge-page__card-action"
+            :title="item.isActive ? 'Деактивировать' : 'Активировать'"
+            @click="toggleActive(item)"
+          >
+            <Icon :name="item.isActive ? 'heroicons:eye' : 'heroicons:eye-slash'" class="w-4 h-4" />
+          </button>
+          <button
+            type="button"
+            class="ai-knowledge-page__card-action"
+            title="Редактировать"
+            @click="openEditModal(item)"
+          >
+            <Icon name="heroicons:pencil" class="w-4 h-4" />
+          </button>
+          <button
+            type="button"
+            class="ai-knowledge-page__card-action ai-knowledge-page__card-action--danger"
+            title="Удалить"
+            @click="deleteItem(item)"
+          >
+            <Icon name="heroicons:trash" class="w-4 h-4" />
+          </button>
+        </div>
+      </article>
 
-      <!-- Empty state -->
-      <div v-if="items.length === 0" class="text-center py-12">
-        <Icon name="heroicons:book-open" class="w-16 h-16 text-[var(--text-muted)] mx-auto mb-4" />
-        <p class="text-[var(--text-muted)]">
+      <div v-if="items.length === 0" class="ai-knowledge-page__empty">
+        <Icon name="heroicons:book-open" class="ai-knowledge-page__empty-icon" />
+        <h2 class="ai-knowledge-page__empty-title">
           {{ searchQuery ? 'Ничего не найдено' : 'База знаний пуста' }}
+        </h2>
+        <p class="ai-knowledge-page__empty-text">
+          {{ searchQuery ? 'Попробуйте другой запрос или сбросьте фильтры' : 'Добавьте первую запись для RAG' }}
         </p>
-        <UiButton @click="openCreateModal" class="mt-4">
+        <button type="button" class="ai-knowledge-page__btn-add-empty" @click="openCreateModal">
           Добавить первую запись
-        </UiButton>
+        </button>
       </div>
     </div>
 
@@ -378,108 +355,87 @@ watch([categoryFilter, statusFilter], () => {
       <Teleport to="body">
         <div
           v-if="showModal"
+          class="ai-knowledge-page__modal-backdrop"
+          aria-hidden="true"
           @click.self="showModal = false"
-          class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
         >
-          <div class="w-full max-w-2xl glass-card rounded-2xl p-6 max-h-[90vh] overflow-y-auto">
-            <div class="flex items-center justify-between mb-6">
-              <h2 class="text-xl font-bold text-[var(--text-primary)]">
+          <div class="ai-knowledge-page__modal glass-card glass-card-static">
+            <div class="ai-knowledge-page__modal-head">
+              <h2 class="ai-knowledge-page__modal-title">
                 {{ editingItem ? 'Редактировать запись' : 'Новая запись' }}
               </h2>
               <button
+                type="button"
+                class="ai-knowledge-page__modal-close"
+                aria-label="Закрыть"
                 @click="showModal = false"
-                class="p-2 rounded-lg hover:bg-white/10 transition-colors"
               >
-                <Icon name="heroicons:x-mark" class="w-5 h-5 text-[var(--text-muted)]" />
+                <Icon name="heroicons:x-mark" class="w-5 h-5" />
               </button>
             </div>
 
-            <div class="space-y-4">
-              <!-- Category -->
-              <div>
-                <label class="block text-sm text-[var(--text-muted)] mb-2">Категория</label>
+            <div class="ai-knowledge-page__modal-body">
+              <div class="ai-knowledge-page__field">
+                <label class="ai-knowledge-page__label">Категория</label>
                 <select
                   v-model="formData.category"
-                  class="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-[var(--text-primary)]"
+                  class="ai-knowledge-page__select-full"
                 >
                   <option v-for="cat in categories" :key="cat.value" :value="cat.value">
                     {{ cat.label }}
                   </option>
                 </select>
               </div>
-
-              <!-- Question -->
-              <div>
-                <label class="block text-sm text-[var(--text-muted)] mb-2">
-                  Вопрос <span class="text-red-400">*</span>
-                </label>
+              <div class="ai-knowledge-page__field">
+                <label class="ai-knowledge-page__label">Вопрос <span class="ai-knowledge-page__required">*</span></label>
                 <textarea
                   v-model="formData.question"
                   rows="2"
                   placeholder="Какой вопрос задаёт пользователь?"
-                  class="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-primary/50 resize-none"
-                ></textarea>
+                  class="ai-knowledge-page__textarea"
+                />
               </div>
-
-              <!-- Answer -->
-              <div>
-                <label class="block text-sm text-[var(--text-muted)] mb-2">
-                  Ответ <span class="text-red-400">*</span>
-                </label>
+              <div class="ai-knowledge-page__field">
+                <label class="ai-knowledge-page__label">Ответ <span class="ai-knowledge-page__required">*</span></label>
                 <textarea
                   v-model="formData.answer"
                   rows="5"
                   placeholder="Как AI должен ответить?"
-                  class="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-primary/50 resize-none"
-                ></textarea>
+                  class="ai-knowledge-page__textarea"
+                />
               </div>
-
-              <!-- Keywords -->
-              <div>
-                <label class="block text-sm text-[var(--text-muted)] mb-2">
-                  Ключевые слова (через запятую)
-                </label>
+              <div class="ai-knowledge-page__field">
+                <label class="ai-knowledge-page__label">Ключевые слова (через запятую)</label>
                 <input
                   v-model="formData.keywords"
                   type="text"
                   placeholder="интернет, скорость, тариф"
-                  class="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-primary/50"
+                  class="ai-knowledge-page__input"
                 />
               </div>
-
-              <!-- Priority & Active -->
-              <div class="flex gap-4">
-                <div class="flex-1">
-                  <label class="block text-sm text-[var(--text-muted)] mb-2">
-                    Приоритет (0-10)
-                  </label>
+              <div class="ai-knowledge-page__field-row">
+                <div class="ai-knowledge-page__field">
+                  <label class="ai-knowledge-page__label">Приоритет (0–10)</label>
                   <input
                     v-model.number="formData.priority"
                     type="number"
                     min="0"
                     max="10"
-                    class="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-[var(--text-primary)] focus:outline-none focus:border-primary/50"
+                    class="ai-knowledge-page__input"
                   />
                 </div>
-                <div class="flex-1 flex items-end">
-                  <label class="flex items-center gap-2 cursor-pointer">
-                    <input
-                      v-model="formData.isActive"
-                      type="checkbox"
-                      class="w-5 h-5 rounded"
-                    />
-                    <span class="text-[var(--text-primary)]">Активно</span>
-                  </label>
-                </div>
+                <label class="ai-knowledge-page__checkbox-wrap">
+                  <input v-model="formData.isActive" type="checkbox" class="ai-knowledge-page__checkbox">
+                  <span class="ai-knowledge-page__checkbox-label">Активно</span>
+                </label>
               </div>
             </div>
 
-            <div class="flex justify-end gap-3 mt-6">
-              <UiButton @click="showModal = false" variant="ghost">
+            <div class="ai-knowledge-page__modal-actions">
+              <UiButton variant="secondary" @click="showModal = false">
                 Отмена
               </UiButton>
-              <UiButton :disabled="saving" @click="saveItem">
-                <Icon v-if="saving" name="heroicons:arrow-path" class="w-4 h-4 animate-spin" />
+              <UiButton :disabled="saving" :loading="saving" @click="saveItem">
                 {{ editingItem ? 'Сохранить' : 'Создать' }}
               </UiButton>
             </div>
