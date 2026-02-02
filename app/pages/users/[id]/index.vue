@@ -206,173 +206,157 @@ onMounted(() => {
 </script>
 
 <template>
-  <div>
-    <!-- Loading -->
-    <UiLoading v-if="loading" />
-
-    <template v-else-if="user">
-      <!-- Header -->
-      <div class="flex items-start justify-between gap-4 mb-6">
-        <div>
-          <div class="flex items-center gap-3 mb-2">
-            <UiButton @click="router.back()" variant="ghost" size="sm" title="Назад">
-              <Icon name="heroicons:arrow-left" class="w-5 h-5" />
-            </UiButton>
-            <UiBadge :class="getStatusBadgeClass(user.status)">
-              {{ getStatusLabel(user.status) }}
-            </UiBadge>
-          </div>
-          <div class="flex items-center gap-4">
-            <!-- Avatar -->
-            <div class="relative">
+  <div class="user-detail-page">
+    <header class="user-detail-page__hero">
+      <div class="user-detail-page__hero-bg" aria-hidden="true" />
+      <div class="user-detail-page__hero-inner">
+        <div class="user-detail-page__hero-row">
+          <button type="button" class="user-detail-page__back" aria-label="Назад" @click="router.back()">
+            <Icon name="heroicons:arrow-left" class="w-5 h-5" />
+          </button>
+          <div class="user-detail-page__hero-head">
+            <div v-if="user" class="user-detail-page__hero-avatar">
               <div
                 v-if="user.avatar"
                 :style="{ backgroundImage: `url(${user.avatar})` }"
-                class="w-16 h-16 rounded-full bg-cover bg-center"
+                class="user-detail-page__hero-avatar-img"
               />
-              <div
+              <span
                 v-else
-                class="w-16 h-16 rounded-full bg-gradient-to-br from-primary/30 to-secondary/30 flex items-center justify-center"
+                class="user-detail-page__hero-avatar-initials"
               >
-                <span class="text-xl font-medium text-[var(--text-primary)]">
-                  {{ user.firstName?.charAt(0) || '?' }}{{ user.lastName?.charAt(0) || '' }}
-                </span>
-              </div>
+                {{ user.firstName?.charAt(0) || '?' }}{{ user.lastName?.charAt(0) || '' }}
+              </span>
             </div>
-            <div>
-              <h1 class="text-2xl font-bold text-[var(--text-primary)]">{{ user.fullName }}</h1>
-              <p v-if="user.nickname" class="text-[var(--text-muted)]">@{{ user.nickname }}</p>
+            <div v-else class="user-detail-page__hero-icon">
+              <Icon name="heroicons:user-circle" class="w-7 h-7 text-primary" />
+            </div>
+            <div class="user-detail-page__hero-title-wrap">
+              <h1 class="user-detail-page__hero-title">
+                {{ user ? user.fullName : 'Пользователь' }}
+              </h1>
+              <p class="user-detail-page__hero-subtitle">
+                {{ user?.nickname ? `@${user.nickname}` : 'Карточка пользователя' }}
+              </p>
             </div>
           </div>
-        </div>
-
-        <div class="flex gap-2">
-          <UiButton
+          <button
+            v-if="user"
+            type="button"
+            class="user-detail-page__btn-edit"
             @click="openEditModal"
-            variant="secondary"
-            size="sm"
           >
             <Icon name="heroicons:pencil" class="w-4 h-4" />
-            Редактировать
-          </UiButton>
+            <span>Редактировать</span>
+          </button>
+        </div>
+        <div v-if="user" class="user-detail-page__hero-badges">
+          <UiBadge :class="getStatusBadgeClass(user.status)" size="sm">
+            {{ getStatusLabel(user.status) }}
+          </UiBadge>
         </div>
       </div>
+    </header>
 
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <!-- Main Content -->
-        <div class="lg:col-span-2 space-y-6">
+    <UiLoading v-if="loading" class="user-detail-page__loading" />
+
+    <template v-else-if="user">
+      <div class="user-detail-page__layout">
+        <div class="user-detail-page__main">
           <!-- Contact Info -->
-          <UiCard>
-            <template #header>
-              <span class="font-medium text-[var(--text-primary)]">Контактная информация</span>
-            </template>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label class="block text-xs text-[var(--text-muted)] mb-1">Телефон</label>
-                <p class="text-[var(--text-primary)]">{{ user.phone || '—' }}</p>
+          <section class="user-detail-page__card glass-card glass-card-static">
+            <h2 class="user-detail-page__card-title">Контактная информация</h2>
+            <dl class="user-detail-page__dl user-detail-page__dl--grid">
+              <div class="user-detail-page__row">
+                <dt class="user-detail-page__dt">Телефон</dt>
+                <dd class="user-detail-page__dd">{{ user.phone || '—' }}</dd>
               </div>
-              <div>
-                <label class="block text-xs text-[var(--text-muted)] mb-1">Email</label>
-                <p class="text-[var(--text-primary)]">{{ user.email || '—' }}</p>
+              <div class="user-detail-page__row">
+                <dt class="user-detail-page__dt">Email</dt>
+                <dd class="user-detail-page__dd">{{ user.email || '—' }}</dd>
               </div>
-              <div>
-                <label class="block text-xs text-[var(--text-muted)] mb-1">Telegram</label>
-                <p class="text-[var(--text-primary)]">
+              <div class="user-detail-page__row">
+                <dt class="user-detail-page__dt">Telegram</dt>
+                <dd class="user-detail-page__dd">
                   <template v-if="user.telegram">
                     <span v-if="user.telegram.username">@{{ user.telegram.username }}</span>
                     <span v-else>ID: {{ user.telegram.id }}</span>
                   </template>
                   <template v-else>—</template>
-                </p>
+                </dd>
               </div>
-              <div>
-                <label class="block text-xs text-[var(--text-muted)] mb-1">VK</label>
-                <p class="text-[var(--text-primary)]">{{ user.vkId || '—' }}</p>
+              <div class="user-detail-page__row">
+                <dt class="user-detail-page__dt">VK</dt>
+                <dd class="user-detail-page__dd">{{ user.vkId || '—' }}</dd>
               </div>
-              <div>
-                <label class="block text-xs text-[var(--text-muted)] mb-1">Дата рождения</label>
-                <p class="text-[var(--text-primary)]">{{ formatDate(user.birthDate) }}</p>
+              <div class="user-detail-page__row">
+                <dt class="user-detail-page__dt">Дата рождения</dt>
+                <dd class="user-detail-page__dd">{{ formatDate(user.birthDate) }}</dd>
               </div>
-            </div>
-          </UiCard>
+            </dl>
+          </section>
 
           <!-- Accounts -->
-          <UiCard>
-            <template #header>
-              <span class="font-medium text-[var(--text-primary)]">
-                Аккаунты ({{ user.accounts.length }})
-              </span>
-            </template>
+          <section class="user-detail-page__card glass-card glass-card-static">
+            <h2 class="user-detail-page__card-title">Аккаунты ({{ user.accounts.length }})</h2>
 
-            <div v-if="user.accounts.length > 0" class="space-y-3">
+            <div v-if="user.accounts.length > 0" class="user-detail-page__accounts">
               <div
                 v-for="account in user.accounts"
                 :key="account.id"
+                class="user-detail-page__account"
                 @click="router.push(`/accounts/${account.id}`)"
-                class="p-4 rounded-lg bg-[var(--glass-bg)] border border-[var(--glass-border)] hover:border-primary/30 cursor-pointer transition-colors"
               >
-                <div class="flex items-center justify-between mb-2">
-                  <span class="font-mono text-primary">
+                <div class="user-detail-page__account-head">
+                  <span class="user-detail-page__account-contract">
                     Договор {{ account.contractNumber || '—' }}
                   </span>
                   <UiBadge :class="getAccountStatusBadgeClass(account.status)" size="sm">
                     {{ getAccountStatusLabel(account.status) }}
                   </UiBadge>
                 </div>
-                <div class="flex items-center justify-between text-sm">
-                  <span class="text-[var(--text-muted)]">{{ account.addressFull || 'Адрес не указан' }}</span>
-                  <span :class="account.balance >= 0 ? 'text-green-400' : 'text-red-400'">
+                <div class="user-detail-page__account-meta">
+                  <span class="user-detail-page__account-address">{{ account.addressFull || 'Адрес не указан' }}</span>
+                  <span :class="account.balance >= 0 ? 'user-detail-page__balance--positive' : 'user-detail-page__balance--negative'">
                     {{ formatBalance(account.balance) }}
                   </span>
                 </div>
               </div>
             </div>
 
-            <div v-else class="text-center py-4 text-[var(--text-muted)]">
-              Нет связанных аккаунтов
-            </div>
-          </UiCard>
+            <p v-else class="user-detail-page__empty">Нет связанных аккаунтов</p>
+          </section>
 
-          <!-- Registration Data (collapsible) -->
-          <UiCard v-if="user.passport || user.registrationAddress">
-            <template #header>
-              <span class="font-medium text-[var(--text-primary)]">Регистрационные данные</span>
-            </template>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div v-if="user.passport">
-                <label class="block text-xs text-[var(--text-muted)] mb-1">Паспорт</label>
-                <p class="text-[var(--text-primary)]">
-                  {{ user.passport.series }} {{ user.passport.number }}
-                </p>
+          <!-- Registration Data -->
+          <section v-if="user.passport || user.registrationAddress" class="user-detail-page__card glass-card glass-card-static">
+            <h2 class="user-detail-page__card-title">Регистрационные данные</h2>
+            <dl class="user-detail-page__dl user-detail-page__dl--grid">
+              <div v-if="user.passport" class="user-detail-page__row">
+                <dt class="user-detail-page__dt">Паспорт</dt>
+                <dd class="user-detail-page__dd">{{ user.passport.series }} {{ user.passport.number }}</dd>
               </div>
-              <div v-if="user.registrationAddress">
-                <label class="block text-xs text-[var(--text-muted)] mb-1">Адрес регистрации</label>
-                <p class="text-[var(--text-primary)]">
+              <div v-if="user.registrationAddress" class="user-detail-page__row">
+                <dt class="user-detail-page__dt">Адрес регистрации</dt>
+                <dd class="user-detail-page__dd">
                   {{ [user.registrationAddress.city, user.registrationAddress.street, user.registrationAddress.building, user.registrationAddress.apartment].filter(Boolean).join(', ') }}
-                </p>
+                </dd>
               </div>
-            </div>
-          </UiCard>
+            </dl>
+          </section>
         </div>
 
-        <!-- Sidebar -->
-        <div class="space-y-6">
+        <aside class="user-detail-page__sidebar">
           <!-- Status Management -->
-          <UiCard>
-            <template #header>
-              <span class="font-medium text-[var(--text-primary)]">Управление статусом</span>
-            </template>
-
-            <div class="space-y-2">
+          <section class="user-detail-page__card glass-card glass-card-static">
+            <h2 class="user-detail-page__card-title">Управление статусом</h2>
+            <div class="user-detail-page__sidebar-fields">
               <UiButton
                 v-if="user.status !== 'active'"
                 :disabled="saving"
                 @click="updateStatus('active')"
                 variant="secondary"
                 size="sm"
-                class="w-full justify-center"
+                class="user-detail-page__status-btn"
               >
                 <Icon name="heroicons:check-circle" class="w-4 h-4 text-green-400" />
                 Активировать
@@ -383,7 +367,7 @@ onMounted(() => {
                 @click="updateStatus('suspended')"
                 variant="secondary"
                 size="sm"
-                class="w-full justify-center"
+                class="user-detail-page__status-btn"
               >
                 <Icon name="heroicons:pause-circle" class="w-4 h-4 text-yellow-400" />
                 Приостановить
@@ -394,36 +378,33 @@ onMounted(() => {
                 @click="updateStatus('terminated')"
                 variant="secondary"
                 size="sm"
-                class="w-full justify-center"
+                class="user-detail-page__status-btn"
               >
                 <Icon name="heroicons:x-circle" class="w-4 h-4 text-red-400" />
                 Удалить
               </UiButton>
             </div>
-          </UiCard>
+          </section>
 
           <!-- Dates -->
-          <UiCard>
-            <template #header>
-              <span class="font-medium text-[var(--text-primary)]">Информация</span>
-            </template>
-
-            <div class="space-y-3 text-sm">
-              <div>
-                <label class="block text-xs text-[var(--text-muted)] mb-1">Создан</label>
-                <p class="text-[var(--text-primary)]">{{ formatDateTime(user.createdAt) }}</p>
+          <section class="user-detail-page__card glass-card glass-card-static">
+            <h2 class="user-detail-page__card-title">Информация</h2>
+            <dl class="user-detail-page__dl">
+              <div class="user-detail-page__row">
+                <dt class="user-detail-page__dt">Создан</dt>
+                <dd class="user-detail-page__dd">{{ formatDateTime(user.createdAt) }}</dd>
               </div>
-              <div>
-                <label class="block text-xs text-[var(--text-muted)] mb-1">Обновлён</label>
-                <p class="text-[var(--text-primary)]">{{ formatDateTime(user.updatedAt) }}</p>
+              <div class="user-detail-page__row">
+                <dt class="user-detail-page__dt">Обновлён</dt>
+                <dd class="user-detail-page__dd">{{ formatDateTime(user.updatedAt) }}</dd>
               </div>
-              <div>
-                <label class="block text-xs text-[var(--text-muted)] mb-1">Последний визит</label>
-                <p class="text-[var(--text-primary)]">{{ formatDateTime(user.lastSeenAt) }}</p>
+              <div class="user-detail-page__row">
+                <dt class="user-detail-page__dt">Последний визит</dt>
+                <dd class="user-detail-page__dd">{{ formatDateTime(user.lastSeenAt) }}</dd>
               </div>
-            </div>
-          </UiCard>
-        </div>
+            </dl>
+          </section>
+        </aside>
       </div>
     </template>
 
