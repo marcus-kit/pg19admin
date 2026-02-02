@@ -117,12 +117,12 @@ onMounted(() => {
             <div class="request-detail-page__hero-icon">
               <Icon name="heroicons:clipboard-document-list" class="w-7 h-7 text-primary" />
             </div>
-            <div>
+            <div class="request-detail-page__hero-title-wrap">
               <h1 class="request-detail-page__hero-title">
-                {{ request ? `Заявка #${request.id}` : 'Заявка' }}
+                {{ request ? request.fullName : 'Заявка' }}
               </h1>
               <p class="request-detail-page__hero-subtitle">
-                Заявка на подключение
+                {{ request ? `Заявка #${request.id} · Подключение` : 'Заявка на подключение' }}
               </p>
             </div>
           </div>
@@ -207,7 +207,7 @@ onMounted(() => {
         </section>
 
         <!-- Карта -->
-        <section v-if="mapUrl" class="request-detail-page__card request-detail-page__card--full glass-card glass-card-static">
+        <section v-if="mapUrl" class="request-detail-page__card glass-card glass-card-static">
           <h2 class="request-detail-page__card-title">Местоположение</h2>
           <div class="request-detail-page__map-wrap">
             <img
@@ -222,7 +222,7 @@ onMounted(() => {
         </section>
 
         <!-- Дополнительная информация -->
-        <section class="request-detail-page__card request-detail-page__card--full glass-card glass-card-static">
+        <section class="request-detail-page__card glass-card glass-card-static">
           <h2 class="request-detail-page__card-title">Дополнительная информация</h2>
           <dl class="request-detail-page__dl request-detail-page__dl--grid">
             <div class="request-detail-page__row">
