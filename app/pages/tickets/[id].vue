@@ -179,13 +179,17 @@ function cancel() {
   router.push('/tickets')
 }
 
+// Кнопка «Стрелка вверх»
+const pageRootRef = ref<HTMLElement | null>(null)
+const { showScrollTop, scrollToTop } = useScrollToTop(pageRootRef)
+
 onMounted(() => {
   fetchTicket()
 })
 </script>
 
 <template>
-  <div class="ticket-detail-page">
+  <div ref="pageRootRef" class="ticket-detail-page">
     <header class="ticket-detail-page__hero">
       <div class="ticket-detail-page__hero-bg" aria-hidden="true" />
       <div class="ticket-detail-page__hero-inner">
@@ -386,6 +390,18 @@ onMounted(() => {
           </section>
         </aside>
       </div>
+
+      <Transition name="ticket-detail-page-scroll-top">
+        <button
+          v-if="showScrollTop"
+          type="button"
+          class="ticket-detail-page__scroll-top"
+          aria-label="Прокрутить вверх"
+          @click="scrollToTop"
+        >
+          <Icon name="heroicons:arrow-up" class="w-5 h-5" />
+        </button>
+      </Transition>
     </template>
   </div>
 </template>

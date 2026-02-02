@@ -117,10 +117,14 @@ watch(filteredTickets, (list) => {
     focusedIndex.value = Math.min(focusedIndex.value, Math.max(0, list.length - 1))
   }
 })
+
+// Кнопка «Стрелка вверх»
+const pageRootRef = ref<HTMLElement | null>(null)
+const { showScrollTop, scrollToTop } = useScrollToTop(pageRootRef)
 </script>
 
 <template>
-  <div class="tickets-page">
+  <div ref="pageRootRef" class="tickets-page">
     <header class="tickets-page__hero">
       <div class="tickets-page__hero-bg" aria-hidden="true" />
       <div class="tickets-page__hero-inner">
@@ -257,5 +261,17 @@ watch(filteredTickets, (list) => {
         </p>
       </div>
     </div>
+
+    <Transition name="tickets-page-scroll-top">
+      <button
+        v-if="showScrollTop"
+        type="button"
+        class="tickets-page__scroll-top"
+        aria-label="Прокрутить вверх"
+        @click="scrollToTop"
+      >
+        <Icon name="heroicons:arrow-up" class="w-5 h-5" />
+      </button>
+    </Transition>
   </div>
 </template>

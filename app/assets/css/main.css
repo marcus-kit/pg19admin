@@ -667,6 +667,49 @@ html {
   margin: 0;
 }
 
+.chat-page__scroll-top {
+  position: fixed;
+  right: 1.5rem;
+  bottom: 1.5rem;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  color: var(--text-primary);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 12px var(--glass-shadow);
+  cursor: pointer;
+  transition: color 0.2s, background 0.2s, border-color 0.2s, transform 0.2s;
+}
+
+.chat-page__scroll-top:hover {
+  background: var(--glass-hover-bg);
+  border-color: var(--glass-hover-border);
+  transform: translateY(-2px);
+}
+
+@media (max-width: 767px) {
+  .chat-page__scroll-top {
+    right: 1rem;
+    bottom: 5rem;
+  }
+}
+
+.chat-page-scroll-top-enter-active,
+.chat-page-scroll-top-leave-active {
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.chat-page-scroll-top-enter-from,
+.chat-page-scroll-top-leave-to {
+  opacity: 0;
+  transform: translateY(0.5rem);
+}
+
 /* =============================================================================
    User Page — список пользователей (в стиле страницы чатов)
    ============================================================================= */
@@ -993,6 +1036,49 @@ html {
   font-size: 0.875rem;
   color: var(--text-muted);
   margin: 0;
+}
+
+.user-page__scroll-top {
+  position: fixed;
+  right: 1.5rem;
+  bottom: 1.5rem;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  color: var(--text-primary);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 12px var(--glass-shadow);
+  cursor: pointer;
+  transition: color 0.2s, background 0.2s, border-color 0.2s, transform 0.2s;
+}
+
+.user-page__scroll-top:hover {
+  background: var(--glass-hover-bg);
+  border-color: var(--glass-hover-border);
+  transform: translateY(-2px);
+}
+
+@media (max-width: 767px) {
+  .user-page__scroll-top {
+    right: 1rem;
+    bottom: 5rem;
+  }
+}
+
+.user-page-scroll-top-enter-active,
+.user-page-scroll-top-leave-active {
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.user-page-scroll-top-enter-from,
+.user-page-scroll-top-leave-to {
+  opacity: 0;
+  transform: translateY(0.5rem);
 }
 
 /* =============================================================================
@@ -1358,6 +1444,49 @@ html {
   font-size: 0.875rem;
   color: var(--text-muted);
   margin: 0;
+}
+
+.contracts-page__scroll-top {
+  position: fixed;
+  right: 1.5rem;
+  bottom: 1.5rem;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  color: var(--text-primary);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 12px var(--glass-shadow);
+  cursor: pointer;
+  transition: color 0.2s, background 0.2s, border-color 0.2s, transform 0.2s;
+}
+
+.contracts-page__scroll-top:hover {
+  background: var(--glass-hover-bg);
+  border-color: var(--glass-hover-border);
+  transform: translateY(-2px);
+}
+
+@media (max-width: 767px) {
+  .contracts-page__scroll-top {
+    right: 1rem;
+    bottom: 5rem;
+  }
+}
+
+.contracts-page-scroll-top-enter-active,
+.contracts-page-scroll-top-leave-active {
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.contracts-page-scroll-top-enter-from,
+.contracts-page-scroll-top-leave-to {
+  opacity: 0;
+  transform: translateY(0.5rem);
 }
 
 /* =============================================================================
@@ -2415,6 +2544,49 @@ html {
   margin: 0;
 }
 
+.tickets-page__scroll-top {
+  position: fixed;
+  right: 1.5rem;
+  bottom: 1.5rem;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  color: var(--text-primary);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 12px var(--glass-shadow);
+  cursor: pointer;
+  transition: color 0.2s, background 0.2s, border-color 0.2s, transform 0.2s;
+}
+
+.tickets-page__scroll-top:hover {
+  background: var(--glass-hover-bg);
+  border-color: var(--glass-hover-border);
+  transform: translateY(-2px);
+}
+
+@media (max-width: 767px) {
+  .tickets-page__scroll-top {
+    right: 1rem;
+    bottom: 5rem;
+  }
+}
+
+.tickets-page-scroll-top-enter-active,
+.tickets-page-scroll-top-leave-active {
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.tickets-page-scroll-top-enter-from,
+.tickets-page-scroll-top-leave-to {
+  opacity: 0;
+  transform: translateY(0.5rem);
+}
+
 /* =============================================================================
    Ticket Detail Page — страница тикета
    ============================================================================= */
@@ -2829,6 +3001,49 @@ html {
   font-size: 0.8125rem;
   color: var(--text-muted);
   margin: 0;
+}
+
+.ticket-detail-page__scroll-top {
+  position: fixed;
+  right: 1.5rem;
+  bottom: 1.5rem;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  color: var(--text-primary);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 12px var(--glass-shadow);
+  cursor: pointer;
+  transition: color 0.2s, background 0.2s, border-color 0.2s, transform 0.2s;
+}
+
+.ticket-detail-page__scroll-top:hover {
+  background: var(--glass-hover-bg);
+  border-color: var(--glass-hover-border);
+  transform: translateY(-2px);
+}
+
+@media (max-width: 767px) {
+  .ticket-detail-page__scroll-top {
+    right: 1rem;
+    bottom: 5rem;
+  }
+}
+
+.ticket-detail-page-scroll-top-enter-active,
+.ticket-detail-page-scroll-top-leave-active {
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.ticket-detail-page-scroll-top-enter-from,
+.ticket-detail-page-scroll-top-leave-to {
+  opacity: 0;
+  transform: translateY(0.5rem);
 }
 
 /* =============================================================================
@@ -4307,6 +4522,49 @@ html {
   font-size: 0.875rem;
   color: var(--text-muted);
   margin: 0;
+}
+
+.catalog-page__scroll-top {
+  position: fixed;
+  right: 1.5rem;
+  bottom: 1.5rem;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  color: var(--text-primary);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 12px var(--glass-shadow);
+  cursor: pointer;
+  transition: color 0.2s, background 0.2s, border-color 0.2s, transform 0.2s;
+}
+
+.catalog-page__scroll-top:hover {
+  background: var(--glass-hover-bg);
+  border-color: var(--glass-hover-border);
+  transform: translateY(-2px);
+}
+
+@media (max-width: 767px) {
+  .catalog-page__scroll-top {
+    right: 1rem;
+    bottom: 5rem;
+  }
+}
+
+.catalog-page-scroll-top-enter-active,
+.catalog-page-scroll-top-leave-active {
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.catalog-page-scroll-top-enter-from,
+.catalog-page-scroll-top-leave-to {
+  opacity: 0;
+  transform: translateY(0.5rem);
 }
 
 /* =============================================================================
@@ -5931,6 +6189,49 @@ html {
 .chat-detail-page__sidebar-link:hover {
   opacity: 0.9;
   text-decoration: underline;
+}
+
+.chat-detail-page__scroll-top {
+  position: fixed;
+  right: 1.5rem;
+  bottom: 1.5rem;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  color: var(--text-primary);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 12px var(--glass-shadow);
+  cursor: pointer;
+  transition: color 0.2s, background 0.2s, border-color 0.2s, transform 0.2s;
+}
+
+.chat-detail-page__scroll-top:hover {
+  background: var(--glass-hover-bg);
+  border-color: var(--glass-hover-border);
+  transform: translateY(-2px);
+}
+
+@media (max-width: 767px) {
+  .chat-detail-page__scroll-top {
+    right: 1rem;
+    bottom: 5rem;
+  }
+}
+
+.chat-detail-page-scroll-top-enter-active,
+.chat-detail-page-scroll-top-leave-active {
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.chat-detail-page-scroll-top-enter-from,
+.chat-detail-page-scroll-top-leave-to {
+  opacity: 0;
+  transform: translateY(0.5rem);
 }
 
 /* Vue transition: кнопка «Вниз» в чате */

@@ -119,10 +119,14 @@ watch(accounts, (list) => {
     focusedIndex.value = Math.min(focusedIndex.value, Math.max(0, list.length - 1))
   }
 })
+
+// Кнопка «Стрелка вверх»
+const pageRootRef = ref<HTMLElement | null>(null)
+const { showScrollTop, scrollToTop } = useScrollToTop(pageRootRef)
 </script>
 
 <template>
-  <div class="contracts-page">
+  <div ref="pageRootRef" class="contracts-page">
     <!-- Hero: градиент + заголовок + статистика -->
     <header class="contracts-page__hero">
       <div class="contracts-page__hero-bg" aria-hidden="true" />
@@ -280,5 +284,17 @@ watch(accounts, (list) => {
         </p>
       </div>
     </div>
+
+    <Transition name="contracts-page-scroll-top">
+      <button
+        v-if="showScrollTop"
+        type="button"
+        class="contracts-page__scroll-top"
+        aria-label="Прокрутить вверх"
+        @click="scrollToTop"
+      >
+        <Icon name="heroicons:arrow-up" class="w-5 h-5" />
+      </button>
+    </Transition>
   </div>
 </template>

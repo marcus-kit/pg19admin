@@ -119,10 +119,14 @@ watch(requests, (list) => {
     focusedIndex.value = Math.min(focusedIndex.value, Math.max(0, list.length - 1))
   }
 })
+
+// Кнопка «Стрелка вверх»
+const pageRootRef = ref<HTMLElement | null>(null)
+const { showScrollTop, scrollToTop } = useScrollToTop(pageRootRef)
 </script>
 
 <template>
-  <div class="requests-page">
+  <div ref="pageRootRef" class="requests-page">
     <header class="requests-page__hero">
       <div class="requests-page__hero-bg" aria-hidden="true" />
       <div class="requests-page__hero-inner">

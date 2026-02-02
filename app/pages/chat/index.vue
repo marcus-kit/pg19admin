@@ -245,6 +245,10 @@ watch(filteredAndSortedChats, (list) => {
   }
 })
 
+// Кнопка «Стрелка вверх»
+const pageRootRef = ref<HTMLElement | null>(null)
+const { showScrollTop, scrollToTop } = useScrollToTop(pageRootRef)
+
 onMounted(() => {
   startRefreshTimer()
 })
@@ -255,7 +259,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="chat-page">
+  <div ref="pageRootRef" class="chat-page">
     <!-- Hero: градиент + заголовок + статистика -->
     <header class="chat-page__hero">
       <div class="chat-page__hero-bg" aria-hidden="true" />
@@ -417,5 +421,17 @@ onUnmounted(() => {
         </p>
       </div>
     </div>
+
+    <Transition name="chat-page-scroll-top">
+      <button
+        v-if="showScrollTop"
+        type="button"
+        class="chat-page__scroll-top"
+        aria-label="Прокрутить вверх"
+        @click="scrollToTop"
+      >
+        <Icon name="heroicons:arrow-up" class="w-5 h-5" />
+      </button>
+    </Transition>
   </div>
 </template>

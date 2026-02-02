@@ -504,6 +504,10 @@ function onPageKeydown(e: KeyboardEvent) {
   }
 }
 
+// Кнопка «Стрелка вверх»
+const pageRootRef = ref<HTMLElement | null>(null)
+const { showScrollTop, scrollToTop } = useScrollToTop(pageRootRef)
+
 onMounted(() => {
   fetchChat()
   setupRealtime()
@@ -525,7 +529,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="chat-detail-page">
+  <div ref="pageRootRef" class="chat-detail-page">
     <div class="chat-detail-page__main">
       <!-- Шапка: назад + аватар + имя + статус + действия -->
       <header v-if="chat" class="chat-detail-page__header">
@@ -987,5 +991,17 @@ onUnmounted(() => {
         </NuxtLink>
       </div>
     </aside>
+
+    <Transition name="chat-detail-page-scroll-top">
+      <button
+        v-if="showScrollTop"
+        type="button"
+        class="chat-detail-page__scroll-top"
+        aria-label="Прокрутить вверх"
+        @click="scrollToTop"
+      >
+        <Icon name="heroicons:arrow-up" class="w-5 h-5" />
+      </button>
+    </Transition>
   </div>
 </template>

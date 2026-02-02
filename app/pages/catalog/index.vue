@@ -96,10 +96,14 @@ onMounted(async () => {
 watch(selectedCategoryId, () => {
   fetchServices()
 })
+
+// Кнопка «Стрелка вверх»
+const pageRootRef = ref<HTMLElement | null>(null)
+const { showScrollTop, scrollToTop } = useScrollToTop(pageRootRef)
 </script>
 
 <template>
-  <div class="catalog-page">
+  <div ref="pageRootRef" class="catalog-page">
     <!-- Hero -->
     <header class="catalog-page__hero">
       <div class="catalog-page__hero-bg" aria-hidden="true" />
@@ -259,5 +263,17 @@ watch(selectedCategoryId, () => {
         <p class="catalog-page__empty-text">Добавьте первую категорию</p>
       </div>
     </div>
+
+    <Transition name="catalog-page-scroll-top">
+      <button
+        v-if="showScrollTop"
+        type="button"
+        class="catalog-page__scroll-top"
+        aria-label="Прокрутить вверх"
+        @click="scrollToTop"
+      >
+        <Icon name="heroicons:arrow-up" class="w-5 h-5" />
+      </button>
+    </Transition>
   </div>
 </template>
