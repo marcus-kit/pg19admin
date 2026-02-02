@@ -50,6 +50,25 @@ const pendingPreview = ref<string | null>(null)
 /** Ошибка отправки: сообщение не ушло, показываем «Повторить» */
 const sendFailed = ref(false)
 
+/** Модальное окно просмотра изображения */
+const imageModalUrl = ref<string | null>(null)
+const imageModalRef = ref<HTMLElement | null>(null)
+
+function openImageModal(url: string) {
+  imageModalUrl.value = url
+  if (typeof document !== 'undefined') document.body.style.overflow = 'hidden'
+  nextTick(() => imageModalRef.value?.focus())
+}
+
+function closeImageModal() {
+  imageModalUrl.value = null
+  if (typeof document !== 'undefined') document.body.style.overflow = ''
+}
+
+function onImageModalKeydown(e: KeyboardEvent) {
+  if (e.key === 'Escape') closeImageModal()
+}
+
 // Константы для работы с файлами
 const ACCEPT_FILES = 'image/jpeg,image/png,image/gif,image/webp,.pdf,.doc,.docx,.xls,.xlsx'
 const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
@@ -662,18 +681,18 @@ onUnmounted(() => {
                 {{ msg.content }}
               </p>
               <template v-if="msg.attachmentUrl">
-                <a
+                <button
                   v-if="isImageAttachment(msg)"
-                  :href="msg.attachmentUrl"
-                  target="_blank"
+                  type="button"
                   class="block mt-2"
+                  @click="openImageModal(msg.attachmentUrl)"
                 >
                   <img
                     :src="msg.attachmentUrl"
                     :alt="msg.attachmentName || 'Изображение'"
-                    class="max-w-full max-h-48 rounded-lg hover:opacity-90 transition-opacity"
+                    class="max-w-full max-h-48 rounded-lg hover:opacity-90 transition-opacity cursor-pointer"
                   />
-                </a>
+                </button>
                 <a
                   v-else
                   :href="msg.attachmentUrl"
@@ -718,18 +737,18 @@ onUnmounted(() => {
                 {{ msg.content }}
               </p>
               <template v-if="msg.attachmentUrl">
-                <a
+                <button
                   v-if="isImageAttachment(msg)"
-                  :href="msg.attachmentUrl"
-                  target="_blank"
+                  type="button"
                   class="block mt-2"
+                  @click="openImageModal(msg.attachmentUrl)"
                 >
                   <img
                     :src="msg.attachmentUrl"
                     :alt="msg.attachmentName || 'Изображение'"
-                    class="max-w-full max-h-48 rounded-lg hover:opacity-90 transition-opacity"
+                    class="max-w-full max-h-48 rounded-lg hover:opacity-90 transition-opacity cursor-pointer"
                   />
-                </a>
+                </button>
                 <a
                   v-else
                   :href="msg.attachmentUrl"
@@ -775,18 +794,18 @@ onUnmounted(() => {
                 {{ msg.content }}
               </p>
               <template v-if="msg.attachmentUrl">
-                <a
+                <button
                   v-if="isImageAttachment(msg)"
-                  :href="msg.attachmentUrl"
-                  target="_blank"
+                  type="button"
                   class="block mt-2"
+                  @click="openImageModal(msg.attachmentUrl)"
                 >
                   <img
                     :src="msg.attachmentUrl"
                     :alt="msg.attachmentName || 'Изображение'"
-                    class="max-w-full max-h-48 rounded-lg hover:opacity-90 transition-opacity"
+                    class="max-w-full max-h-48 rounded-lg hover:opacity-90 transition-opacity cursor-pointer"
                   />
-                </a>
+                </button>
                 <a
                   v-else
                   :href="msg.attachmentUrl"
@@ -1003,5 +1022,37 @@ onUnmounted(() => {
         <Icon name="heroicons:arrow-up" class="w-5 h-5" />
       </button>
     </Transition>
+
+    <!-- Модальное окно просмотра изображения -->
+    <Teleport to="body">
+      <Transition name="chat-image-modal">
+        <div
+          v-if="imageModalUrl"
+          ref="imageModalRef"
+          class="chat-image-modal"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Просмотр изображения"
+          tabindex="-1"
+          @keydown="onImageModalKeydown"
+          @click.self="closeImageModal"
+        >
+          <button
+            type="button"
+            class="chat-image-modal__close"
+            aria-label="Закрыть"
+            @click="closeImageModal"
+          >
+            <Icon name="heroicons:x-mark" class="w-6 h-6" />
+          </button>
+          <img
+            :src="imageModalUrl"
+            alt="Изображение"
+            class="chat-image-modal__img"
+            @click.stop
+          >
+        </div>
+      </Transition>
+    </Teleport>
   </div>
 </template>

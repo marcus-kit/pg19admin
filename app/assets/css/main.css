@@ -6290,6 +6290,60 @@ html {
   transform: translateY(0.5rem);
 }
 
+/* Модальное окно просмотра изображения в чате */
+.chat-image-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  background: rgba(0, 0, 0, 0.85);
+  cursor: pointer;
+  outline: none;
+}
+
+.chat-image-modal__close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  color: white;
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.chat-image-modal__close:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.chat-image-modal__img {
+  max-width: 100%;
+  max-height: calc(100vh - 4rem);
+  object-fit: contain;
+  border-radius: 0.5rem;
+  cursor: default;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+.chat-image-modal-enter-active,
+.chat-image-modal-leave-active {
+  transition: opacity 0.2s ease;
+}
+
+.chat-image-modal-enter-from,
+.chat-image-modal-leave-to {
+  opacity: 0;
+}
+
 /* Vue transition: кнопка «Вниз» в чате */
 .fade-enter-active,
 .fade-leave-active {
