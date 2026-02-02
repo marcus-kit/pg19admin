@@ -439,6 +439,58 @@ async function copyMessageText(msg: ChatMessage) {
   }
 }
 
+/** Редактирование сообщения */
+const editingMessageId = ref<string | null>(null)
+const editingContent = ref('')
+const editingSaving = ref(false)
+
+function startEditMessage(msg: ChatMessage) {
+  if (msg.senderType !== 'admin' && msg.senderType !== 'bot') return
+  editingMessageId.value = msg.id
+  editingContent.value = msg.content || ''
+}
+
+function cancelEditMessage() {
+  editingMessageId.value = null
+  editingContent.value = ''
+}
+
+async function saveEditMessage() {
+  if (!editingMessageId.value || editingSaving.value) return
+  const content = editingContent.value.trim()
+  if (!content) {
+    toast.error('Текст не может быть пустым')
+    return
+  }
+
+  editingSaving.value = true
+  try {
+    const updated = await $fetch<{ message: ChatMessage & { editedAt?: string } }>(
+      `/api/admin/chat/${chatId.value}/messages/${editingMessageId.value}`,
+      {
+        method: 'PATCH',
+        body: { content },
+      },
+    )
+    const idx = messages.value.findIndex(m => m.id === editingMessageId.value)
+    if (idx >= 0) {
+      messages.value[idx] = { ...messages.value[idx]!, ...updated.message }
+    }
+    toast.success('Сообщение изменено')
+    cancelEditMessage()
+  }
+  catch {
+    toast.error('Не удалось сохранить изменения')
+  }
+  finally {
+    editingSaving.value = false
+  }
+}
+
+function canEditMessage(msg: ChatMessage): boolean {
+  return (msg.senderType === 'admin' || msg.senderType === 'bot') && !!msg.content
+}
+
 /** Автоматическое изменение высоты textarea */
 function handleTextareaInput(e: Event) {
   const target = e.target as HTMLTextAreaElement
@@ -658,9 +710,18 @@ onUnmounted(() => {
               class="chat-detail-page__bubble chat-detail-page__bubble--bot group relative"
             >
               <div
-                v-if="msg.content || msg.attachmentName"
-                class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                v-if="(msg.content || msg.attachmentName) && editingMessageId !== msg.id"
+                class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-0.5"
               >
+                <button
+                  v-if="canEditMessage(msg)"
+                  type="button"
+                  title="Редактировать"
+                  class="p-1.5 rounded-lg hover:bg-white/10"
+                  @click.stop="startEditMessage(msg)"
+                >
+                  <Icon name="heroicons:pencil-square" class="w-4 h-4 text-[var(--text-muted)]" />
+                </button>
                 <button
                   type="button"
                   title="Копировать"
@@ -674,11 +735,40 @@ onUnmounted(() => {
                 <Icon name="heroicons:cpu-chip" class="w-3.5 h-3.5 text-[#8B5CF6]" />
                 <span class="text-xs font-medium text-[#8B5CF6]">{{ msg.senderName || 'AI Ассистент' }}</span>
               </div>
+              <div v-if="editingMessageId === msg.id" class="chat-detail-page__edit-form">
+                <textarea
+                  ref="editTextareaRef"
+                  v-model="editingContent"
+                  class="chat-detail-page__edit-textarea"
+                  rows="3"
+                  placeholder="Текст сообщения"
+                  @keydown.enter.ctrl="saveEditMessage"
+                  @keydown.escape="cancelEditMessage"
+                />
+                <div class="chat-detail-page__edit-actions">
+                  <button
+                    type="button"
+                    class="chat-detail-page__edit-btn chat-detail-page__edit-btn--cancel"
+                    @click="cancelEditMessage"
+                  >
+                    Отмена
+                  </button>
+                  <button
+                    type="button"
+                    class="chat-detail-page__edit-btn chat-detail-page__edit-btn--save"
+                    :disabled="editingSaving || !editingContent.trim()"
+                    @click="saveEditMessage"
+                  >
+                    {{ editingSaving ? 'Сохранение…' : 'Сохранить' }}
+                  </button>
+                </div>
+              </div>
               <p
-                v-if="msg.content"
+                v-else-if="msg.content"
                 class="whitespace-pre-wrap break-words text-[var(--text-primary)] pr-8"
               >
                 {{ msg.content }}
+                <span v-if="msg.editedAt" class="text-[var(--text-muted)] text-xs ml-1">(изм.)</span>
               </p>
               <template v-if="msg.attachmentUrl">
                 <button
@@ -718,9 +808,18 @@ onUnmounted(() => {
               class="chat-detail-page__bubble chat-detail-page__bubble--admin group relative"
             >
               <div
-                v-if="msg.content || msg.attachmentName"
-                class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                v-if="(msg.content || msg.attachmentName) && editingMessageId !== msg.id"
+                class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-0.5"
               >
+                <button
+                  v-if="canEditMessage(msg)"
+                  type="button"
+                  title="Редактировать"
+                  class="p-1.5 rounded-lg hover:bg-white/10"
+                  @click.stop="startEditMessage(msg)"
+                >
+                  <Icon name="heroicons:pencil-square" class="w-4 h-4 text-[var(--text-muted)]" />
+                </button>
                 <button
                   type="button"
                   title="Копировать"
@@ -730,11 +829,40 @@ onUnmounted(() => {
                   <Icon name="heroicons:document-duplicate" class="w-4 h-4 text-[var(--text-muted)]" />
                 </button>
               </div>
+              <div v-if="editingMessageId === msg.id" class="chat-detail-page__edit-form">
+                <textarea
+                  ref="editTextareaRef"
+                  v-model="editingContent"
+                  class="chat-detail-page__edit-textarea"
+                  rows="3"
+                  placeholder="Текст сообщения"
+                  @keydown.enter.ctrl="saveEditMessage"
+                  @keydown.escape="cancelEditMessage"
+                />
+                <div class="chat-detail-page__edit-actions">
+                  <button
+                    type="button"
+                    class="chat-detail-page__edit-btn chat-detail-page__edit-btn--cancel"
+                    @click="cancelEditMessage"
+                  >
+                    Отмена
+                  </button>
+                  <button
+                    type="button"
+                    class="chat-detail-page__edit-btn chat-detail-page__edit-btn--save"
+                    :disabled="editingSaving || !editingContent.trim()"
+                    @click="saveEditMessage"
+                  >
+                    {{ editingSaving ? 'Сохранение…' : 'Сохранить' }}
+                  </button>
+                </div>
+              </div>
               <p
-                v-if="msg.content"
+                v-else-if="msg.content"
                 class="whitespace-pre-wrap break-words text-[var(--text-primary)] pr-8"
               >
                 {{ msg.content }}
+                <span v-if="msg.editedAt" class="text-[var(--text-muted)] text-xs ml-1">(изм.)</span>
               </p>
               <template v-if="msg.attachmentUrl">
                 <button
