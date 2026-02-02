@@ -179,7 +179,8 @@ watch(statsPeriod, () => {
     <!-- Header -->
     <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
       <div>
-        <h1 class="text-3xl font-bold text-[var(--text-primary)]">
+        <h1 class="flex items-center gap-3 text-3xl font-bold text-[var(--text-primary)]">
+          <Icon name="heroicons:sparkles" class="h-8 w-8 text-[#F7941D]" />
           Настройки AI-бота
         </h1>
         <p class="text-[var(--text-muted)] mt-1">

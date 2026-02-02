@@ -38,7 +38,8 @@ function deleteNews(id: string) {
   <div>
     <!-- Header -->
     <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
-      <h1 class="text-3xl font-bold text-[var(--text-primary)]">
+      <h1 class="flex items-center gap-3 text-3xl font-bold text-[var(--text-primary)]">
+        <Icon name="heroicons:newspaper" class="h-8 w-8 text-[#F7941D]" />
         Управление новостями
       </h1>
       <UiButton @click="$router.push('/news/create')">

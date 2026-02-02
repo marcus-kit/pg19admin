@@ -376,6 +376,16 @@ watch(mapContainer, (el) => {
   if (el && !map) initMap()
 })
 
+// Обновление размера карты при открытии/закрытии drawer
+watch(showZonesDrawer, () => {
+  if (map) {
+    // Небольшая задержка для завершения CSS анимации
+    setTimeout(() => {
+      map.updateSize()
+    }, 300)
+  }
+})
+
 // ═══════════════════════════════════════════════════════════════════════════
 // 8. LIFECYCLE HOOKS
 // ═══════════════════════════════════════════════════════════════════════════
@@ -404,58 +414,66 @@ onUnmounted(() => {
 <template>
   <div>
     <!-- Header -->
-    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
-      <div>
-        <h1 class="text-3xl font-bold text-[var(--text-primary)]">
-          Карта покрытия
-        </h1>
-        <p class="text-[var(--text-muted)] mt-1">
-          Управление зонами обслуживания ПЖ19 и партнёров
-        </p>
-      </div>
-
-      <UiButton @click="showZonesDrawer = true" variant="secondary">
-        <Icon name="heroicons:queue-list" class="w-4 h-4" />
-        Список зон ({{ filteredZones.length }})
-      </UiButton>
+    <div class="mb-8">
+      <h1 class="flex items-center gap-3 text-3xl font-bold text-[var(--text-primary)]">
+        <Icon name="heroicons:map" class="h-8 w-8 text-[#F7941D]" />
+        Карта покрытия
+      </h1>
+      <p class="text-[var(--text-muted)] mt-1">
+        Управление зонами обслуживания ПЖ19 и партнёров
+      </p>
     </div>
 
     <div class="space-y-4">
       <!-- Map (full width) -->
-      <div class="space-y-4">
-        <!-- Filters -->
-        <UiCard padding="sm">
+      <div 
+        :class="{ 'shift-left': showZonesDrawer }" 
+        class="space-y-4 transition-all duration-300 ease-in-out"
+      >
+          <!-- Filters -->
           <div class="flex flex-wrap gap-3 items-center">
-            <span class="text-sm text-[var(--text-secondary)]">Партнёр:</span>
+          <span class="text-base font-semibold text-[var(--text-primary)]">Партнёр:</span>
 
-            <UiButton
-              :class="{ 'bg-white/10': !selectedPartnerId }"
-              @click="selectedPartnerId = null"
-              variant="ghost"
-              size="sm"
-            >
-              Все
-            </UiButton>
+          <UiButton
+            :class="[
+              !selectedPartnerId 
+                ? 'bg-primary/20 text-primary font-medium scale-[1.02]' 
+                : 'hover:bg-[var(--glass-bg)]'
+            ]"
+            @click="selectedPartnerId = null"
+            variant="ghost"
+            size="sm"
+          >
+            Все
+          </UiButton>
 
-            <UiButton
-              v-for="partner in partners"
-              :key="partner.id"
-              :class="{ 'ring-2 ring-offset-1 ring-offset-transparent': selectedPartnerId === partner.id }"
-              :style="selectedPartnerId === partner.id ? { ringColor: partner.color } : {}"
-              @click="selectPartner(partner.id)"
-              variant="ghost"
-              size="sm"
-            >
-              <span
-                :style="{ backgroundColor: partner.color }"
-                class="w-3 h-3 rounded-full mr-2"
-              />
-              {{ partner.name }}
-            </UiButton>
+          <UiButton
+            v-for="partner in partners"
+            :key="partner.id"
+            :class="[
+              selectedPartnerId === partner.id
+                ? 'bg-primary/20 text-primary font-medium scale-[1.02] ring-2 ring-offset-1 ring-offset-transparent'
+                : 'hover:bg-[var(--glass-bg)]'
+            ]"
+            :style="selectedPartnerId === partner.id ? { ringColor: partner.color } : {}"
+            @click="selectPartner(partner.id)"
+            variant="ghost"
+            size="sm"
+          >
+            <span
+              :style="{ backgroundColor: partner.color }"
+              class="w-3 h-3 rounded-full mr-2"
+            />
+            {{ partner.name }}
+          </UiButton>
 
-            <UiToggle v-model="showOnlyActive" label="Только активные" size="sm" class="ml-auto" />
-          </div>
-        </UiCard>
+          <UiToggle v-model="showOnlyActive" label="Только активные" size="sm" class="ml-auto" />
+          
+          <UiButton @click="showZonesDrawer = true" variant="secondary" size="sm">
+            <Icon name="heroicons:queue-list" class="w-4 h-4" />
+            Список зон ({{ filteredZones.length }})
+          </UiButton>
+        </div>
 
         <!-- Map -->
         <ClientOnly>
@@ -535,10 +553,10 @@ onUnmounted(() => {
         <Transition name="slide-right">
           <div
             v-if="showZonesDrawer"
-            class="fixed right-0 top-0 h-full w-full max-w-md bg-[var(--bg-secondary)] border-l border-[var(--glass-border)] z-50 overflow-y-auto"
+            class="fixed right-0 top-0 h-full w-full max-w-sm bg-[var(--bg-secondary)] border-l border-[var(--glass-border)] z-50 flex flex-col"
           >
             <!-- Header -->
-            <div class="sticky top-0 bg-[var(--bg-secondary)] border-b border-[var(--glass-border)] p-4 flex items-center justify-between">
+            <div class="flex-shrink-0 bg-[var(--bg-secondary)] border-b border-[var(--glass-border)] p-4 flex items-center justify-between">
               <h2 class="text-lg font-semibold text-[var(--text-primary)]">
                 Зоны покрытия ({{ filteredZones.length }})
               </h2>
@@ -548,7 +566,7 @@ onUnmounted(() => {
             </div>
 
             <!-- Content -->
-            <div class="p-4 space-y-4">
+            <div class="flex-1 overflow-y-auto p-4 space-y-4">
               <!-- Zone List -->
               <UiLoading v-if="loading" size="sm" />
 
@@ -783,5 +801,13 @@ onUnmounted(() => {
 .expand-enter-to,
 .expand-leave-from {
   max-height: 200px;
+}
+
+/* Scale animation for content when drawer opens */
+.shift-left {
+  /* Просто немного сжимаем контент */
+  transform: scale(0.95);
+  transform-origin: left center;
+  max-width: calc(100% - 12rem);
 }
 </style>
