@@ -38,36 +38,11 @@ async function handleLogout() {
           </button>
         </div>
 
-        <!-- Навигация -->
+        <!-- Навигация: сначала оперативные разделы, затем справочники и настройки -->
         <nav class="space-y-2">
           <NuxtLink to="/dashboard" active-class="nav-item-active" class="nav-item">
             <Icon name="heroicons:home" class="w-5 h-5" />
             <span>Dashboard</span>
-          </NuxtLink>
-
-          <NuxtLink to="/users" active-class="nav-item-active" class="nav-item">
-            <Icon name="heroicons:users" class="w-5 h-5" />
-            <span>Пользователи</span>
-          </NuxtLink>
-
-          <NuxtLink to="/accounts" active-class="nav-item-active" class="nav-item">
-            <Icon name="heroicons:document-text" class="w-5 h-5" />
-            <span>Договоры</span>
-          </NuxtLink>
-
-          <NuxtLink to="/news" active-class="nav-item-active" class="nav-item">
-            <Icon name="heroicons:newspaper" class="w-5 h-5" />
-            <span>Новости</span>
-          </NuxtLink>
-
-          <NuxtLink to="/catalog" active-class="nav-item-active" class="nav-item">
-            <Icon name="heroicons:squares-2x2" class="w-5 h-5" />
-            <span>Каталог</span>
-          </NuxtLink>
-
-          <NuxtLink to="/coverage" active-class="nav-item-active" class="nav-item">
-            <Icon name="heroicons:map" class="w-5 h-5" />
-            <span>Карта покрытия</span>
           </NuxtLink>
 
           <NuxtLink
@@ -89,6 +64,31 @@ async function handleLogout() {
           <NuxtLink to="/tickets" active-class="nav-item-active" class="nav-item">
             <Icon name="heroicons:ticket" class="w-5 h-5" />
             <span>Тикеты</span>
+          </NuxtLink>
+
+          <NuxtLink to="/users" active-class="nav-item-active" class="nav-item">
+            <Icon name="heroicons:users" class="w-5 h-5" />
+            <span>Пользователи</span>
+          </NuxtLink>
+
+          <NuxtLink to="/accounts" active-class="nav-item-active" class="nav-item">
+            <Icon name="heroicons:document-text" class="w-5 h-5" />
+            <span>Договоры</span>
+          </NuxtLink>
+
+          <NuxtLink to="/catalog" active-class="nav-item-active" class="nav-item">
+            <Icon name="heroicons:squares-2x2" class="w-5 h-5" />
+            <span>Каталог</span>
+          </NuxtLink>
+
+          <NuxtLink to="/coverage" active-class="nav-item-active" class="nav-item">
+            <Icon name="heroicons:map" class="w-5 h-5" />
+            <span>Карта покрытия</span>
+          </NuxtLink>
+
+          <NuxtLink to="/news" active-class="nav-item-active" class="nav-item">
+            <Icon name="heroicons:newspaper" class="w-5 h-5" />
+            <span>Новости</span>
           </NuxtLink>
 
           <NuxtLink to="/settings/ai" active-class="nav-item-active" class="nav-item">
