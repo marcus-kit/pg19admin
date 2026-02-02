@@ -469,24 +469,24 @@ html {
   gap: 0.375rem;
   font-size: 0.8125rem;
   font-weight: 500;
-  color: var(--text-muted);
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
+  color: var(--text-inverted);
+  background: var(--color-primary, #f7941d);
+  border: 1px solid transparent;
   cursor: pointer;
-  transition: color 0.2s, background 0.2s, border-color 0.2s;
+  transition: color 0.2s, background 0.2s, border-color 0.2s, opacity 0.2s;
   flex-shrink: 0;
 }
 
 .chat-page__block--mine:hover {
-  color: var(--text-primary);
-  background: var(--glass-hover-bg);
-  border-color: var(--glass-hover-border);
+  opacity: 0.9;
 }
 
 .chat-page__block--mine-on {
-  color: var(--color-primary, #f7941d);
-  border-color: var(--color-primary, #f7941d);
-  background: rgba(247, 148, 29, 0.08);
+  color: var(--text-inverted);
+  background: var(--color-primary, #f7941d);
+  border-color: transparent;
+  opacity: 1;
+  box-shadow: 0 0 0 2px rgba(247, 148, 29, 0.4);
 }
 
 /* Список чатов */
@@ -884,16 +884,16 @@ html {
   gap: 0.375rem;
   font-size: 0.8125rem;
   font-weight: 500;
-  color: var(--text-primary);
+  color: var(--text-inverted);
+  background: var(--color-primary, #f7941d);
+  border: 1px solid transparent;
   text-decoration: none;
   cursor: pointer;
-  transition: color 0.2s, background 0.2s, border-color 0.2s;
+  transition: color 0.2s, background 0.2s, border-color 0.2s, opacity 0.2s;
 }
 
 .user-page__block--create:hover {
-  color: var(--color-primary, #f7941d);
-  background: var(--glass-hover-bg);
-  border-color: var(--glass-hover-border);
+  opacity: 0.9;
 }
 
 .user-page__list {
@@ -1285,16 +1285,16 @@ html {
   gap: 0.375rem;
   font-size: 0.8125rem;
   font-weight: 500;
-  color: var(--text-primary);
+  color: var(--text-inverted);
+  background: var(--color-primary, #f7941d);
+  border: 1px solid transparent;
   text-decoration: none;
   cursor: pointer;
-  transition: color 0.2s, background 0.2s, border-color 0.2s;
+  transition: color 0.2s, background 0.2s, border-color 0.2s, opacity 0.2s;
 }
 
 .contracts-page__block--create:hover {
-  color: var(--color-primary, #f7941d);
-  background: var(--glass-hover-bg);
-  border-color: var(--glass-hover-border);
+  opacity: 0.9;
 }
 
 .contracts-page__list {
@@ -4063,16 +4063,16 @@ html {
   gap: 0.375rem;
   font-size: 0.8125rem;
   font-weight: 500;
-  color: var(--text-primary);
+  color: var(--text-inverted);
+  background: var(--color-primary, #f7941d);
+  border: 1px solid transparent;
   text-decoration: none;
   cursor: pointer;
-  transition: color 0.2s, background 0.2s, border-color 0.2s;
+  transition: color 0.2s, background 0.2s, border-color 0.2s, opacity 0.2s;
 }
 
 .news-page__block--create:hover {
-  color: var(--color-primary, #f7941d);
-  background: var(--glass-hover-bg);
-  border-color: var(--glass-hover-border);
+  opacity: 0.9;
 }
 
 .news-page__list {
