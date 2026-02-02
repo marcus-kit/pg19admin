@@ -78,7 +78,7 @@ const hasActiveFilters = computed(() => {
       <div class="mb-6">
         <div class="flex items-center gap-4 mb-4">
           <h1 class="flex items-center gap-3 text-3xl font-bold text-[var(--text-primary)] whitespace-nowrap flex-shrink-0">
-            <Icon name="heroicons:users" class="h-8 w-8" />
+            <Icon name="heroicons:users" class="h-8 w-8 text-[#F7941D]" />
             Пользователи
             <span v-if="total > 0" class="text-lg font-normal text-[var(--text-muted)]">
               ({{ total }})
@@ -142,7 +142,7 @@ const hasActiveFilters = computed(() => {
     </div>
 
     <!-- Правая колонка: Панель фильтров -->
-    <aside class="hidden lg:block w-64 flex-shrink-0">
+    <aside class="hidden lg:block w-72 flex-shrink-0">
       <div class="glass-card rounded-xl border border-[var(--glass-border)] backdrop-blur-sm overflow-hidden">
         <!-- Заголовок панели с кнопкой сворачивания -->
         <button

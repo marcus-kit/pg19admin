@@ -129,7 +129,7 @@ onUnmounted(() => {
     <!-- Header с поиском и кнопкой -->
     <div class="mb-8 flex flex-col gap-4 md:flex-row md:items-center">
       <h1 class="flex items-center gap-3 text-3xl font-bold text-[var(--text-primary)] whitespace-nowrap flex-shrink-0">
-        <Icon name="heroicons:document-text" class="h-8 w-8" />
+        <Icon name="heroicons:document-text" class="h-8 w-8 text-[#F7941D]" />
         Договоры
         <span v-if="total > 0" class="text-lg font-normal text-[var(--text-muted)]">
           ({{ total }})

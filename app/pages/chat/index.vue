@@ -331,7 +331,7 @@ onUnmounted(() => {
       <div class="mb-6">
         <div class="flex items-center gap-4 mb-4">
           <h1 class="flex items-center gap-3 text-3xl font-bold text-[var(--text-primary)] whitespace-nowrap flex-shrink-0">
-            <Icon name="heroicons:chat-bubble-left-right" class="h-8 w-8" />
+            <Icon name="heroicons:chat-bubble-left-right" class="h-8 w-8 text-[#F7941D]" />
         Чаты поддержки
       </h1>
           
