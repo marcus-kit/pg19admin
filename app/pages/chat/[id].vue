@@ -56,6 +56,15 @@ const contextMenu = ref<{
   y: number
 } | null>(null)
 
+// Состояние для модального окна подтверждения удаления
+const deleteConfirmModal = ref<{
+  show: boolean
+  messageId: string | null
+}>({
+  show: false,
+  messageId: null,
+})
+
 // Состояние для модального окна изображения
 const imageModal = ref<{
   show: boolean
@@ -261,27 +270,60 @@ async function saveEditedMessage() {
 }
 
 /** Удалить сообщение */
-async function deleteMessage(messageId: string) {
-  if (!confirm('Удалить это сообщение?')) return
+/** Показать модальное окно подтверждения удаления */
+function showDeleteConfirm(messageId: string) {
+  deleteConfirmModal.value = {
+    show: true,
+    messageId,
+  }
+  contextMenu.value = null
+}
 
+/** Закрыть модальное окно подтверждения удаления */
+function closeDeleteConfirm() {
+  deleteConfirmModal.value = {
+    show: false,
+    messageId: null,
+  }
+}
+
+/** Обработка клавиши Escape для закрытия модального окна удаления */
+function handleDeleteModalEscape(e: KeyboardEvent) {
+  if (e.key === 'Escape' && deleteConfirmModal.value.show) {
+    closeDeleteConfirm()
+  }
+}
+
+/** Подтвердить удаление сообщения */
+async function confirmDelete() {
+  if (!deleteConfirmModal.value.messageId) return
+
+  const messageId = deleteConfirmModal.value.messageId
+  
+  // Закрываем модальное окно сразу для быстрого отклика
+  closeDeleteConfirm()
+
+  // Оптимистичное обновление: удаляем сообщение из UI сразу
+  const index = messages.value.findIndex(m => m.id === messageId)
+  const deletedMessage = index !== -1 ? messages.value[index] : null
+  
+  if (index !== -1) {
+    messages.value.splice(index, 1)
+  }
+
+  // Выполняем запрос в фоне
   try {
     await $fetch(`/api/admin/chat/${chatId.value}/messages/${messageId}`, {
       method: 'DELETE',
     })
-
-    // Удаляем сообщение из списка
-    const index = messages.value.findIndex(m => m.id === messageId)
-    if (index !== -1) {
-      messages.value.splice(index, 1)
-    }
-
     toast.success('Сообщение удалено')
   }
   catch {
+    // Если ошибка - возвращаем сообщение обратно
+    if (deletedMessage && index !== -1) {
+      messages.value.splice(index, 0, deletedMessage)
+    }
     toast.error('Ошибка при удалении сообщения')
-  }
-  finally {
-    contextMenu.value = null
   }
 }
 
@@ -295,10 +337,17 @@ function showContextMenu(event: MouseEvent, message: ChatMessage) {
   event.preventDefault()
   event.stopPropagation()
 
+  // Находим элемент сообщения и получаем его позицию
+  const target = event.currentTarget as HTMLElement
+  if (!target) return
+
+  const rect = target.getBoundingClientRect()
+  
+  // Позиционируем меню снизу сообщения, по центру
   contextMenu.value = {
     messageId: message.id,
-    x: event.clientX,
-    y: event.clientY,
+    x: rect.left + rect.width / 2, // Центр по горизонтали
+    y: rect.bottom + 4, // Снизу сообщения с небольшим отступом
   }
 }
 
@@ -320,7 +369,7 @@ function handleContextEdit() {
 /** Обработчик удаления из контекстного меню */
 function handleContextDelete() {
   if (!contextMenu.value) return
-  deleteMessage(contextMenu.value.messageId)
+  showDeleteConfirm(contextMenu.value.messageId)
 }
 
 /** Отправка сообщения (с файлом или без) */
@@ -584,6 +633,7 @@ onMounted(() => {
   // Закрываем контекстное меню при клике вне его
   document.addEventListener('click', closeContextMenu)
   document.addEventListener('contextmenu', closeContextMenu)
+  document.addEventListener('keydown', handleDeleteModalEscape)
 })
 
 onUnmounted(() => {
@@ -594,6 +644,18 @@ onUnmounted(() => {
   
   document.removeEventListener('click', closeContextMenu)
   document.removeEventListener('contextmenu', closeContextMenu)
+  document.removeEventListener('keydown', handleDeleteModalEscape)
+  document.body.style.overflow = ''
+})
+
+// Управление overflow body при открытии модального окна удаления
+watch(() => deleteConfirmModal.value.show, (isOpen) => {
+  if (isOpen) {
+    document.body.style.overflow = 'hidden'
+  }
+  else {
+    document.body.style.overflow = ''
+  }
 })
 </script>
 
@@ -1018,6 +1080,7 @@ onUnmounted(() => {
             position: 'fixed',
             left: `${contextMenu.x}px`,
             top: `${contextMenu.y}px`,
+            transform: 'translateX(-50%)',
             zIndex: 1000,
           }"
           class="glass-card rounded-lg border border-[var(--glass-border)] shadow-lg py-1 min-w-[150px]"
@@ -1048,6 +1111,64 @@ onUnmounted(() => {
       :image-alt="imageModal.alt"
       @close="closeImageModal"
     />
+
+    <!-- Delete Confirmation Modal -->
+    <ClientOnly>
+      <Teleport to="body">
+        <Transition
+          enter-active-class="transition-opacity duration-200"
+          leave-active-class="transition-opacity duration-150"
+          enter-from-class="opacity-0"
+          leave-to-class="opacity-0"
+        >
+          <div
+            v-if="deleteConfirmModal.show"
+            @click.self="closeDeleteConfirm"
+            class="fixed inset-0 z-50 flex items-center justify-center p-4"
+            style="background-color: rgba(0, 0, 0, 0.85);"
+          >
+            <div
+              class="w-full max-w-md rounded-2xl p-6"
+              style="background: var(--bg-surface); border: 1px solid var(--glass-border);"
+            >
+              <!-- Header -->
+              <div class="flex items-center gap-3 mb-4">
+                <div class="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center">
+                  <Icon name="heroicons:exclamation-triangle" class="w-6 h-6 text-red-400" />
+                </div>
+                <h3 class="text-lg font-semibold text-[var(--text-primary)]">
+                  Удалить сообщение?
+                </h3>
+              </div>
+
+              <!-- Message -->
+              <p class="text-[var(--text-secondary)] mb-6">
+                Это действие необратимо. Сообщение будет удалено навсегда.
+              </p>
+
+              <!-- Actions -->
+              <div class="flex gap-3">
+                <UiButton
+                  @click="closeDeleteConfirm"
+                  class="flex-1"
+                  variant="secondary"
+                >
+                  Отмена
+                </UiButton>
+                <UiButton
+                  @click="confirmDelete"
+                  class="flex-1"
+                  variant="danger"
+                >
+                  <Icon name="heroicons:trash" class="w-4 h-4 mr-2" />
+                  Удалить
+                </UiButton>
+              </div>
+            </div>
+          </div>
+        </Transition>
+      </Teleport>
+    </ClientOnly>
   </div>
 </template>
 

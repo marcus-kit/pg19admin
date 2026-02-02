@@ -182,17 +182,19 @@ const hasActiveFilters = computed(() => {
           @click="filtersExpanded = !filtersExpanded"
           class="w-full flex items-center justify-between p-4 hover:bg-[var(--glass-bg)] transition-colors"
         >
-          <div class="flex items-center gap-2">
-            <Icon name="heroicons:funnel" class="w-5 h-5 text-[var(--text-primary)]" />
+          <div class="flex items-center gap-2 flex-1 min-w-0">
+            <Icon name="heroicons:funnel" class="w-5 h-5 text-[var(--text-primary)] flex-shrink-0" />
             <span class="font-semibold text-[var(--text-primary)]">Фильтры</span>
             
             <!-- Кнопка сброса фильтров -->
             <UiButton
-              v-if="hasActiveFilters"
+              :class="[
+                'flex-shrink-0 ml-2 transition-opacity',
+                hasActiveFilters ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+              ]"
               @click.stop="resetFilters"
               variant="ghost"
               size="sm"
-              class="flex-shrink-0 ml-2"
             >
               <Icon name="heroicons:arrow-path" class="w-4 h-4" />
               Сбросить

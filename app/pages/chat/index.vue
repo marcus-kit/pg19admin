@@ -469,24 +469,26 @@ onUnmounted(() => {
     </div>
 
     <!-- Правая колонка: Панель фильтров -->
-    <aside class="hidden lg:block w-80 flex-shrink-0">
+    <aside class="hidden lg:block w-72 flex-shrink-0">
       <div class="glass-card rounded-xl border border-[var(--glass-border)] backdrop-blur-sm overflow-hidden">
         <!-- Заголовок панели с кнопкой сворачивания -->
         <button
           @click="filtersExpanded = !filtersExpanded"
           class="w-full flex items-center justify-between p-4 hover:bg-[var(--glass-bg)] transition-colors"
         >
-          <div class="flex items-center gap-2">
-            <Icon name="heroicons:funnel" class="w-5 h-5 text-[var(--text-primary)]" />
+          <div class="flex items-center gap-2 flex-1 min-w-0">
+            <Icon name="heroicons:funnel" class="w-5 h-5 text-[var(--text-primary)] flex-shrink-0" />
             <span class="font-semibold text-[var(--text-primary)]">Фильтры</span>
             
             <!-- Кнопка сброса фильтров -->
             <UiButton
-              v-if="hasActiveFilters"
+              :class="[
+                'flex-shrink-0 ml-2 transition-opacity',
+                hasActiveFilters ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+              ]"
               @click.stop="resetFilters"
               variant="ghost"
               size="sm"
-              class="flex-shrink-0 ml-2"
             >
               <Icon name="heroicons:arrow-path" class="w-4 h-4" />
               Сбросить
@@ -507,7 +509,29 @@ onUnmounted(() => {
               <label class="block text-xs font-medium text-[var(--text-muted)] mb-2 uppercase tracking-wide">
                 Статус
               </label>
-              <UiFilterTabs v-model="filters.status" :options="CHAT_STATUS_OPTIONS" />
+              <div class="flex flex-col gap-1">
+                <UiButton
+                  v-for="opt in CHAT_STATUS_OPTIONS"
+                  :key="opt.value"
+                  :variant="filters.status === opt.value ? 'primary' : 'ghost'"
+                  :class="[
+                    'filter-tab-button w-full',
+                    filters.status === opt.value
+                      ? 'bg-primary/20 text-primary font-medium scale-[1.02]'
+                      : 'hover:bg-[var(--glass-bg)]'
+                  ]"
+                  size="sm"
+                  @click="filters.status = opt.value"
+                >
+                  <Icon
+                    v-if="filters.status === opt.value"
+                    name="heroicons:check"
+                    class="w-4 h-4 flex-shrink-0 text-primary"
+                  />
+                  <span v-else class="w-4"></span>
+                  <span class="text-left">{{ opt.label }}</span>
+                </UiButton>
+              </div>
             </div>
 
             <!-- Тип отправителя -->
@@ -515,7 +539,29 @@ onUnmounted(() => {
               <label class="block text-xs font-medium text-[var(--text-muted)] mb-2 uppercase tracking-wide">
                 Тип отправителя
               </label>
-              <UiFilterTabs v-model="senderType as any" :options="senderTypeOptions" />
+              <div class="flex flex-col gap-1">
+                <UiButton
+                  v-for="opt in senderTypeOptions"
+                  :key="opt.value"
+                  :variant="senderType === opt.value ? 'primary' : 'ghost'"
+                  :class="[
+                    'filter-tab-button w-full',
+                    senderType === opt.value
+                      ? 'bg-primary/20 text-primary font-medium scale-[1.02]'
+                      : 'hover:bg-[var(--glass-bg)]'
+                  ]"
+                  size="sm"
+                  @click="senderType = opt.value as any"
+                >
+                  <Icon
+                    v-if="senderType === opt.value"
+                    name="heroicons:check"
+                    class="w-4 h-4 flex-shrink-0 text-primary"
+                  />
+                  <span v-else class="w-4"></span>
+                  <span class="text-left">{{ opt.label }}</span>
+                </UiButton>
+              </div>
             </div>
 
             <!-- Сортировка -->
@@ -523,7 +569,29 @@ onUnmounted(() => {
               <label class="block text-xs font-medium text-[var(--text-muted)] mb-2 uppercase tracking-wide">
                 Сортировка
               </label>
-              <UiFilterTabs v-model="sortBy as any" :options="SORT_OPTIONS.map(o => ({ value: o.value, label: o.label }))" />
+              <div class="flex flex-col gap-1">
+                <UiButton
+                  v-for="opt in SORT_OPTIONS"
+                  :key="opt.value"
+                  :variant="sortBy === opt.value ? 'primary' : 'ghost'"
+                  :class="[
+                    'filter-tab-button w-full',
+                    sortBy === opt.value
+                      ? 'bg-primary/20 text-primary font-medium scale-[1.02]'
+                      : 'hover:bg-[var(--glass-bg)]'
+                  ]"
+                  size="sm"
+                  @click="sortBy = opt.value"
+                >
+                  <Icon
+                    v-if="sortBy === opt.value"
+                    name="heroicons:check"
+                    class="w-4 h-4 flex-shrink-0 text-primary"
+                  />
+                  <span v-else class="w-4"></span>
+                  <span class="text-left">{{ opt.label }}</span>
+                </UiButton>
+              </div>
             </div>
 
             <!-- Только мои -->
@@ -568,5 +636,10 @@ onUnmounted(() => {
 .slide-leave-from {
   max-height: 500px;
   opacity: 1;
+}
+
+:deep(.filter-tab-button) {
+  justify-content: flex-start !important;
+  text-align: left;
 }
 </style>
