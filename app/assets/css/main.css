@@ -669,7 +669,7 @@ html {
 
 .chat-page__scroll-top {
   position: fixed;
-  right: 1.5rem;
+  right: 2rem;
   bottom: 1.5rem;
   z-index: 30;
   display: flex;
@@ -694,7 +694,7 @@ html {
 
 @media (max-width: 767px) {
   .chat-page__scroll-top {
-    right: 1rem;
+    right: 1.25rem;
     bottom: 5rem;
   }
 }
@@ -1040,7 +1040,7 @@ html {
 
 .user-page__scroll-top {
   position: fixed;
-  right: 1.5rem;
+  right: 2rem;
   bottom: 1.5rem;
   z-index: 30;
   display: flex;
@@ -1065,7 +1065,7 @@ html {
 
 @media (max-width: 767px) {
   .user-page__scroll-top {
-    right: 1rem;
+    right: 1.25rem;
     bottom: 5rem;
   }
 }
@@ -1448,7 +1448,7 @@ html {
 
 .contracts-page__scroll-top {
   position: fixed;
-  right: 1.5rem;
+  right: 2rem;
   bottom: 1.5rem;
   z-index: 30;
   display: flex;
@@ -1473,7 +1473,7 @@ html {
 
 @media (max-width: 767px) {
   .contracts-page__scroll-top {
-    right: 1rem;
+    right: 1.25rem;
     bottom: 5rem;
   }
 }
@@ -1932,6 +1932,49 @@ html {
   font-size: 0.875rem;
   color: var(--text-muted);
   margin: 0;
+}
+
+.requests-page__scroll-top {
+  position: fixed;
+  right: 2rem;
+  bottom: 1.5rem;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  color: var(--text-primary);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 12px var(--glass-shadow);
+  cursor: pointer;
+  transition: color 0.2s, background 0.2s, border-color 0.2s, transform 0.2s;
+}
+
+.requests-page__scroll-top:hover {
+  background: var(--glass-hover-bg);
+  border-color: var(--glass-hover-border);
+  transform: translateY(-2px);
+}
+
+@media (max-width: 767px) {
+  .requests-page__scroll-top {
+    right: 1.25rem;
+    bottom: 5rem;
+  }
+}
+
+.requests-page-scroll-top-enter-active,
+.requests-page-scroll-top-leave-active {
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.requests-page-scroll-top-enter-from,
+.requests-page-scroll-top-leave-to {
+  opacity: 0;
+  transform: translateY(0.5rem);
 }
 
 /* =============================================================================
@@ -2546,7 +2589,7 @@ html {
 
 .tickets-page__scroll-top {
   position: fixed;
-  right: 1.5rem;
+  right: 2rem;
   bottom: 1.5rem;
   z-index: 30;
   display: flex;
@@ -2571,7 +2614,7 @@ html {
 
 @media (max-width: 767px) {
   .tickets-page__scroll-top {
-    right: 1rem;
+    right: 1.25rem;
     bottom: 5rem;
   }
 }
@@ -3005,7 +3048,7 @@ html {
 
 .ticket-detail-page__scroll-top {
   position: fixed;
-  right: 1.5rem;
+  right: 2rem;
   bottom: 1.5rem;
   z-index: 30;
   display: flex;
@@ -3030,7 +3073,7 @@ html {
 
 @media (max-width: 767px) {
   .ticket-detail-page__scroll-top {
-    right: 1rem;
+    right: 1.25rem;
     bottom: 5rem;
   }
 }
@@ -4526,7 +4569,7 @@ html {
 
 .catalog-page__scroll-top {
   position: fixed;
-  right: 1.5rem;
+  right: 2rem;
   bottom: 1.5rem;
   z-index: 30;
   display: flex;
@@ -4551,7 +4594,7 @@ html {
 
 @media (max-width: 767px) {
   .catalog-page__scroll-top {
-    right: 1rem;
+    right: 1.25rem;
     bottom: 5rem;
   }
 }
@@ -6193,7 +6236,7 @@ html {
 
 .chat-detail-page__scroll-top {
   position: fixed;
-  right: 1.5rem;
+  right: 2rem;
   bottom: 1.5rem;
   z-index: 30;
   display: flex;
@@ -6218,7 +6261,7 @@ html {
 
 @media (max-width: 767px) {
   .chat-detail-page__scroll-top {
-    right: 1rem;
+    right: 1.25rem;
     bottom: 5rem;
   }
 }
