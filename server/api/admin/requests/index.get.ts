@@ -18,6 +18,11 @@ export default defineEventHandler(async (event) => {
     queryBuilder = queryBuilder.eq('in_coverage_zone', true)
   }
 
+  if (query.search) {
+    const search = `%${query.search}%`
+    queryBuilder = queryBuilder.or(`full_name.ilike.${search},address_text.ilike.${search},phone.ilike.${search}`)
+  }
+
   const limit = Number(query.limit) || 100
   queryBuilder = queryBuilder.limit(limit)
 

@@ -224,6 +224,7 @@ onMounted(() => {
     <UiLoading v-if="loading" />
 
     <template v-else-if="user">
+      <div class="max-w-4xl mx-auto">
       <!-- Header -->
       <div class="flex items-start justify-between gap-4 mb-6">
         <div>
@@ -437,6 +438,7 @@ onMounted(() => {
             </div>
           </UiCard>
         </div>
+      </div>
       </div>
     </template>
 

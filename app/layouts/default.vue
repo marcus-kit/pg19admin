@@ -18,7 +18,7 @@ async function handleLogout() {
 <template>
   <div class="layout-root min-h-screen flex">
     <!-- Боковая панель -->
-    <aside class="hidden md:flex w-64 flex-col glass-card border-r border-[var(--glass-border)]">
+    <aside class="hidden md:flex w-64 flex-col glass-card border-r border-[var(--glass-border)] sticky top-0 h-screen overflow-y-auto">
       <div class="p-6">
         <!-- Шапка с кнопкой выхода -->
         <div class="flex items-center justify-between mb-8">

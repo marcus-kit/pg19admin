@@ -469,7 +469,7 @@ onUnmounted(() => {
     </div>
 
     <!-- Правая колонка: Панель фильтров -->
-    <aside class="hidden lg:block w-72 flex-shrink-0">
+    <aside class="hidden lg:block w-72 flex-shrink-0 sticky top-6 self-start">
       <div class="glass-card rounded-xl border border-[var(--glass-border)] backdrop-blur-sm overflow-hidden">
         <!-- Заголовок панели с кнопкой сворачивания -->
         <button
