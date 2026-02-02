@@ -31,7 +31,7 @@ const filters: FilterConfig[] = [
 
 // Переход к заявке
 function goToRequest(request: Record<string, unknown>) {
-  router.push(`/requests/${request.id}`)
+  router.push(`/requests/${request.id}?from=connection`)
 }
 </script>
 

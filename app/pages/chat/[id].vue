@@ -56,6 +56,17 @@ const contextMenu = ref<{
   y: number
 } | null>(null)
 
+// Состояние для модального окна изображения
+const imageModal = ref<{
+  show: boolean
+  url: string
+  alt: string
+}>({
+  show: false,
+  url: '',
+  alt: 'Изображение',
+})
+
 // Константы для работы с файлами
 const ACCEPT_FILES = 'image/jpeg,image/png,image/gif,image/webp,.pdf,.doc,.docx,.xls,.xlsx'
 const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
@@ -442,6 +453,20 @@ function isImageAttachment(message: ChatMessage): boolean {
     || (message.attachmentName ? imagePattern.test(message.attachmentName) : false)
 }
 
+/** Открыть изображение в модальном окне */
+function openImageModal(url: string, alt: string = 'Изображение') {
+  imageModal.value = {
+    show: true,
+    url,
+    alt,
+  }
+}
+
+/** Закрыть модальное окно изображения */
+function closeImageModal() {
+  imageModal.value.show = false
+}
+
 /** Открытие диалога выбора файла */
 function openFileDialog() {
   fileInput.value?.click()
@@ -710,18 +735,17 @@ onUnmounted(() => {
                 {{ msg.content }}
               </p>
               <template v-if="msg.attachmentUrl">
-                <a
+                <button
                   v-if="isImageAttachment(msg)"
-                  :href="msg.attachmentUrl"
-                  target="_blank"
-                  class="block mt-2"
+                  @click="openImageModal(msg.attachmentUrl, msg.attachmentName || 'Изображение')"
+                  class="block mt-2 cursor-pointer"
                 >
                   <img
                     :src="msg.attachmentUrl"
                     :alt="msg.attachmentName || 'Изображение'"
                     class="max-w-full max-h-48 rounded-lg hover:opacity-90 transition-opacity"
                   />
-                </a>
+                </button>
                 <a
                   v-else
                   :href="msg.attachmentUrl"
@@ -770,18 +794,17 @@ onUnmounted(() => {
                 {{ msg.content }}
               </p>
               <template v-if="msg.attachmentUrl">
-                <a
+                <button
                   v-if="isImageAttachment(msg)"
-                  :href="msg.attachmentUrl"
-                  target="_blank"
-                  class="block mt-2"
+                  @click="openImageModal(msg.attachmentUrl, msg.attachmentName || 'Изображение')"
+                  class="block mt-2 cursor-pointer"
                 >
                   <img
                     :src="msg.attachmentUrl"
                     :alt="msg.attachmentName || 'Изображение'"
                     class="max-w-full max-h-48 rounded-lg hover:opacity-90 transition-opacity"
                   />
-                </a>
+                </button>
                 <a
                   v-else
                   :href="msg.attachmentUrl"
@@ -814,18 +837,17 @@ onUnmounted(() => {
                 {{ msg.content }}
               </p>
               <template v-if="msg.attachmentUrl">
-                <a
+                <button
                   v-if="isImageAttachment(msg)"
-                  :href="msg.attachmentUrl"
-                  target="_blank"
-                  class="block mt-2"
+                  @click="openImageModal(msg.attachmentUrl, msg.attachmentName || 'Изображение')"
+                  class="block mt-2 cursor-pointer"
                 >
                   <img
                     :src="msg.attachmentUrl"
                     :alt="msg.attachmentName || 'Изображение'"
                     class="max-w-full max-h-48 rounded-lg hover:opacity-90 transition-opacity"
                   />
-                </a>
+                </button>
                 <a
                   v-else
                   :href="msg.attachmentUrl"
@@ -974,9 +996,9 @@ onUnmounted(() => {
       class="pt-2 border-t border-[var(--glass-border)] text-center space-y-3"
     >
       <div class="text-[var(--text-muted)]">
-        <Icon name="heroicons:lock-closed" class="w-5 h-5 inline-block mr-1" />
-        Чат закрыт
-      </div>
+      <Icon name="heroicons:lock-closed" class="w-5 h-5 inline-block mr-1" />
+      Чат закрыт
+    </div>
       <UiButton
         @click="handleOpen"
         variant="secondary"
@@ -1018,6 +1040,14 @@ onUnmounted(() => {
         </div>
       </Transition>
     </Teleport>
+
+    <!-- Image Modal -->
+    <UiImageModal
+      :show="imageModal.show"
+      :image-url="imageModal.url"
+      :image-alt="imageModal.alt"
+      @close="closeImageModal"
+    />
   </div>
 </template>
 

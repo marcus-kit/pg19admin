@@ -45,6 +45,16 @@ const selectedStatus = ref<string>('') // Выбранный статус
 
 const requestId = computed(() => route.params.id as string)
 
+// Определяем, откуда пришли (для правильной навигации назад)
+const backUrl = computed(() => {
+  const from = route.query.from as string
+  if (from === 'callback') {
+    return '/requests/callback'
+  }
+  // По умолчанию возвращаемся на страницу подключения
+  return '/requests/connection'
+})
+
 // Опции статуса заявки
 const statusOptions = [
   { value: 'new', label: 'Новая' },
@@ -110,7 +120,7 @@ onMounted(() => {
   <div>
     <!-- Back button -->
     <div class="mb-6">
-      <UiButton @click="router.push('/requests')" variant="ghost">
+      <UiButton @click="router.push(backUrl)" variant="ghost">
         <Icon name="heroicons:arrow-left" class="w-4 h-4 mr-2" />
         Назад к списку
       </UiButton>

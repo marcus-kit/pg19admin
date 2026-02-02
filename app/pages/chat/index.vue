@@ -327,13 +327,13 @@ onUnmounted(() => {
   <div class="flex gap-6">
     <!-- Левая колонка: Заголовок, поиск и список чатов -->
     <div class="flex-1 min-w-0">
-      <!-- Header -->
+    <!-- Header -->
       <div class="mb-6">
         <div class="flex items-center gap-4 mb-4">
           <h1 class="flex items-center gap-3 text-3xl font-bold text-[var(--text-primary)] whitespace-nowrap flex-shrink-0">
             <Icon name="heroicons:chat-bubble-left-right" class="h-8 w-8" />
-            Чаты поддержки
-          </h1>
+        Чаты поддержки
+      </h1>
           
           <UiInput
             v-model="searchQuery"
@@ -348,18 +348,18 @@ onUnmounted(() => {
         </div>
       </div>
 
-      <!-- Chat List (с навигацией с клавиатуры) -->
-      <div
-        ref="listContainerRef"
-        tabindex="0"
-        role="list"
-        aria-label="Список чатов"
+    <!-- Chat List (с навигацией с клавиатуры) -->
+    <div
+      ref="listContainerRef"
+      tabindex="0"
+      role="list"
+      aria-label="Список чатов"
         :class="[
           'outline-none focus:outline-none space-y-3 transition-opacity duration-200',
           loading && 'opacity-50 pointer-events-none'
         ]"
-        @keydown="onListKeydown"
-      >
+      @keydown="onListKeydown"
+    >
       <UiCard
         v-for="(chat, i) in filteredAndSortedChats"
         :key="chat.id"
@@ -451,12 +451,12 @@ onUnmounted(() => {
         </div>
       </UiCard>
 
-        <!-- Empty State -->
-        <UiEmptyState
+      <!-- Empty State -->
+      <UiEmptyState
           v-if="!loading && filteredAndSortedChats.length === 0"
-          :title="searchQuery.trim() ? 'Ничего не найдено по запросу' : (filters.status === 'all' ? 'Чатов пока нет' : 'Нет чатов с таким статусом')"
-          icon="heroicons:chat-bubble-left-right"
-        />
+        :title="searchQuery.trim() ? 'Ничего не найдено по запросу' : (filters.status === 'all' ? 'Чатов пока нет' : 'Нет чатов с таким статусом')"
+        icon="heroicons:chat-bubble-left-right"
+      />
         
         <!-- Индикатор загрузки -->
         <div

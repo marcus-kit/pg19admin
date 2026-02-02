@@ -283,37 +283,37 @@ onUnmounted(() => {
       <div class="flex-1 min-w-0">
         <AdminListTable
           :data="items as unknown as Record<string, unknown>[]"
-          :columns="columns"
+    :columns="columns"
           row-key="id"
           :empty-icon="'heroicons:document-text'"
           :empty-text="'Договоров не найдено'"
           :loading="loading"
           @row-click="(row) => goToAccount(row as unknown as Account)"
-        >
-          <!-- Номер договора -->
-          <template #contractNumber="{ row }">
+  >
+    <!-- Номер договора -->
+    <template #contractNumber="{ row }">
             <span class="font-mono text-sm text-[var(--text-secondary)]">{{ (row as Account).contractNumber || '—' }}</span>
-          </template>
+    </template>
 
-          <!-- Пользователь -->
-          <template #user="{ row }">
-            <NuxtLink
+    <!-- Пользователь -->
+    <template #user="{ row }">
+      <NuxtLink
               v-if="(row as Account).user"
               :to="`/users/${(row as Account).user!.id}`"
-              @click.stop
-              class="font-medium text-[var(--text-primary)] hover:text-primary"
-            >
+        @click.stop
+        class="font-medium text-[var(--text-primary)] hover:text-primary"
+      >
               {{ (row as Account).user!.fullName }}
-            </NuxtLink>
-            <span v-else class="text-[var(--text-muted)]">—</span>
-          </template>
+      </NuxtLink>
+      <span v-else class="text-[var(--text-muted)]">—</span>
+    </template>
 
-          <!-- Адрес с truncate -->
-          <template #addressFull="{ row }">
-            <span class="block max-w-xs truncate text-sm text-[var(--text-muted)]">
+    <!-- Адрес с truncate -->
+    <template #addressFull="{ row }">
+      <span class="block max-w-xs truncate text-sm text-[var(--text-muted)]">
               {{ (row as Account).addressFull || '—' }}
-            </span>
-          </template>
+      </span>
+    </template>
         </AdminListTable>
       </div>
     </div>
