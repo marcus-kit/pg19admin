@@ -51,11 +51,20 @@ const statusOptions = [
   { value: 'completed', label: 'Выполнена' },
 ]
 
+const showMapModal = ref(false)
+
 const mapUrl = computed(() => {
   if (!request.value?.latitude || !request.value?.longitude) return null
   const lat = request.value.latitude
   const lon = request.value.longitude
   return `https://static-maps.yandex.ru/1.x/?ll=${lon},${lat}&z=16&size=600,300&l=map&pt=${lon},${lat},pm2rdm`
+})
+
+const mapUrlLarge = computed(() => {
+  if (!request.value?.latitude || !request.value?.longitude) return null
+  const lat = request.value.latitude
+  const lon = request.value.longitude
+  return `https://static-maps.yandex.ru/1.x/?ll=${lon},${lat}&z=16&size=1200,800&l=map&pt=${lon},${lat},pm2rdm`
 })
 
 async function fetchRequest() {
@@ -209,15 +218,20 @@ onMounted(() => {
         <!-- Карта -->
         <section v-if="mapUrl" class="request-detail-page__card glass-card glass-card-static">
           <h2 class="request-detail-page__card-title">Местоположение</h2>
-          <div class="request-detail-page__map-wrap">
+          <button
+            type="button"
+            class="request-detail-page__map-wrap request-detail-page__map-wrap--clickable"
+            @click="showMapModal = true"
+          >
             <img
               :src="mapUrl"
               :alt="`Карта: ${request.addressText}`"
               class="request-detail-page__map-img"
             />
-          </div>
+          </button>
           <p class="request-detail-page__map-coords">
             Координаты: {{ request.latitude }}, {{ request.longitude }}
+            <span class="request-detail-page__map-hint">· Нажмите на карту для увеличения</span>
           </p>
         </section>
 
@@ -272,6 +286,36 @@ onMounted(() => {
           </div>
         </section>
       </div>
+
+      <!-- Модальное окно карты -->
+      <Teleport to="body">
+        <div
+          v-if="showMapModal && mapUrlLarge"
+          class="request-detail-page__map-modal"
+          @click.self="showMapModal = false"
+        >
+          <div class="request-detail-page__map-modal-backdrop" />
+          <div class="request-detail-page__map-modal-inner">
+            <button
+              type="button"
+              class="request-detail-page__map-modal-close"
+              aria-label="Закрыть"
+              @click="showMapModal = false"
+            >
+              <Icon name="heroicons:x-mark" class="w-6 h-6" />
+            </button>
+            <img
+              :src="mapUrlLarge"
+              :alt="`Карта: ${request.addressText}`"
+              class="request-detail-page__map-modal-img"
+              @click.stop
+            />
+            <p class="request-detail-page__map-modal-coords">
+              {{ request.addressText || '—' }} · {{ request.latitude }}, {{ request.longitude }}
+            </p>
+          </div>
+        </div>
+      </Teleport>
     </template>
   </div>
 </template>
