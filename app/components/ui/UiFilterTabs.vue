@@ -29,13 +29,13 @@ const model = defineModel<string>({ required: true })
 </script>
 
 <template>
-  <div class="flex flex-col gap-1">
+  <div class="flex flex-row flex-wrap gap-2">
     <UiButton
       v-for="opt in props.options"
       :key="opt.value"
       :variant="model === opt.value ? 'primary' : 'ghost'"
       :class="[
-        'filter-tab-button flex items-center gap-2 transition-all duration-300 ease-in-out w-full',
+        'filter-tab-button flex items-center gap-2 transition-all duration-300 ease-in-out',
         model === opt.value 
           ? 'bg-primary/20 text-primary font-medium scale-[1.02]' 
           : 'hover:bg-[var(--glass-bg)]'
@@ -75,7 +75,7 @@ const model = defineModel<string>({ required: true })
 
 /* Переопределяем выравнивание для кнопок фильтров */
 :deep(.filter-tab-button) {
-  justify-content: flex-start !important;
-  text-align: left;
+  justify-content: center !important;
+  text-align: center;
 }
 </style>
