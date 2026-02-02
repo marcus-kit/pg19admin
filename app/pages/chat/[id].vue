@@ -37,12 +37,44 @@ const sending = ref(false)
 const chat = ref<Chat | null>(null)
 const messages = ref<ChatMessage[]>([])
 const messagesContainer = ref<HTMLElement | null>(null)
+const currentAdminName = ref<string | null>(null)
 
 // Состояние для ввода сообщения
 const newMessage = ref('')
 const fileInput = ref<HTMLInputElement | null>(null)
 const pendingFile = ref<File | null>(null)
 const pendingPreview = ref<string | null>(null)
+
+// Состояние для редактирования сообщения
+const editingMessageId = ref<string | null>(null)
+const editingMessageContent = ref('')
+
+// Состояние для контекстного меню
+const contextMenu = ref<{
+  messageId: string
+  x: number
+  y: number
+} | null>(null)
+
+// Состояние для модального окна подтверждения удаления
+const deleteConfirmModal = ref<{
+  show: boolean
+  messageId: string | null
+}>({
+  show: false,
+  messageId: null,
+})
+
+// Состояние для модального окна изображения
+const imageModal = ref<{
+  show: boolean
+  url: string
+  alt: string
+}>({
+  show: false,
+  url: '',
+  alt: 'Изображение',
+})
 
 // Константы для работы с файлами
 const ACCEPT_FILES = 'image/jpeg,image/png,image/gif,image/webp,.pdf,.doc,.docx,.xls,.xlsx'
@@ -74,6 +106,59 @@ const groupedMessages = computed(() => {
   return groups
 })
 
+/** Получить отображаемое имя чата */
+function getChatDisplayName(): string {
+  if (!chat.value) return ''
+  
+  // Приоритет: ФИО из личного кабинета
+  if (chat.value.userFirstName || chat.value.userLastName) {
+    return `${chat.value.userLastName || ''} ${chat.value.userFirstName || ''}`.trim()
+  }
+  // Затем userName из чата
+  if (chat.value.userName) {
+    return chat.value.userName
+  }
+  // Затем guestName из чата
+  if (chat.value.guestName) {
+    return chat.value.guestName
+  }
+  
+  // Если ничего нет, используем ID чата
+  return `Чат #${chat.value.id}`
+}
+
+/** Проверяет, является ли чат из личного кабинета */
+function isPersonalCabinetChat(): boolean {
+  return !!chat.value?.userId
+}
+
+/** Получить отображаемое имя отправителя сообщения */
+function getSenderDisplayName(msg: ChatMessage): string {
+  // Если это сообщение от пользователя, используем данные из чата
+  if (msg.senderType === 'user' && chat.value) {
+    // Приоритет: ФИО из личного кабинета
+    if (chat.value.userFirstName || chat.value.userLastName) {
+      return `${chat.value.userLastName || ''} ${chat.value.userFirstName || ''}`.trim()
+    }
+    // Затем userName из чата
+    if (chat.value.userName) {
+      return chat.value.userName
+    }
+    // Затем guestName из чата
+    if (chat.value.guestName) {
+      return chat.value.guestName
+    }
+  }
+  
+  // Используем senderName из сообщения, если есть
+  if (msg.senderName) {
+    return msg.senderName
+  }
+  
+  // Если ничего нет, используем ID чата
+  return `Чат #${chat.value?.id || msg.chatId}`
+}
+
 // ═══════════════════════════════════════════════════════════════════════════
 // МЕТОДЫ
 // ═══════════════════════════════════════════════════════════════════════════
@@ -82,6 +167,15 @@ const groupedMessages = computed(() => {
 async function fetchChat() {
   loading.value = true
   try {
+    // Загружаем данные текущего админа
+    try {
+      const adminData = await $fetch<{ admin: { fullName: string } }>('/api/admin/auth/me')
+      currentAdminName.value = adminData.admin.fullName
+    }
+    catch {
+      // Игнорируем ошибку, если не удалось загрузить
+    }
+
     const data = await $fetch<{ chat: Chat, messages: ChatMessage[] }>(`/api/admin/chat/${chatId.value}`)
     chat.value = data.chat
     messages.value = data.messages
@@ -122,9 +216,172 @@ async function uploadFile(file: File) {
   })
 }
 
+/** Начать редактирование сообщения */
+function startEditing(msg: ChatMessage) {
+  editingMessageId.value = msg.id
+  editingMessageContent.value = msg.content
+  newMessage.value = msg.content
+  // Прокручиваем к полю ввода
+  nextTick(() => {
+    const textarea = document.querySelector('textarea')
+    textarea?.focus()
+    textarea?.scrollIntoView({ behavior: 'smooth', block: 'end' })
+  })
+}
+
+/** Отменить редактирование */
+function cancelEditing() {
+  editingMessageId.value = null
+  editingMessageContent.value = ''
+  newMessage.value = ''
+}
+
+/** Сохранить отредактированное сообщение */
+async function saveEditedMessage() {
+  if (!editingMessageId.value || !newMessage.value.trim()) return
+
+  sending.value = true
+  try {
+    const response = await $fetch<{ message: ChatMessage }>(
+      `/api/admin/chat/${chatId.value}/messages/${editingMessageId.value}`,
+      {
+        method: 'PUT',
+        body: {
+          content: newMessage.value.trim(),
+        },
+      },
+    )
+
+    // Обновляем сообщение в списке
+    const index = messages.value.findIndex(m => m.id === editingMessageId.value)
+    if (index !== -1) {
+      messages.value[index] = response.message
+    }
+
+    cancelEditing()
+    toast.success('Сообщение обновлено')
+  }
+  catch {
+    toast.error('Ошибка при обновлении сообщения')
+  }
+  finally {
+    sending.value = false
+  }
+}
+
+/** Удалить сообщение */
+/** Показать модальное окно подтверждения удаления */
+function showDeleteConfirm(messageId: string) {
+  deleteConfirmModal.value = {
+    show: true,
+    messageId,
+  }
+  contextMenu.value = null
+}
+
+/** Закрыть модальное окно подтверждения удаления */
+function closeDeleteConfirm() {
+  deleteConfirmModal.value = {
+    show: false,
+    messageId: null,
+  }
+}
+
+/** Обработка клавиши Escape для закрытия модального окна удаления */
+function handleDeleteModalEscape(e: KeyboardEvent) {
+  if (e.key === 'Escape' && deleteConfirmModal.value.show) {
+    closeDeleteConfirm()
+  }
+}
+
+/** Подтвердить удаление сообщения */
+async function confirmDelete() {
+  if (!deleteConfirmModal.value.messageId) return
+
+  const messageId = deleteConfirmModal.value.messageId
+  
+  // Закрываем модальное окно сразу для быстрого отклика
+  closeDeleteConfirm()
+
+  // Оптимистичное обновление: удаляем сообщение из UI сразу
+  const index = messages.value.findIndex(m => m.id === messageId)
+  const deletedMessage = index !== -1 ? messages.value[index] : null
+  
+  if (index !== -1) {
+    messages.value.splice(index, 1)
+  }
+
+  // Выполняем запрос в фоне
+  try {
+    await $fetch(`/api/admin/chat/${chatId.value}/messages/${messageId}`, {
+      method: 'DELETE',
+    })
+    toast.success('Сообщение удалено')
+  }
+  catch {
+    // Если ошибка - возвращаем сообщение обратно
+    if (deletedMessage && index !== -1) {
+      messages.value.splice(index, 0, deletedMessage)
+    }
+    toast.error('Ошибка при удалении сообщения')
+  }
+}
+
+/** Показать контекстное меню */
+function showContextMenu(event: MouseEvent, message: ChatMessage) {
+  // Показываем только для сообщений админа текущего пользователя
+  if (message.senderType !== 'admin' || message.senderName !== currentAdminName.value) {
+    return
+  }
+
+  event.preventDefault()
+  event.stopPropagation()
+
+  // Находим элемент сообщения и получаем его позицию
+  const target = event.currentTarget as HTMLElement
+  if (!target) return
+
+  const rect = target.getBoundingClientRect()
+  
+  // Позиционируем меню снизу сообщения, по центру
+  contextMenu.value = {
+    messageId: message.id,
+    x: rect.left + rect.width / 2, // Центр по горизонтали
+    y: rect.bottom + 4, // Снизу сообщения с небольшим отступом
+  }
+}
+
+/** Закрыть контекстное меню */
+function closeContextMenu() {
+  contextMenu.value = null
+}
+
+/** Обработчик редактирования из контекстного меню */
+function handleContextEdit() {
+  if (!contextMenu.value) return
+  const message = messages.value.find(m => m.id === contextMenu.value!.messageId)
+  if (message) {
+    startEditing(message)
+  }
+  closeContextMenu()
+}
+
+/** Обработчик удаления из контекстного меню */
+function handleContextDelete() {
+  if (!contextMenu.value) return
+  showDeleteConfirm(contextMenu.value.messageId)
+}
+
 /** Отправка сообщения (с файлом или без) */
 async function handleSendMessage(content: string, file: File | null) {
   if (sending.value) return
+
+  // Если редактируем сообщение, сохраняем изменения
+  if (editingMessageId.value) {
+    editingMessageContent.value = content
+    await saveEditedMessage()
+    return
+  }
 
   sending.value = true
   try {
@@ -162,16 +419,33 @@ async function handleSendMessage(content: string, file: File | null) {
 
 /** Закрытие чата */
 async function handleClose() {
-  if (!confirm('Закрыть этот чат?')) return
-
   try {
     await $fetch(`/api/admin/chat/${chatId.value}/close`, { method: 'POST' })
     if (chat.value) {
       chat.value.status = 'closed'
     }
+    toast.success('Чат закрыт')
+    // Перезагружаем чат для получения системного сообщения
+    await fetchChat()
   }
   catch {
     toast.error('Ошибка при закрытии чата')
+  }
+}
+
+/** Открытие чата */
+async function handleOpen() {
+  try {
+    await $fetch(`/api/admin/chat/${chatId.value}/open`, { method: 'POST' })
+    if (chat.value) {
+      chat.value.status = 'active'
+    }
+    toast.success('Чат открыт')
+    // Перезагружаем чат для получения системного сообщения
+    await fetchChat()
+  }
+  catch {
+    toast.error('Ошибка при открытии чата')
   }
 }
 
@@ -226,6 +500,20 @@ function isImageAttachment(message: ChatMessage): boolean {
   const imagePattern = /\.(jpg|jpeg|png|gif|webp)$/i
   return imagePattern.test(message.attachmentUrl)
     || (message.attachmentName ? imagePattern.test(message.attachmentName) : false)
+}
+
+/** Открыть изображение в модальном окне */
+function openImageModal(url: string, alt: string = 'Изображение') {
+  imageModal.value = {
+    show: true,
+    url,
+    alt,
+  }
+}
+
+/** Закрыть модальное окно изображения */
+function closeImageModal() {
+  imageModal.value.show = false
 }
 
 /** Открытие диалога выбора файла */
@@ -341,12 +629,32 @@ function setupRealtime() {
 onMounted(() => {
   fetchChat()
   setupRealtime()
+  
+  // Закрываем контекстное меню при клике вне его
+  document.addEventListener('click', closeContextMenu)
+  document.addEventListener('contextmenu', closeContextMenu)
+  document.addEventListener('keydown', handleDeleteModalEscape)
 })
 
 onUnmounted(() => {
   subscription?.unsubscribe()
   if (pendingPreview.value) {
     URL.revokeObjectURL(pendingPreview.value)
+  }
+  
+  document.removeEventListener('click', closeContextMenu)
+  document.removeEventListener('contextmenu', closeContextMenu)
+  document.removeEventListener('keydown', handleDeleteModalEscape)
+  document.body.style.overflow = ''
+})
+
+// Управление overflow body при открытии модального окна удаления
+watch(() => deleteConfirmModal.value.show, (isOpen) => {
+  if (isOpen) {
+    document.body.style.overflow = 'hidden'
+  }
+  else {
+    document.body.style.overflow = ''
   }
 })
 </script>
@@ -368,11 +676,28 @@ onUnmounted(() => {
         </UiButton>
         <div>
           <div class="flex items-center gap-2">
-            <h1 class="text-lg font-semibold text-[var(--text-primary)]">
-              {{ chat.userName || chat.guestName || `Чат #${chat.id}` }}
+            <NuxtLink
+              v-if="isPersonalCabinetChat() && chat.userId"
+              :to="`/users/${chat.userId}?from=chat&chatId=${chat.id}`"
+              class="text-lg font-semibold text-[var(--text-primary)] hover:text-primary transition-colors cursor-pointer"
+            >
+              {{ getChatDisplayName() }}
+            </NuxtLink>
+            <h1
+              v-else
+              class="text-lg font-semibold text-[var(--text-primary)]"
+            >
+              {{ getChatDisplayName() }}
             </h1>
             <UiBadge
-              v-if="chat.guestName && !chat.userId"
+              v-if="isPersonalCabinetChat()"
+              size="sm"
+              class="bg-blue-500/20 text-blue-400"
+            >
+              Личный кабинет
+            </UiBadge>
+            <UiBadge
+              v-else-if="chat.guestName"
               size="sm"
               class="bg-purple-500/20 text-purple-400"
             >
@@ -472,18 +797,17 @@ onUnmounted(() => {
                 {{ msg.content }}
               </p>
               <template v-if="msg.attachmentUrl">
-                <a
+                <button
                   v-if="isImageAttachment(msg)"
-                  :href="msg.attachmentUrl"
-                  target="_blank"
-                  class="block mt-2"
+                  @click="openImageModal(msg.attachmentUrl, msg.attachmentName || 'Изображение')"
+                  class="block mt-2 cursor-pointer"
                 >
                   <img
                     :src="msg.attachmentUrl"
                     :alt="msg.attachmentName || 'Изображение'"
                     class="max-w-full max-h-48 rounded-lg hover:opacity-90 transition-opacity"
                   />
-                </a>
+                </button>
                 <a
                   v-else
                   :href="msg.attachmentUrl"
@@ -506,8 +830,25 @@ onUnmounted(() => {
             <!-- Admin Message -->
             <div
               v-else-if="msg.senderType === 'admin'"
-              class="max-w-[70%] rounded-2xl px-4 py-2 glass-card rounded-br-md border-l-2 border-primary/50"
+              :data-message-id="msg.id"
+              class="max-w-[70%] rounded-2xl px-4 py-2 glass-card rounded-br-md border-l-2 border-primary/50 group relative"
+              :class="{ 'ring-2 ring-primary/30': editingMessageId === msg.id }"
+              @contextmenu="showContextMenu($event, msg)"
             >
+              <div class="flex items-center justify-between mb-1">
+                <div class="flex items-center gap-1.5">
+                  <Icon name="heroicons:user-circle" class="w-3.5 h-3.5 text-primary" />
+                  <span class="text-xs font-medium text-primary">{{ msg.senderName || 'Администратор' }}</span>
+                </div>
+                <button
+                  v-if="!editingMessageId && msg.senderName === currentAdminName"
+                  @click.stop="startEditing(msg)"
+                  class="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-white/10"
+                  title="Редактировать"
+                >
+                  <Icon name="heroicons:pencil" class="w-3.5 h-3.5 text-[var(--text-muted)]" />
+                </button>
+              </div>
               <p
                 v-if="msg.content"
                 class="whitespace-pre-wrap break-words text-[var(--text-primary)]"
@@ -515,18 +856,17 @@ onUnmounted(() => {
                 {{ msg.content }}
               </p>
               <template v-if="msg.attachmentUrl">
-                <a
+                <button
                   v-if="isImageAttachment(msg)"
-                  :href="msg.attachmentUrl"
-                  target="_blank"
-                  class="block mt-2"
+                  @click="openImageModal(msg.attachmentUrl, msg.attachmentName || 'Изображение')"
+                  class="block mt-2 cursor-pointer"
                 >
                   <img
                     :src="msg.attachmentUrl"
                     :alt="msg.attachmentName || 'Изображение'"
                     class="max-w-full max-h-48 rounded-lg hover:opacity-90 transition-opacity"
                   />
-                </a>
+                </button>
                 <a
                   v-else
                   :href="msg.attachmentUrl"
@@ -543,9 +883,6 @@ onUnmounted(() => {
               </template>
               <div class="text-xs mt-1 text-[var(--text-muted)]">
                 {{ formatTime(msg.createdAt) }}
-                <span v-if="msg.senderName" class="ml-1 text-primary">
-                  · {{ msg.senderName }}
-                </span>
               </div>
             </div>
 
@@ -554,22 +891,25 @@ onUnmounted(() => {
               v-else
               class="max-w-[70%] rounded-2xl px-4 py-2 glass-card rounded-bl-md"
             >
+              <div class="flex items-center gap-1.5 mb-1">
+                <Icon name="heroicons:user" class="w-3.5 h-3.5 text-accent" />
+                <span class="text-xs font-medium text-accent">{{ getSenderDisplayName(msg) }}</span>
+              </div>
               <p v-if="msg.content" class="whitespace-pre-wrap break-words">
                 {{ msg.content }}
               </p>
               <template v-if="msg.attachmentUrl">
-                <a
+                <button
                   v-if="isImageAttachment(msg)"
-                  :href="msg.attachmentUrl"
-                  target="_blank"
-                  class="block mt-2"
+                  @click="openImageModal(msg.attachmentUrl, msg.attachmentName || 'Изображение')"
+                  class="block mt-2 cursor-pointer"
                 >
                   <img
                     :src="msg.attachmentUrl"
                     :alt="msg.attachmentName || 'Изображение'"
                     class="max-w-full max-h-48 rounded-lg hover:opacity-90 transition-opacity"
                   />
-                </a>
+                </button>
                 <a
                   v-else
                   :href="msg.attachmentUrl"
@@ -584,7 +924,7 @@ onUnmounted(() => {
                   <Icon name="heroicons:arrow-down-tray" class="w-4 h-4 text-[var(--text-muted)]" />
                 </a>
               </template>
-              <div class="text-xs mt-1 text-[var(--text-muted)]">
+              <div class="text-xs mt-1 text-[var(--text-muted)] text-right">
                 {{ formatTime(msg.createdAt) }}
               </div>
             </div>
@@ -645,14 +985,34 @@ onUnmounted(() => {
         class="hidden"
       />
 
-      <form @submit.prevent="handleSubmit" class="flex gap-2">
+      <!-- Режим редактирования -->
+      <div
+        v-if="editingMessageId"
+        class="mb-2 p-2 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-between"
+      >
+        <div class="flex items-center gap-2">
+          <Icon name="heroicons:pencil" class="w-4 h-4 text-primary" />
+          <span class="text-sm text-primary font-medium">Редактирование сообщения</span>
+        </div>
+        <button
+          @click="cancelEditing"
+          class="p-1 rounded hover:bg-white/10 transition-colors"
+          title="Отменить"
+        >
+          <Icon name="heroicons:x-mark" class="w-4 h-4 text-[var(--text-muted)]" />
+        </button>
+      </div>
+
+      <form @submit.prevent="handleSubmit" class="flex gap-2 items-start">
         <!-- Attach button -->
         <UiButton
+          v-if="!editingMessageId"
           :disabled="sending"
           @click="openFileDialog"
           type="button"
           variant="ghost"
           title="Прикрепить файл"
+          class="flex-shrink-0 self-start"
         >
           <Icon name="heroicons:paper-clip" class="w-5 h-5" />
         </UiButton>
@@ -661,16 +1021,31 @@ onUnmounted(() => {
           v-model="newMessage"
           :disabled="sending"
           @keydown.enter.exact.prevent="handleSubmit"
+          @keydown.escape="cancelEditing"
           @input="handleTextareaInput"
-          placeholder="Введите сообщение..."
+          :placeholder="editingMessageId ? 'Редактируйте сообщение...' : 'Введите сообщение...'"
           rows="1"
           class="flex-1 px-3 py-2 glass-card rounded-lg text-[var(--text-primary)] border border-[var(--glass-border)] focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all bg-[var(--glass-bg)] resize-none min-h-[40px] max-h-[120px]"
         />
 
         <UiButton
+          v-if="editingMessageId"
+          :loading="sending"
+          :disabled="!newMessage.trim() || sending"
+          @click="saveEditedMessage"
+          type="button"
+          variant="secondary"
+          class="flex-shrink-0 self-start"
+        >
+          <Icon name="heroicons:check" class="w-5 h-5" />
+          Сохранить
+        </UiButton>
+        <UiButton
+          v-else
           :loading="sending"
           :disabled="(!newMessage.trim() && !pendingFile) || sending"
           type="submit"
+          class="flex-shrink-0 self-start"
         >
           <Icon name="heroicons:paper-airplane" class="w-5 h-5" />
         </UiButton>
@@ -680,10 +1055,131 @@ onUnmounted(() => {
     <!-- Closed Chat Notice -->
     <div
       v-else-if="chat"
-      class="pt-2 border-t border-[var(--glass-border)] text-center text-[var(--text-muted)]"
+      class="pt-2 border-t border-[var(--glass-border)] text-center space-y-3"
     >
+      <div class="text-[var(--text-muted)]">
       <Icon name="heroicons:lock-closed" class="w-5 h-5 inline-block mr-1" />
       Чат закрыт
     </div>
+      <UiButton
+        @click="handleOpen"
+        variant="secondary"
+        size="sm"
+      >
+        <Icon name="heroicons:lock-open" class="w-4 h-4" />
+        Открыть чат
+      </UiButton>
+    </div>
+
+    <!-- Context Menu -->
+    <Teleport to="body">
+      <Transition name="fade">
+        <div
+          v-if="contextMenu"
+          :style="{
+            position: 'fixed',
+            left: `${contextMenu.x}px`,
+            top: `${contextMenu.y}px`,
+            transform: 'translateX(-50%)',
+            zIndex: 1000,
+          }"
+          class="glass-card rounded-lg border border-[var(--glass-border)] shadow-lg py-1 min-w-[150px]"
+          @click.stop
+        >
+          <button
+            @click="handleContextEdit"
+            class="w-full flex items-center gap-2 px-3 py-2 text-sm text-[var(--text-primary)] hover:bg-[var(--glass-bg)] transition-colors"
+          >
+            <Icon name="heroicons:pencil" class="w-4 h-4" />
+            Редактировать
+          </button>
+          <button
+            @click="handleContextDelete"
+            class="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-400 hover:bg-red-500/10 transition-colors"
+          >
+            <Icon name="heroicons:trash" class="w-4 h-4" />
+            Удалить
+          </button>
+        </div>
+      </Transition>
+    </Teleport>
+
+    <!-- Image Modal -->
+    <UiImageModal
+      :show="imageModal.show"
+      :image-url="imageModal.url"
+      :image-alt="imageModal.alt"
+      @close="closeImageModal"
+    />
+
+    <!-- Delete Confirmation Modal -->
+    <ClientOnly>
+      <Teleport to="body">
+        <Transition
+          enter-active-class="transition-opacity duration-200"
+          leave-active-class="transition-opacity duration-150"
+          enter-from-class="opacity-0"
+          leave-to-class="opacity-0"
+        >
+          <div
+            v-if="deleteConfirmModal.show"
+            @click.self="closeDeleteConfirm"
+            class="fixed inset-0 z-50 flex items-center justify-center p-4"
+            style="background-color: rgba(0, 0, 0, 0.85);"
+          >
+            <div
+              class="w-full max-w-md rounded-2xl p-6"
+              style="background: var(--bg-surface); border: 1px solid var(--glass-border);"
+            >
+              <!-- Header -->
+              <div class="flex items-center gap-3 mb-4">
+                <div class="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center">
+                  <Icon name="heroicons:exclamation-triangle" class="w-6 h-6 text-red-400" />
+                </div>
+                <h3 class="text-lg font-semibold text-[var(--text-primary)]">
+                  Удалить сообщение?
+                </h3>
+              </div>
+
+              <!-- Message -->
+              <p class="text-[var(--text-secondary)] mb-6">
+                Это действие необратимо. Сообщение будет удалено навсегда.
+              </p>
+
+              <!-- Actions -->
+              <div class="flex gap-3">
+                <UiButton
+                  @click="closeDeleteConfirm"
+                  class="flex-1"
+                  variant="secondary"
+                >
+                  Отмена
+                </UiButton>
+                <UiButton
+                  @click="confirmDelete"
+                  class="flex-1"
+                  variant="danger"
+                >
+                  <Icon name="heroicons:trash" class="w-4 h-4 mr-2" />
+                  Удалить
+                </UiButton>
+              </div>
+            </div>
+          </div>
+        </Transition>
+      </Teleport>
+    </ClientOnly>
   </div>
 </template>
+
+<style scoped>
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.15s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+</style>

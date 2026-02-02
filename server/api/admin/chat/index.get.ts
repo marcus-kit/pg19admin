@@ -13,7 +13,8 @@ export default defineEventHandler(async (event) => {
     .from('chats')
     .select(`
       *,
-      assigned_admin:admins!assigned_admin_id(id, full_name)
+      assigned_admin:admins!assigned_admin_id(id, full_name),
+      user:users!user_id(first_name, last_name)
     `)
     .order('last_message_at', { ascending: false, nullsFirst: false })
 

@@ -203,6 +203,7 @@ export interface DbChat {
   subject: string | null
   assigned_admin_id: string | null
   assigned_admin?: { id: string, full_name: string } | null
+  user?: { first_name: string | null, last_name: string | null } | null
   last_message_at: string | null
   last_admin_message_at: string | null
   last_user_message_at: string | null
@@ -219,6 +220,8 @@ export function mapChat(chat: DbChat) {
     id: chat.id,
     userId: chat.user_id,
     userName: chat.user_name ?? chat.guest_name,
+    userFirstName: chat.user?.first_name ?? null,
+    userLastName: chat.user?.last_name ?? null,
     guestName: chat.guest_name,
     guestContact: chat.guest_contact,
     userTelegramId: chat.user_telegram_id,

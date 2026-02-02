@@ -158,10 +158,10 @@ export const TICKET_PRIORITY_OPTIONS: FilterOption<TicketPriority>[] = [
 ]
 
 export const CHAT_STATUS_OPTIONS: FilterOption<ChatStatus>[] = [
+  { value: 'all', label: 'Все' },
   { value: 'waiting', label: 'Ожидают' },
   { value: 'active', label: 'Активные' },
   { value: 'closed', label: 'Закрытые' },
-  { value: 'all', label: 'Все' },
 ]
 
 export const CONNECTION_STATUS_OPTIONS: FilterOption<ConnectionRequestStatus>[] = [

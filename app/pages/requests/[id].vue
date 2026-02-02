@@ -45,6 +45,16 @@ const selectedStatus = ref<string>('') // Выбранный статус
 
 const requestId = computed(() => route.params.id as string)
 
+// Определяем, откуда пришли (для правильной навигации назад)
+const backUrl = computed(() => {
+  const from = route.query.from as string
+  if (from === 'callback') {
+    return '/requests/callback'
+  }
+  // По умолчанию возвращаемся на страницу подключения
+  return '/requests/connection'
+})
+
 // Опции статуса заявки
 const statusOptions = [
   { value: 'new', label: 'Новая' },
@@ -107,10 +117,10 @@ onMounted(() => {
 </script>
 
 <template>
-  <div>
+  <div class="max-w-6xl mx-auto">
     <!-- Back button -->
     <div class="mb-6">
-      <UiButton @click="router.push('/requests')" variant="ghost">
+      <UiButton @click="router.push(backUrl)" variant="ghost">
         <Icon name="heroicons:arrow-left" class="w-4 h-4 mr-2" />
         Назад к списку
       </UiButton>
@@ -161,57 +171,71 @@ onMounted(() => {
       </div>
 
       <!-- Main info -->
-      <div class="grid md:grid-cols-2 gap-6">
-        <!-- Contact info -->
-        <UiCard>
-          <h3 class="text-lg font-semibold text-[var(--text-primary)] mb-4">
-            Контактные данные
-          </h3>
-          <dl class="space-y-3">
-            <div>
-              <dt class="text-sm text-[var(--text-muted)]">Имя</dt>
-              <dd class="text-[var(--text-primary)] font-medium">{{ request.fullName }}</dd>
-            </div>
-            <div>
-              <dt class="text-sm text-[var(--text-muted)]">Телефон</dt>
-              <dd class="text-[var(--text-primary)] font-medium">
-                <a :href="`tel:${request.phone}`" class="text-primary hover:underline">
-                  {{ formatPhone(request.phone) }}
-                </a>
-              </dd>
-            </div>
-            <div>
-              <dt class="text-sm text-[var(--text-muted)]">Адрес</dt>
-              <dd class="text-[var(--text-primary)]">{{ request.addressText }}</dd>
-            </div>
-          </dl>
-        </UiCard>
-
-        <!-- Status change -->
-        <UiCard>
-          <h3 class="text-lg font-semibold text-[var(--text-primary)] mb-4">
-            Изменить статус
-          </h3>
-          <div class="space-y-4">
-            <UiSelect
-              v-model="selectedStatus"
-              :options="statusOptions"
-              label="Статус заявки"
-            />
-            <UiButton
-              :disabled="saving || selectedStatus === request.status"
-              :loading="saving"
-              @click="updateStatus"
-              class="w-full"
-            >
-              {{ saving ? 'Сохранение...' : 'Сохранить' }}
-            </UiButton>
+      <UiCard>
+        <div class="flex flex-col lg:flex-row gap-6">
+          <!-- Contact info -->
+          <div class="flex-1">
+            <h3 class="text-lg font-semibold text-[var(--text-primary)] mb-4">
+              Контактные данные
+            </h3>
+            <dl class="space-y-3">
+              <div>
+                <dt class="text-sm text-[var(--text-muted)]">Имя</dt>
+                <dd class="text-[var(--text-primary)] font-medium">{{ request.fullName }}</dd>
+              </div>
+              <div>
+                <dt class="text-sm text-[var(--text-muted)]">Телефон</dt>
+                <dd class="text-[var(--text-primary)] font-medium">
+                  <a :href="`tel:${request.phone}`" class="text-primary hover:underline">
+                    {{ formatPhone(request.phone) }}
+                  </a>
+                </dd>
+              </div>
+              <div>
+                <dt class="text-sm text-[var(--text-muted)]">Адрес</dt>
+                <dd class="text-[var(--text-primary)]">{{ request.addressText }}</dd>
+              </div>
+              <div>
+                <dt class="text-sm text-[var(--text-muted)]">Дата создания</dt>
+                <dd class="text-[var(--text-primary)]">{{ formatDateTime(request.createdAt) }}</dd>
+              </div>
+              <div>
+                <dt class="text-sm text-[var(--text-muted)]">Источник</dt>
+                <dd class="text-[var(--text-primary)]">{{ getStatusLabel(REQUEST_SOURCE, request.source) }}</dd>
+              </div>
+              <div v-if="request.metadata?.ip">
+                <dt class="text-sm text-[var(--text-muted)]">IP адрес</dt>
+                <dd class="text-[var(--text-primary)] font-mono text-sm">{{ request.metadata.ip }}</dd>
+              </div>
+            </dl>
           </div>
-        </UiCard>
-      </div>
+
+          <!-- Status change -->
+          <div class="w-full lg:w-72 flex-shrink-0 lg:border-l lg:border-[var(--glass-border)] lg:pl-6">
+            <h3 class="text-lg font-semibold text-[var(--text-primary)] mb-4">
+              Изменить статус
+            </h3>
+            <div class="space-y-3">
+              <UiSelect
+                v-model="selectedStatus"
+                :options="statusOptions"
+                label="Статус заявки"
+              />
+              <UiButton
+                :disabled="saving || selectedStatus === request.status"
+                :loading="saving"
+                @click="updateStatus"
+                class="w-full"
+              >
+                {{ saving ? 'Сохранение...' : 'Сохранить' }}
+              </UiButton>
+            </div>
+          </div>
+        </div>
+      </UiCard>
 
       <!-- Map -->
-      <UiCard v-if="mapUrl">
+      <UiCard v-if="mapUrl" class="w-full">
         <h3 class="text-lg font-semibold text-[var(--text-primary)] mb-4">
           Местоположение
         </h3>
@@ -225,58 +249,6 @@ onMounted(() => {
         <p class="text-sm text-[var(--text-muted)] mt-2">
           Координаты: {{ request.latitude }}, {{ request.longitude }}
         </p>
-      </UiCard>
-
-      <!-- Metadata -->
-      <UiCard>
-        <h3 class="text-lg font-semibold text-[var(--text-primary)] mb-4">
-          Дополнительная информация
-        </h3>
-        <dl class="grid md:grid-cols-2 gap-4">
-          <div>
-            <dt class="text-sm text-[var(--text-muted)]">Источник</dt>
-            <dd class="text-[var(--text-primary)]">{{ getStatusLabel(REQUEST_SOURCE, request.source) }}</dd>
-          </div>
-          <div>
-            <dt class="text-sm text-[var(--text-muted)]">Дата создания</dt>
-            <dd class="text-[var(--text-primary)]">{{ formatDateTime(request.createdAt) }}</dd>
-          </div>
-          <div>
-            <dt class="text-sm text-[var(--text-muted)]">Последнее обновление</dt>
-            <dd class="text-[var(--text-primary)]">{{ formatDateTime(request.updatedAt) }}</dd>
-          </div>
-          <div v-if="request.metadata?.ip">
-            <dt class="text-sm text-[var(--text-muted)]">IP адрес</dt>
-            <dd class="text-[var(--text-primary)] font-mono text-sm">{{ request.metadata.ip }}</dd>
-          </div>
-        </dl>
-
-        <!-- Address components (if available) -->
-        <div v-if="request.addressComponents" class="mt-6">
-          <h4 class="text-sm font-medium text-[var(--text-muted)] mb-2">Компоненты адреса</h4>
-          <dl class="grid md:grid-cols-3 gap-2 text-sm">
-            <div v-if="request.addressComponents.region">
-              <dt class="text-[var(--text-muted)]">Регион</dt>
-              <dd class="text-[var(--text-primary)]">{{ request.addressComponents.region }}</dd>
-            </div>
-            <div v-if="request.addressComponents.city">
-              <dt class="text-[var(--text-muted)]">Город</dt>
-              <dd class="text-[var(--text-primary)]">{{ request.addressComponents.city }}</dd>
-            </div>
-            <div v-if="request.addressComponents.street">
-              <dt class="text-[var(--text-muted)]">Улица</dt>
-              <dd class="text-[var(--text-primary)]">{{ request.addressComponents.street }}</dd>
-            </div>
-            <div v-if="request.addressComponents.house">
-              <dt class="text-[var(--text-muted)]">Дом</dt>
-              <dd class="text-[var(--text-primary)]">{{ request.addressComponents.house }}</dd>
-            </div>
-            <div v-if="request.addressComponents.flat">
-              <dt class="text-[var(--text-muted)]">Квартира</dt>
-              <dd class="text-[var(--text-primary)]">{{ request.addressComponents.flat }}</dd>
-            </div>
-          </dl>
-        </div>
       </UiCard>
     </div>
   </div>
